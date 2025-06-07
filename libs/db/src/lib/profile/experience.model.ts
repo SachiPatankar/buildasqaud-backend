@@ -1,0 +1,72 @@
+import mongoose, { Schema, Document } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
+
+export interface IExperience extends Document {
+  _id: string;
+  profile_id: string;
+  company_name: string;
+  position: string;
+  start_date?: Date;
+  end_date?: Date;
+  is_current?: boolean;
+  description?: string;
+  location_id?: string;
+  employment_type?: 'full-time' | 'part-time' | 'contract' | 'internship' | 'freelance';
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+const ExperienceSchema = new Schema<IExperience>(
+  {
+    _id: {
+      type: String,
+      default: uuidv4,
+    },
+    profile_id: { 
+      type: String, 
+      required: true,
+    },
+    company_name: { 
+      type: String, 
+      required: true,
+      trim: true,
+    },
+    position: { 
+      type: String, 
+      required: true,
+      trim: true,
+    },
+    start_date: { 
+      type: Date,
+    },
+    end_date: { 
+      type: Date,
+    },
+    is_current: {
+      type: Boolean,
+      default: false,
+    },
+    description: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
+    },
+    employment_type: {
+      type: String,
+      enum: ['full-time', 'part-time', 'contract', 'internship', 'freelance'],
+    },
+    location_id: { 
+      type: String,
+    },
+  },
+  {
+    timestamps: {
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+    },
+  }
+);
+
+ExperienceSchema.index({ profile_id: 1 });
+
+export const Experience = mongoose.model<IExperience>('Experience', ExperienceSchema);

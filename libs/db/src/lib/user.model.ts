@@ -11,6 +11,8 @@ export interface IUser extends Document {
   googleId?: string;
   githubId?: string;
   profile_id: string;
+  is_online?: boolean;
+  last_seen?: Date;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -26,21 +28,42 @@ const UserSchema = new Schema<IUser>(
       required: true,
       lowercase: true,
       trim: true,
+      unique: true,
     },
     first_name: {
       type: String,
+      trim: true,
     },
     last_name: {
       type: String,
+      trim: true,
     },
     password: {
       type: String,
+      minlength: 6,
     },
     photo: {
       type: String,
     },
+    googleId: {
+      type: String,
+      sparse: true,
+    },
+    githubId: {
+      type: String,
+      sparse: true,
+    },
     profile_id: {
       type: String,
+      required: true,
+    },
+    is_online: {
+      type: Boolean,
+      default: false,
+    },
+    last_seen: {
+      type: Date,
+      default: Date.now,
     },
   },
   {
@@ -52,5 +75,7 @@ const UserSchema = new Schema<IUser>(
 );
 
 UserSchema.index({ email: 1 }, { unique: true });
+UserSchema.index({ googleId: 1 }, { sparse: true });
+UserSchema.index({ githubId: 1 }, { sparse: true });
 
 export const User = mongoose.model<IUser>('User', UserSchema);
