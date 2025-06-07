@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "rootDir": "../../",
+    "baseUrl": "./src",
+    "paths": {
+      "@db": ["../../libs/db/src"],
+      "@aws": ["../../libs/aws/src"],
+      "@socket": ["../../libs/socket/src"]
+    },
+    "strict": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": [
+    "./src",
+    "../../libs/db/src",
+    "../../libs/aws/src",
+    "../../libs/socket/src"
+  ]
+}

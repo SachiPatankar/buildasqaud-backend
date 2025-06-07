@@ -1,0 +1,27 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "es2015",
+    "module": "esnext",
+    "lib": ["es2017", "dom"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@aws": ["libs/aws/src/index.ts"],
+      "@backend/libs": ["libs/src/index.ts"],
+      "@backend/shared-models": ["shared-models/src/index.ts"],
+      "@backend/socket": ["libs/socket/src/index.ts"],
+      "@db": ["libs/db/src/index.ts"],
+      "@socket": ["libs/socket/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}
