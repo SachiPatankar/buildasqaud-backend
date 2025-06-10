@@ -6,15 +6,15 @@ export interface IEducation extends Document {
   user_id: string;
   institution_name: string;
   location_id?: string;
-  degree?: string;
-  field_of_study?: string;
-  start_date?: Date;
-  end_date?: Date;
-  is_current?: boolean;
+  degree: string;
+  field_of_study: string;
+  start_date: Date;
+  end_date: Date;
+  is_current: boolean;
   grade?: string;
   description?: string;
-  created_at?: Date;
-  updated_at?: Date;
+  created_at: Date;
+  updated_at: Date;
 }
 
 const EducationSchema = new Schema<IEducation>(
@@ -35,20 +35,25 @@ const EducationSchema = new Schema<IEducation>(
     degree: {
       type: String,
       trim: true,
+      required: true,
     },
     field_of_study: {
       type: String,
       trim: true,
+      required: true,
     },
     start_date: {
       type: Date,
+      required: true,
     },
     end_date: {
       type: Date,
+      required: true,
     },
     is_current: {
       type: Boolean,
       default: false,
+      required: true,
     },
     grade: {
       type: String,

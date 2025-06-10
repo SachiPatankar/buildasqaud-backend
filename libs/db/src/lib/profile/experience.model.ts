@@ -6,9 +6,9 @@ export interface IExperience extends Document {
   user_id: string;
   company_name: string;
   position: string;
-  start_date?: Date;
-  end_date?: Date;
-  is_current?: boolean;
+  start_date: Date;
+  end_date: Date;
+  is_current: boolean;
   description?: string;
   location_id?: string;
   employment_type?:
@@ -17,8 +17,8 @@ export interface IExperience extends Document {
     | 'contract'
     | 'internship'
     | 'freelance';
-  created_at?: Date;
-  updated_at?: Date;
+  created_at: Date;
+  updated_at: Date;
 }
 
 const ExperienceSchema = new Schema<IExperience>(
@@ -43,13 +43,16 @@ const ExperienceSchema = new Schema<IExperience>(
     },
     start_date: {
       type: Date,
+      required: true,
     },
     end_date: {
       type: Date,
+      required: true,
     },
     is_current: {
       type: Boolean,
       default: false,
+      required: true,
     },
     description: {
       type: String,

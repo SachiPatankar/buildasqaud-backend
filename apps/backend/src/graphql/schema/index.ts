@@ -3,6 +3,9 @@ import { DocumentNode } from 'graphql';
 import userSchema from './user';
 import s3Schema from './s3';
 import postSchema from './post';
+import applySchema from './apply';
+import profileSchema from './profile';
+import connectionSchema from './connection';
 
 const rootDefs = gql`
   type Query {
@@ -19,13 +22,6 @@ const rootDefs = gql`
 `;
 
 const typeDefs: DocumentNode[] = [];
-typeDefs.push(
-  rootDefs,
-  userSchema,
-  s3Schema,
-  postSchema
-
- 
-);
+typeDefs.push(rootDefs, userSchema, s3Schema, postSchema, applySchema, profileSchema, connectionSchema);
 
 export default typeDefs;

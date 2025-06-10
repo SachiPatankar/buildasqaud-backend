@@ -6,8 +6,8 @@ export interface IAchievement extends Document {
   title: string;
   description?: string;
   user_id: string;
-  created_at?: Date;
-  updated_at?: Date;
+  created_at: Date;
+  updated_at: Date;
 }
 
 const AchievementSchema = new Schema<IAchievement>(

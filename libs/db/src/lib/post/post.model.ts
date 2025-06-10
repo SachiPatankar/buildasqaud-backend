@@ -12,7 +12,7 @@ export interface IPost extends Document {
   _id: string;
   title: string;
   description?: string;
-  posted_by: string; 
+  posted_by: string;
   requirements?: IRequirement;
   tech_stack?: string[];
   project_phase?:
@@ -31,7 +31,7 @@ export interface IPost extends Document {
     | 'personal'
     | 'freelance';
   work_mode?: 'remote' | 'hybrid' | 'in_person';
-  location_id?: string; 
+  location_id?: string;
   status: 'open' | 'closed' | 'paused' | 'completed';
   views_count: number;
   applications_count: number;

@@ -6,14 +6,14 @@ export interface IProject extends Document {
   user_id: string;
   title: string;
   description?: string;
-  technologies: string[];
+  technologies?: string[];
   project_url?: string;
   github_url?: string;
   start_date?: Date;
   end_date?: Date;
   is_current?: boolean;
-  created_at?: Date;
-  updated_at?: Date;
+  created_at: Date;
+  updated_at: Date;
 }
 
 const ProjectSchema = new Schema<IProject>(
@@ -73,4 +73,7 @@ const ProjectSchema = new Schema<IProject>(
 ProjectSchema.index({ user_id: 1 });
 ProjectSchema.index({ technologies: 1 });
 
-export const ProjectModel = mongoose.model<IProject>('ProjectModel', ProjectSchema);
+export const ProjectModel = mongoose.model<IProject>(
+  'ProjectModel',
+  ProjectSchema
+);

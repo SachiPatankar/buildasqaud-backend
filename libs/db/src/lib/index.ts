@@ -1,6 +1,7 @@
 export * from './user.model';
 export * from './location.model';
 export * from './profile/project.model';
+export * from './profile/education.model';
 export * from './profile/experience.model';
 export * from './profile/achievement.model';
 export * from './profile/user-skill.model';

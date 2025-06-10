@@ -1,7 +1,6 @@
 // graphql/schemas/post.ts
 import gql from 'graphql-tag';
 
-
 const typeDefs = gql`
   scalar Date
 
@@ -13,7 +12,7 @@ const typeDefs = gql`
 
   type Post {
     _id: String!
-    title: String!  
+    title: String!
     description: String
     posted_by: String!
     requirements: Requirement
@@ -49,7 +48,6 @@ const typeDefs = gql`
     work_mode: String
     project_phase: String
     tech_stack: [String]
-
   }
 
   extend type Mutation {

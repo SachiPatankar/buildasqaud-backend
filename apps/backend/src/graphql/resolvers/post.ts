@@ -1,6 +1,12 @@
 // graphql/resolvers/post.ts
 import { ApolloContext } from '../types';
-import { Post, CreatePostInput, UpdatePostInput, PostFilterInput, SavedPost } from '../../types/generated'
+import {
+  Post,
+  CreatePostInput,
+  UpdatePostInput,
+  PostFilterInput,
+  SavedPost,
+} from '../../types/generated';
 const resolvers = {
   Query: {
     loadPosts: async (
@@ -28,7 +34,9 @@ const resolvers = {
       _: any,
       context: ApolloContext
     ): Promise<SavedPost[]> => {
-      return context.dataSources.savedPost.getSavedPosts(context.currentUser.id);
+      return context.dataSources.savedPost.getSavedPosts(
+        context.currentUser.id
+      );
     },
   },
 
@@ -66,14 +74,20 @@ const resolvers = {
       { postId }: { postId: string },
       context: ApolloContext
     ): Promise<SavedPost> => {
-      return context.dataSources.savedPost.savePost(postId, context.currentUser.id);
+      return context.dataSources.savedPost.savePost(
+        postId,
+        context.currentUser.id
+      );
     },
     unsavePost: async (
       _: any,
       { postId }: { postId: string },
       context: ApolloContext
     ): Promise<boolean> => {
-      return context.dataSources.savedPost.unsavePost(postId, context.currentUser.id);
+      return context.dataSources.savedPost.unsavePost(
+        postId,
+        context.currentUser.id
+      );
     },
     closePost: async (
       _: any,

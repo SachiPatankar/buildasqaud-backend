@@ -7,8 +7,8 @@ export interface IUserSkill extends Document {
   skill_name: string;
   proficiency_level: 'beginner' | 'intermediate' | 'advanced' | 'expert';
   years_experience?: number;
-  created_at?: Date;
-  updated_at?: Date;
+  created_at: Date;
+  updated_at: Date;
 }
 
 const UserSkillSchema = new Schema<IUserSkill>(

@@ -1,7 +1,12 @@
 // graphql/datasources/post.ts
 import { IPostDataSource } from './types';
 import { PostModel } from '@db';
-import { CreatePostInput, UpdatePostInput, PostFilterInput, Post } from '../../types/generated'; 
+import {
+  CreatePostInput,
+  UpdatePostInput,
+  PostFilterInput,
+  Post,
+} from '../../types/generated';
 
 export default class PostDataSource implements IPostDataSource {
   async loadPosts(page: number, limit: number): Promise<Post[]> {
@@ -24,7 +29,10 @@ export default class PostDataSource implements IPostDataSource {
     return newPost.save();
   }
 
-  async updatePost(postId: string, input: UpdatePostInput): Promise<Post | null> {
+  async updatePost(
+    postId: string,
+    input: UpdatePostInput
+  ): Promise<Post | null> {
     return PostModel.findByIdAndUpdate(postId, input, { new: true });
   }
 
@@ -34,10 +42,18 @@ export default class PostDataSource implements IPostDataSource {
   }
 
   async incrementPostView(postId: string): Promise<Post> {
-    return PostModel.findByIdAndUpdate(postId, { $inc: { views_count: 1 } }, { new: true });
+    return PostModel.findByIdAndUpdate(
+      postId,
+      { $inc: { views_count: 1 } },
+      { new: true }
+    );
   }
 
   async closePost(postId: string): Promise<Post> {
-    return PostModel.findByIdAndUpdate(postId, { status: 'closed' }, { new: true });
+    return PostModel.findByIdAndUpdate(
+      postId,
+      { status: 'closed' },
+      { new: true }
+    );
   }
 }

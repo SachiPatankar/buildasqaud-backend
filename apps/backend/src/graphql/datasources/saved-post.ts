@@ -1,7 +1,7 @@
 // graphql/datasources/savedPost.ts
 import { ISavedPostDataSource } from './types';
 import { SavedPostModel } from '@db';
-import {SavedPost} from '../../types/generated';
+import { SavedPost } from '../../types/generated';
 
 export default class SavedPostDataSource implements ISavedPostDataSource {
   async getSavedPosts(userId: string): Promise<SavedPost[]> {

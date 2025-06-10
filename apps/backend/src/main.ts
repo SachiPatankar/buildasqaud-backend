@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { application } from 'express';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
 import cors from 'cors';
@@ -18,6 +18,9 @@ import UserDataSource from './graphql/datasources/user';
 import S3DataSource from './graphql/datasources/s3';
 import PostDataSource from './graphql/datasources/post';
 import SavedPostDataSource from './graphql/datasources/saved-post';
+import ApplicationDataSource from './graphql/datasources/apply';
+import ProfileDataSource from './graphql/datasources/profile';
+import ConnectionDataSource from './graphql/datasources/connection';
 
 const HOST = process.env.HOST ?? 'localhost';
 const PORT = process.env.PORT || 3000;
@@ -44,6 +47,9 @@ async function startServer() {
       s3: new S3DataSource(),
       post: new PostDataSource(),
       savedPost: new SavedPostDataSource(),
+      application: new ApplicationDataSource(),
+      profile: new ProfileDataSource(),
+      connection: new ConnectionDataSource(),
     };
 
     const schema = makeExecutableSchema({ typeDefs, resolvers });

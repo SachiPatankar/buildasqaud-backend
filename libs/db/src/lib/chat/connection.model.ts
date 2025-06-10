@@ -6,10 +6,10 @@ export interface IConnection extends Document {
   requester_user_id: string;
   addressee_user_id: string;
   status: 'pending' | 'accepted' | 'declined' | 'blocked';
-  message?: string; 
-  chat_id?: string; 
-  created_at?: Date;
-  updated_at?: Date;
+  message?: string;
+  chat_id?: string;
+  created_at: Date;
+  updated_at: Date;
   responded_at?: Date;
 }
 

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { IHomeController } from './types';
 
-import { UserModel} from '@db';
+import { UserModel } from '@db';
 
 export default class HomeController implements IHomeController {
   getHome = async (req: Request, res: Response) => {

@@ -54,4 +54,7 @@ const LocationSchema = new Schema<ILocation>(
   }
 );
 
-export const LocationModel = mongoose.model<ILocation>('LocationModel', LocationSchema);
+export const LocationModel = mongoose.model<ILocation>(
+  'LocationModel',
+  LocationSchema
+);

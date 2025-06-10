@@ -8,8 +8,8 @@ export interface IApplication extends Document {
   applicant_id: string;
   message?: string;
   status: 'pending' | 'accepted' | 'rejected' | 'withdrawn';
-  created_at?: Date;
-  updated_at?: Date;
+  created_at: Date;
+  updated_at: Date;
 }
 
 const ApplicationSchema = new Schema<IApplication>(
@@ -45,13 +45,12 @@ const ApplicationSchema = new Schema<IApplication>(
   }
 );
 
-// Prevent duplicate applications
 ApplicationSchema.index(
   { post_id: 1, applicant_profile_id: 1 },
   { unique: true }
 );
 ApplicationSchema.index({ post_id: 1, status: 1 });
-ApplicationSchema.index({ applicant_profile_id: 1, status: 1 });
+ApplicationSchema.index({ applicant_id: 1, status: 1 });
 ApplicationSchema.index({ created_at: -1 });
 
 export const ApplicationModel = mongoose.model<IApplication>(
