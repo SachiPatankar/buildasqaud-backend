@@ -1,9 +1,12 @@
 export * from './user.model';
-export * from './profile/profile.model';
+export * from './location.model';
 export * from './profile/project.model';
 export * from './profile/experience.model';
 export * from './profile/achievement.model';
+export * from './profile/user-skill.model';
 export * from './chat/connection.model';
 export * from './chat/message.model';
 export * from './chat/chat.model';
-
+export * from './post/post.model';
+export * from './post/application.model';
+export * from './post/saved-post.model';

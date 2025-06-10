@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export interface IProject extends Document {
   _id: string;
-  profile_id: string;
+  user_id: string;
   title: string;
   description?: string;
   technologies: string[];
@@ -22,26 +22,28 @@ const ProjectSchema = new Schema<IProject>(
       type: String,
       default: uuidv4,
     },
-    profile_id: { 
-      type: String, 
+    user_id: {
+      type: String,
       required: true,
     },
-    title: { 
-      type: String, 
+    title: {
+      type: String,
       required: true,
       trim: true,
       maxlength: 100,
     },
-    description: { 
+    description: {
       type: String,
       trim: true,
       maxlength: 1000,
     },
-    technologies: [{
-      type: String,
-      trim: true,
-    }],
-    project_url: { 
+    technologies: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    project_url: {
       type: String,
       trim: true,
     },
@@ -68,7 +70,7 @@ const ProjectSchema = new Schema<IProject>(
   }
 );
 
-ProjectSchema.index({ profile_id: 1 });
+ProjectSchema.index({ user_id: 1 });
 ProjectSchema.index({ technologies: 1 });
 
-export const Project = mongoose.model<IProject>('Project', ProjectSchema);
+export const ProjectModel = mongoose.model<IProject>('ProjectModel', ProjectSchema);

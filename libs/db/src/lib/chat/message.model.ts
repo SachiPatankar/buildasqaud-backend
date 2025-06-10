@@ -12,7 +12,7 @@ export interface IMessage extends Document {
   }[];
   edited_at?: Date;
   is_deleted: boolean;
-  deleted_for: string[]; // profile_ids who deleted this message
+  deleted_for: string[]; 
   reply_to_message_id?: string;
   created_at?: Date;
   updated_at?: Date;
@@ -24,23 +24,25 @@ const MessageSchema = new Schema<IMessage>(
       type: String,
       default: uuidv4,
     },
-    chat_id: { 
-      type: String, 
+    chat_id: {
+      type: String,
       required: true,
     },
-    sender_id: { 
-      type: String, 
+    sender_id: {
+      type: String,
       required: true,
     },
-    content: { 
-      type: String, 
+    content: {
+      type: String,
       required: true,
       maxlength: 2000,
     },
-    read_by: [{
-      user_id: { type: String, required: true },
-      read_at: { type: Date, required: true },
-    }],
+    read_by: [
+      {
+        user_id: { type: String, required: true },
+        read_at: { type: Date, required: true },
+      },
+    ],
     edited_at: {
       type: Date,
     },
@@ -48,9 +50,11 @@ const MessageSchema = new Schema<IMessage>(
       type: Boolean,
       default: false,
     },
-    deleted_for: [{
-      type: String,
-    }],
+    deleted_for: [
+      {
+        type: String,
+      },
+    ],
     reply_to_message_id: {
       type: String,
     },
@@ -63,9 +67,8 @@ const MessageSchema = new Schema<IMessage>(
   }
 );
 
-
 MessageSchema.index({ chat_id: 1, created_at: -1 }); // Get messages for a chat
 MessageSchema.index({ sender_profile_id: 1 }); // Get messages by sender
 MessageSchema.index({ chat_id: 1, is_deleted: 1 }); // Active messages only
 
-export const Message = mongoose.model<IMessage>('Message', MessageSchema);
+export const MessageModel = mongoose.model<IMessage>('MessageModel', MessageSchema);

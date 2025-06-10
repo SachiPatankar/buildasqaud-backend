@@ -14,17 +14,10 @@ import { ApolloContext } from './graphql/types';
 import { getCurrentUserFromReq } from './graphql/auth';
 import { initSocket } from '@socket';
 
-import UserSource from './graphql/datasources/user';
-import S3Source from './graphql/datasources/s3';
-import HackathonSource from './graphql/datasources/hackathon';
-import InterestSource from './graphql/datasources/interest';
-import ProfileSource from './graphql/datasources/profile';
-import PeopleSource from './graphql/datasources/people';
-import ExperienceSource from './graphql/datasources/experience';
-import ProjectSource from './graphql/datasources/project';
-import HackathonWinSource from './graphql/datasources/hackathonWin';
-import FriendSource from './graphql/datasources/friend';
-import ChatSource from './graphql/datasources/chat';
+import UserDataSource from './graphql/datasources/user';
+import S3DataSource from './graphql/datasources/s3';
+import PostDataSource from './graphql/datasources/post';
+import SavedPostDataSource from './graphql/datasources/saved-post';
 
 const HOST = process.env.HOST ?? 'localhost';
 const PORT = process.env.PORT || 3000;
@@ -47,17 +40,10 @@ async function startServer() {
     );
 
     const dataSource = {
-      user: new UserSource(),
-      s3: new S3Source(),
-      hackathon: new HackathonSource(),
-      interest: new InterestSource(),
-      profile: new ProfileSource(),
-      people: new PeopleSource(),
-      experience: new ExperienceSource(),
-      project: new ProjectSource(),
-      hackathonWin: new HackathonWinSource(),
-      friend: new FriendSource(),
-      chat: new ChatSource(),
+      user: new UserDataSource(),
+      s3: new S3DataSource(),
+      post: new PostDataSource(),
+      savedPost: new SavedPostDataSource(),
     };
 
     const schema = makeExecutableSchema({ typeDefs, resolvers });

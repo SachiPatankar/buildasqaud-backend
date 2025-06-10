@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { User, IUser } from '@db';
+import { UserModel, IUser } from '@db';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import validator from 'validator';
@@ -39,7 +39,7 @@ export class AuthController implements IAuthController {
         return res.status(400).json({ error: 'All fields must be filled' });
       }
 
-      const user: IUser | null = await User.findOne({ email });
+      const user: IUser | null = await UserModel.findOne({ email });
 
       if (!user) {
         return res.status(400).json({ error: 'Email not valid' });
@@ -79,7 +79,7 @@ export class AuthController implements IAuthController {
         return res.status(400).json({ error: 'Password is not strong enough' });
       }
 
-      const exists: IUser | null = await User.findOne({ email });
+      const exists: IUser | null = await UserModel.findOne({ email });
 
       if (exists) {
         return res.status(400).json({ error: 'Email already in database' });
@@ -88,7 +88,7 @@ export class AuthController implements IAuthController {
       const salt = await bcrypt.genSalt(10);
       const hash = await bcrypt.hash(password, salt);
 
-      const user: IUser = await User.create({
+      const user: IUser = await UserModel.create({
         first_name,
         last_name,
         email,
@@ -128,7 +128,7 @@ export class AuthController implements IAuthController {
   ): Promise<Response> => {
     try {
       const { email } = req.body;
-      const user: IUser | null = await User.findOne({ email });
+      const user: IUser | null = await UserModel.findOne({ email });
 
       if (!user) {
         return res.status(404).json({ status: 'User not present' });
@@ -175,7 +175,7 @@ export class AuthController implements IAuthController {
       const salt = await bcrypt.genSalt(10);
       const hash = await bcrypt.hash(password, salt);
 
-      await User.findByIdAndUpdate(id, { password: hash });
+      await UserModel.findByIdAndUpdate(id, { password: hash });
 
       return res.status(200).json({ status: 'Success' });
     } catch (error) {
@@ -187,7 +187,7 @@ export class AuthController implements IAuthController {
   };
 
   public async getUsers(req: Request, res: Response): Promise<Response> {
-    const users = await User.find({});
+    const users = await UserModel.find({});
     return res.status(200).json(users);
   }
 
@@ -195,7 +195,7 @@ export class AuthController implements IAuthController {
     try {
       const { email } = req.body;
 
-      const deletedUser = await User.findOneAndDelete({ email });
+      const deletedUser = await UserModel.findOneAndDelete({ email });
 
       if (!deletedUser) {
         return res.status(404).json({ message: 'User not found' });

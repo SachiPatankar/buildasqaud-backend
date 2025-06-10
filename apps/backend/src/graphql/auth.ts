@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { User } from '@db';
+import { UserModel } from '@db';
 import { Request } from 'express';
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -15,7 +15,7 @@ export const getCurrentUserFromReq = async (
   try {
     const decoded: any = jwt.verify(token, JWT_SECRET!);
     const userId = decoded.sub;
-    const user = await User.findById(userId);
+    const user = await UserModel.findById(userId);
     if (!user) {
       console.error('User not found:', userId);
       return null;

@@ -1,21 +1,21 @@
 import bcrypt from 'bcrypt';
-import { User } from '@db';
+import { UserModel } from '@db';
 import { IUserDataSource } from './types';
 import { GraphQLError } from 'graphql';
 export default class UserSource implements IUserDataSource {
   getUsers = async (page = 1, limit = 10) => {
     const skip = (page - 1) * limit;
-    return User.find({}).sort({ created_at: -1 }).skip(skip).limit(limit);
+    return UserModel.find({}).sort({ created_at: -1 }).skip(skip).limit(limit);
   };
 
   getUserById = async (userId: string) => {
-    const user = await User.findById(userId);
+    const user = await UserModel.findById(userId);
     if (!user) throw new GraphQLError(`User with ID ${userId} not found`);
     return user;
   };
 
   updateUserPhoto = async (userId: string, photoUrl: string) => {
-    const user = await User.findByIdAndUpdate(
+    const user = await UserModel.findByIdAndUpdate(
       userId,
       { photo: photoUrl },
       { new: true }
@@ -25,7 +25,7 @@ export default class UserSource implements IUserDataSource {
   };
 
   deletePhoto = async (userId: string) => {
-    const user = await User.findByIdAndUpdate(
+    const user = await UserModel.findByIdAndUpdate(
       userId,
       { $unset: { photo: 1 } },
       { new: true }
@@ -39,7 +39,7 @@ export default class UserSource implements IUserDataSource {
     userId: string,
     data: { first_name?: string; last_name?: string }
   ) => {
-    const user = await User.findByIdAndUpdate(userId, data, { new: true });
+    const user = await UserModel.findByIdAndUpdate(userId, data, { new: true });
     if (!user) throw new GraphQLError(`User with ID ${userId} not found`);
     return user;
   };
@@ -50,7 +50,7 @@ export default class UserSource implements IUserDataSource {
     oldPassword: string,
     newPassword: string
   ) => {
-    const user = await User.findById(userId);
+    const user = await UserModel.findById(userId);
     if (!user) throw new GraphQLError('User not found');
     if (!user.password) throw new GraphQLError('No password set on account');
 

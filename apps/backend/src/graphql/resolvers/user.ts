@@ -1,4 +1,4 @@
-import { User } from '@db';
+import { UserModel } from '@db';
 import { ApolloContext } from '../types';
 
 const resolvers = {
@@ -39,7 +39,7 @@ const resolvers = {
       { dataSources, currentUser }: ApolloContext
     ) => {
       // atomically unset & get old URL
-      const before = await User.findByIdAndUpdate(
+      const before = await UserModel.findByIdAndUpdate(
         currentUser.id,
         { $unset: { photo: 1 } },
         { new: false }

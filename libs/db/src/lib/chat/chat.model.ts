@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export interface IChat extends Document {
   _id: string;
-  participant_ids: [string, string]; 
+  participant_ids: [string, string];
   last_message_id?: string;
   last_message_at?: Date;
   is_active: boolean;
@@ -48,4 +48,4 @@ const ChatSchema = new Schema<IChat>(
 ChatSchema.index({ participant_ids: 1 }, { unique: true });
 ChatSchema.index({ participant_ids: 1, is_active: 1, last_message_at: -1 });
 
-export const Chat = mongoose.model<IChat>('Chat', ChatSchema);
+export const ChatModel = mongoose.model<IChat>('ChatModel', ChatSchema);

@@ -1,6 +1,11 @@
 import mongoose, { Schema, Document } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 
+export interface ILink {
+  name: string;
+  url: string;
+}
+
 export interface IUser extends Document {
   _id: string;
   email: string;
@@ -10,12 +15,32 @@ export interface IUser extends Document {
   photo?: string;
   googleId?: string;
   githubId?: string;
-  profile_id: string;
+  title?: string;
+  bio?: string;
+  location_id?: string;
+  connections_count: number;
+  links: ILink[];
   is_online?: boolean;
   last_seen?: Date;
   created_at?: Date;
   updated_at?: Date;
 }
+
+const LinkSchema = new Schema<ILink>(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    url: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+  },
+  { _id: false }
+);
 
 const UserSchema = new Schema<IUser>(
   {
@@ -53,10 +78,25 @@ const UserSchema = new Schema<IUser>(
       type: String,
       sparse: true,
     },
-    profile_id: {
+    title: {
       type: String,
-      required: true,
+      trim: true,
+      maxlength: 100,
     },
+    bio: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+    },
+    location_id: {
+      type: String,
+    },
+    connections_count: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    links: [LinkSchema],
     is_online: {
       type: Boolean,
       default: false,
@@ -78,4 +118,4 @@ UserSchema.index({ email: 1 }, { unique: true });
 UserSchema.index({ googleId: 1 }, { sparse: true });
 UserSchema.index({ githubId: 1 }, { sparse: true });
 
-export const User = mongoose.model<IUser>('User', UserSchema);
+export const UserModel = mongoose.model<IUser>('UserModel', UserSchema);

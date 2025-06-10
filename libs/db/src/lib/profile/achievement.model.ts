@@ -5,7 +5,7 @@ export interface IAchievement extends Document {
   _id: string;
   title: string;
   description?: string;
-  profile_id: string;
+  user_id: string;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -19,7 +19,7 @@ const AchievementSchema = new Schema<IAchievement>(
     },
     title: { type: String, required: true },
     description: { type: String },
-    profile_id: { type: String, required: true },
+    user_id: { type: String, required: true },
   },
   {
     timestamps: {
@@ -29,7 +29,7 @@ const AchievementSchema = new Schema<IAchievement>(
   }
 );
 
-export const HackathonWin = mongoose.model<IAchievement>(
-  'Achievement',
+export const AchievementModel = mongoose.model<IAchievement>(
+  'AchievementModel',
   AchievementSchema
 );

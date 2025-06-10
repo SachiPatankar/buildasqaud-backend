@@ -24,6 +24,7 @@
     "express-session": "^1.18.1",
     "graphql": "^16.10.0",
     "graphql-codegen": "^0.4.0",
+    "graphql-scalars": "^1.24.2",
     "graphql-tag": "^2.12.6",
     "http": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",

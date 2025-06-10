@@ -1,0 +1,1046 @@
+--- File: .\all_files_with_contents.txt ---
+
+
+--- File: .\index.ts ---
+import mongoose from 'mongoose';
+
+mongoose.set('toJSON', {
+  virtuals: true,
+  transform: (doc, ret) => {
+    delete ret.__v;
+    delete ret._id;
+  },
+});
+
+mongoose.set('toObject', {
+  virtuals: true,
+});
+
+export const connectMongoDB = async (uri?: string) => {
+  const conn = mongoose
+    .connect(uri || process.env.NX_MONGO_URL || '', {
+      serverSelectionTimeoutMS: 5000,
+    })
+    .then(() => mongoose);
+
+  await conn;
+  return conn;
+};
+
+// connection status logging
+mongoose.connection.on('connecting', () => {
+  console.log('MongoDB connecting...');
+});
+mongoose.connection.on('connected', () => {
+  console.log('MongoDB Connected!');
+});
+mongoose.connection.on('disconnecting', () => {
+  console.log('MongoDB Disconnecting...');
+});
+mongoose.connection.on('disconnected', () => {
+  console.log('MongoDB Disconnected!');
+});
+
+// If the Node process ends, close the Mongoose connection
+process.on('SIGINT', () => {
+  mongoose.connection.on('close', () => {
+    console.log('MongoDB Connection Closed!');
+    process.exit(0);
+  });
+});
+
+export * from './lib/index';
+export default mongoose;
+
+
+--- File: .\script.py ---
+import os
+
+output_file = "all_files_with_contents.txt"
+
+with open(output_file, "w", encoding="utf-8") as f:
+    for root, dirs, files in os.walk("."):
+        for file in files:
+            file_path = os.path.join(root, file)
+            f.write(f"--- File: {file_path} ---\n")
+            try:
+                with open(file_path, "r", encoding="utf-8") as infile:
+                    contents = infile.read()
+                    f.write(contents + "\n")
+            except Exception as e:
+                f.write(f"[Could not read file: {e}]\n")
+            f.write("\n")  # Add spacing between files
+
+print(f"All file paths and contents written to {output_file}")
+
+
+--- File: .\lib\index.ts ---
+export * from './user.model';
+export * from './location.model';
+export * from './profile/project.model';
+export * from './profile/experience.model';
+export * from './profile/achievement.model';
+export * from './profile/user-skill.model';
+export * from './chat/connection.model';
+export * from './chat/message.model';
+export * from './chat/chat.model';
+export * from './post/post.model';
+export * from './post/application.model';
+
+
+--- File: .\lib\location.model.ts ---
+import mongoose, { Schema, Document } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
+
+export interface ILocation extends Document {
+  _id: string;
+  city?: string;
+  state?: string;
+  country: string;
+  coordinates?: {
+    latitude: number;
+    longitude: number;
+  };
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+const LocationSchema = new Schema<ILocation>(
+  {
+    _id: {
+      type: String,
+      default: uuidv4,
+    },
+    city: {
+      type: String,
+      trim: true,
+    },
+    state: {
+      type: String,
+      trim: true,
+    },
+    country: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    coordinates: {
+      latitude: {
+        type: Number,
+        min: -90,
+        max: 90,
+      },
+      longitude: {
+        type: Number,
+        min: -180,
+        max: 180,
+      },
+    },
+  },
+  {
+    timestamps: {
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+    },
+  }
+);
+
+export const Location = mongoose.model<ILocation>('Location', LocationSchema);
+
+
+--- File: .\lib\user.model.ts ---
+import mongoose, { Schema, Document } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
+
+export interface ILink {
+  name: string;
+  url: string;
+}
+
+export interface IUser extends Document {
+  _id: string;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  password?: string;
+  photo?: string;
+  googleId?: string;
+  githubId?: string;
+  title?: string;
+  bio?: string;
+  location_id?: string;
+  connections_count: number;
+  links: ILink[];
+  is_online?: boolean;
+  last_seen?: Date;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+const LinkSchema = new Schema<ILink>(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    url: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+  },
+  { _id: false }
+);
+
+const UserSchema = new Schema<IUser>(
+  {
+    _id: {
+      type: String,
+      default: uuidv4,
+    },
+    email: {
+      type: String,
+      required: true,
+      lowercase: true,
+      trim: true,
+      unique: true,
+    },
+    first_name: {
+      type: String,
+      trim: true,
+    },
+    last_name: {
+      type: String,
+      trim: true,
+    },
+    password: {
+      type: String,
+      minlength: 6,
+    },
+    photo: {
+      type: String,
+    },
+    googleId: {
+      type: String,
+      sparse: true,
+    },
+    githubId: {
+      type: String,
+      sparse: true,
+    },
+    title: {
+      type: String,
+      trim: true,
+      maxlength: 100,
+    },
+    bio: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+    },
+    location_id: {
+      type: String,
+    },
+    connections_count: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    links: [LinkSchema],
+    is_online: {
+      type: Boolean,
+      default: false,
+    },
+    last_seen: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  {
+    timestamps: {
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+    },
+  }
+);
+
+UserSchema.index({ email: 1 }, { unique: true });
+UserSchema.index({ googleId: 1 }, { sparse: true });
+UserSchema.index({ githubId: 1 }, { sparse: true });
+
+export const User = mongoose.model<IUser>('User', UserSchema);
+
+
+--- File: .\lib\chat\chat.model.ts ---
+// chat.model.ts
+import mongoose, { Schema, Document } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
+
+export interface IChat extends Document {
+  _id: string;
+  participant_ids: [string, string];
+  last_message_id?: string;
+  last_message_at?: Date;
+  is_active: boolean;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+const ChatSchema = new Schema<IChat>(
+  {
+    _id: {
+      type: String,
+      default: uuidv4,
+    },
+    participant_ids: {
+      type: [String],
+      required: true,
+      validate: [
+        (val: string[]) => val.length === 2,
+        'Must have exactly 2 participants',
+      ],
+    },
+    last_message_id: {
+      type: String,
+    },
+    last_message_at: {
+      type: Date,
+    },
+    is_active: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  {
+    timestamps: {
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+    },
+  }
+);
+
+ChatSchema.index({ participant_ids: 1 }, { unique: true });
+ChatSchema.index({ participant_ids: 1, is_active: 1, last_message_at: -1 });
+
+export const Chat = mongoose.model<IChat>('Chat', ChatSchema);
+
+
+--- File: .\lib\chat\connection.model.ts ---
+import mongoose, { Schema, Document } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
+
+export interface IConnection extends Document {
+  _id: string;
+  requester_user_id: string;
+  addressee_user_id: string;
+  status: 'pending' | 'accepted' | 'declined' | 'blocked';
+  message?: string; 
+  chat_id?: string; 
+  created_at?: Date;
+  updated_at?: Date;
+  responded_at?: Date;
+}
+
+const ConnectionSchema = new Schema<IConnection>(
+  {
+    _id: {
+      type: String,
+      default: uuidv4,
+    },
+    requester_user_id: {
+      type: String,
+      required: true,
+    },
+    addressee_user_id: {
+      type: String,
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'accepted', 'declined', 'blocked'],
+      default: 'pending',
+    },
+    message: {
+      type: String,
+      trim: true,
+      maxlength: 300,
+    },
+    chat_id: {
+      type: String,
+    },
+    responded_at: {
+      type: Date,
+    },
+  },
+  {
+    timestamps: {
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+    },
+  }
+);
+
+ConnectionSchema.index(
+  {
+    requester_user_id: 1,
+    addressee_user_id: 1,
+  },
+  { unique: true }
+);
+
+ConnectionSchema.index({ requester_user_id: 1, status: 1 });
+ConnectionSchema.index({ addressee_user_id: 1, status: 1 });
+ConnectionSchema.index({ status: 1, created_at: -1 });
+
+export const Connection = mongoose.model<IConnection>(
+  'Connection',
+  ConnectionSchema
+);
+
+
+--- File: .\lib\chat\message.model.ts ---
+import mongoose, { Schema, Document } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
+
+export interface IMessage extends Document {
+  _id: string;
+  chat_id: string;
+  sender_id: string;
+  content: string;
+  read_by: {
+    user_id: string;
+    read_at: Date;
+  }[];
+  edited_at?: Date;
+  is_deleted: boolean;
+  deleted_for: string[]; 
+  reply_to_message_id?: string;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+const MessageSchema = new Schema<IMessage>(
+  {
+    _id: {
+      type: String,
+      default: uuidv4,
+    },
+    chat_id: {
+      type: String,
+      required: true,
+    },
+    sender_id: {
+      type: String,
+      required: true,
+    },
+    content: {
+      type: String,
+      required: true,
+      maxlength: 2000,
+    },
+    read_by: [
+      {
+        user_id: { type: String, required: true },
+        read_at: { type: Date, required: true },
+      },
+    ],
+    edited_at: {
+      type: Date,
+    },
+    is_deleted: {
+      type: Boolean,
+      default: false,
+    },
+    deleted_for: [
+      {
+        type: String,
+      },
+    ],
+    reply_to_message_id: {
+      type: String,
+    },
+  },
+  {
+    timestamps: {
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+    },
+  }
+);
+
+MessageSchema.index({ chat_id: 1, created_at: -1 }); // Get messages for a chat
+MessageSchema.index({ sender_profile_id: 1 }); // Get messages by sender
+MessageSchema.index({ chat_id: 1, is_deleted: 1 }); // Active messages only
+
+export const Message = mongoose.model<IMessage>('Message', MessageSchema);
+
+
+--- File: .\lib\post\application.model.ts ---
+// post-application.model.ts
+import mongoose, { Schema, Document } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
+
+export interface IApplication extends Document {
+  _id: string;
+  post_id: string;
+  applicant_id: string;
+  message?: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'withdrawn';
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+const ApplicationSchema = new Schema<IApplication>(
+  {
+    _id: {
+      type: String,
+      default: uuidv4,
+    },
+    post_id: {
+      type: String,
+      required: true,
+    },
+    applicant_id: {
+      type: String,
+      required: true,
+    },
+    message: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'accepted', 'rejected', 'withdrawn'],
+      default: 'pending',
+    },
+  },
+  {
+    timestamps: {
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+    },
+  }
+);
+
+// Prevent duplicate applications
+ApplicationSchema.index(
+  { post_id: 1, applicant_profile_id: 1 },
+  { unique: true }
+);
+ApplicationSchema.index({ post_id: 1, status: 1 });
+ApplicationSchema.index({ applicant_profile_id: 1, status: 1 });
+ApplicationSchema.index({ created_at: -1 });
+
+export const PostApplication = mongoose.model<IApplication>(
+  'Application',
+  ApplicationSchema
+);
+
+
+--- File: .\lib\post\post.model.ts ---
+// post.model.ts
+import mongoose, { Schema, Document } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
+
+export interface IRequirement {
+  desired_skills: string[];
+  desired_roles: string[];
+  preferred_experience?: string;
+}
+
+export interface IPost extends Document {
+  _id: string;
+  title: string;
+  description: string;
+  posted_by: string; 
+  requirements: IRequirement;
+  tech_stack: string[];
+  project_phase:
+    | 'idea'
+    | 'planning'
+    | 'development'
+    | 'testing'
+    | 'deployment'
+    | 'maintenance';
+  people_required: number;
+  project_type:
+    | 'academic'
+    | 'startup'
+    | 'hackathon'
+    | 'open_source'
+    | 'personal'
+    | 'freelance';
+  work_mode: 'remote' | 'hybrid' | 'in_person';
+  location_id?: string; 
+  status: 'open' | 'closed' | 'paused' | 'completed';
+  views_count: number;
+  applications_count: number;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+const RequirementSchema = new Schema<IRequirement>(
+  {
+    desired_skills: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    desired_roles: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    preferred_experience: {
+      type: String,
+      trim: true,
+    },
+  },
+  { _id: false }
+);
+
+const PostSchema = new Schema<IPost>(
+  {
+    _id: {
+      type: String,
+      default: uuidv4,
+    },
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 150,
+    },
+    description: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 2000,
+    },
+    posted_by: {
+      type: String,
+      required: true,
+    },
+    requirements: {
+      type: RequirementSchema,
+      required: true,
+    },
+    tech_stack: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    project_phase: {
+      type: String,
+      enum: [
+        'idea',
+        'planning',
+        'development',
+        'testing',
+        'deployment',
+        'maintenance',
+      ],
+      required: true,
+    },
+    project_type: {
+      type: String,
+      enum: [
+        'academic',
+        'startup',
+        'hackathon',
+        'open_source',
+        'personal',
+        'freelance',
+      ],
+      required: true,
+    },
+    work_mode: {
+      type: String,
+      enum: ['remote', 'hybrid', 'in_person'],
+      required: true,
+    },
+    location_id: {
+      type: String,
+    },
+    status: {
+      type: String,
+      enum: ['open', 'closed', 'paused', 'completed'],
+      default: 'open',
+    },
+    views_count: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    applications_count: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+  },
+  {
+    timestamps: {
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+    },
+  }
+);
+
+// Indexes for efficient querying and filtering
+PostSchema.index({ posted_by: 1 });
+PostSchema.index({ status: 1 });
+PostSchema.index({ project_type: 1 });
+PostSchema.index({ work_mode: 1 });
+PostSchema.index({ project_phase: 1 });
+PostSchema.index({ created_at: -1 });
+PostSchema.index({ views_count: -1 }); // For popularity sorting
+PostSchema.index({ applications_count: -1 }); // For trending posts
+
+export const Post = mongoose.model<IPost>('Post', PostSchema);
+
+
+--- File: .\lib\profile\achievement.model.ts ---
+import mongoose, { Schema, Document } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
+
+export interface IAchievement extends Document {
+  _id: string;
+  title: string;
+  description?: string;
+  user_id: string;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+const AchievementSchema = new Schema<IAchievement>(
+  {
+    _id: {
+      type: Schema.Types.String,
+      required: true,
+      default: uuidv4,
+    },
+    title: { type: String, required: true },
+    description: { type: String },
+    user_id: { type: String, required: true },
+  },
+  {
+    timestamps: {
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+    },
+  }
+);
+
+export const HackathonWin = mongoose.model<IAchievement>(
+  'Achievement',
+  AchievementSchema
+);
+
+
+--- File: .\lib\profile\education.model.ts ---
+import mongoose, { Schema, Document } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
+
+export interface IEducation extends Document {
+  _id: string;
+  user_id: string;
+  institution_name: string;
+  location_id?: string;
+  degree?: string;
+  field_of_study?: string;
+  start_date?: Date;
+  end_date?: Date;
+  is_current?: boolean;
+  grade?: string;
+  description?: string;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+const EducationSchema = new Schema<IEducation>(
+  {
+    _id: {
+      type: String,
+      default: uuidv4,
+    },
+    user_id: {
+      type: String,
+      required: true,
+    },
+    institution_name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    degree: {
+      type: String,
+      trim: true,
+    },
+    field_of_study: {
+      type: String,
+      trim: true,
+    },
+    start_date: {
+      type: Date,
+    },
+    end_date: {
+      type: Date,
+    },
+    is_current: {
+      type: Boolean,
+      default: false,
+    },
+    grade: {
+      type: String,
+      trim: true,
+    },
+    description: {
+      type: String,
+      trim: true,
+      maxlength: 500,
+    },
+    location_id: {
+      type: String,
+    },
+  },
+  {
+    timestamps: {
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+    },
+  }
+);
+
+EducationSchema.index({ user_id: 1 });
+
+export const Education = mongoose.model<IEducation>(
+  'Education',
+  EducationSchema
+);
+
+
+--- File: .\lib\profile\experience.model.ts ---
+import mongoose, { Schema, Document } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
+
+export interface IExperience extends Document {
+  _id: string;
+  user_id: string;
+  company_name: string;
+  position: string;
+  start_date?: Date;
+  end_date?: Date;
+  is_current?: boolean;
+  description?: string;
+  location_id?: string;
+  employment_type?:
+    | 'full-time'
+    | 'part-time'
+    | 'contract'
+    | 'internship'
+    | 'freelance';
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+const ExperienceSchema = new Schema<IExperience>(
+  {
+    _id: {
+      type: String,
+      default: uuidv4,
+    },
+    user_id: {
+      type: String,
+      required: true,
+    },
+    company_name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    position: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    start_date: {
+      type: Date,
+    },
+    end_date: {
+      type: Date,
+    },
+    is_current: {
+      type: Boolean,
+      default: false,
+    },
+    description: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
+    },
+    employment_type: {
+      type: String,
+      enum: ['full-time', 'part-time', 'contract', 'internship', 'freelance'],
+    },
+    location_id: {
+      type: String,
+    },
+  },
+  {
+    timestamps: {
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+    },
+  }
+);
+
+ExperienceSchema.index({ user_id: 1 });
+
+export const Experience = mongoose.model<IExperience>(
+  'Experience',
+  ExperienceSchema
+);
+
+
+--- File: .\lib\profile\project.model.ts ---
+import mongoose, { Schema, Document } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
+
+export interface IProject extends Document {
+  _id: string;
+  user_id: string;
+  title: string;
+  description?: string;
+  technologies: string[];
+  project_url?: string;
+  github_url?: string;
+  start_date?: Date;
+  end_date?: Date;
+  is_current?: boolean;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+const ProjectSchema = new Schema<IProject>(
+  {
+    _id: {
+      type: String,
+      default: uuidv4,
+    },
+    user_id: {
+      type: String,
+      required: true,
+    },
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 100,
+    },
+    description: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
+    },
+    technologies: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    project_url: {
+      type: String,
+      trim: true,
+    },
+    github_url: {
+      type: String,
+      trim: true,
+    },
+    start_date: {
+      type: Date,
+    },
+    end_date: {
+      type: Date,
+    },
+    is_current: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  {
+    timestamps: {
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+    },
+  }
+);
+
+ProjectSchema.index({ user_id: 1 });
+ProjectSchema.index({ technologies: 1 });
+
+export const Project = mongoose.model<IProject>('Project', ProjectSchema);
+
+
+--- File: .\lib\profile\user-skill.model.ts ---
+import mongoose, { Schema, Document } from 'mongoose';
+import { v4 as uuidv4 } from 'uuid';
+
+export interface IUserSkill extends Document {
+  _id: string;
+  user_id: string;
+  skill_name: string;
+  proficiency_level: 'beginner' | 'intermediate' | 'advanced' | 'expert';
+  years_experience?: number;
+  created_at?: Date;
+  updated_at?: Date;
+}
+
+const UserSkillSchema = new Schema<IUserSkill>(
+  {
+    _id: {
+      type: String,
+      default: uuidv4,
+    },
+    user_id: {
+      type: String,
+      required: true,
+    },
+    skill_name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    proficiency_level: {
+      type: String,
+      enum: ['beginner', 'intermediate', 'advanced', 'expert'],
+      required: true,
+    },
+    years_experience: {
+      type: Number,
+      min: 0,
+      max: 50,
+    },
+  },
+  {
+    timestamps: {
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
+    },
+  }
+);
+
+UserSkillSchema.index({ user_id: 1, skill_name: 1 }, { unique: true });
+UserSkillSchema.index({ skill_name: 1 });
+UserSkillSchema.index({ proficiency_level: 1 });
+
+export const UserSkill = mongoose.model<IUserSkill>(
+  'UserSkill',
+  UserSkillSchema
+);
+
+

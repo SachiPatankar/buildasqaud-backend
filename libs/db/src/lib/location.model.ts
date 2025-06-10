@@ -20,26 +20,26 @@ const LocationSchema = new Schema<ILocation>(
       type: String,
       default: uuidv4,
     },
-    city: { 
+    city: {
       type: String,
       trim: true,
     },
-    state: { 
+    state: {
       type: String,
       trim: true,
     },
-    country: { 
-      type: String, 
+    country: {
+      type: String,
       required: true,
       trim: true,
     },
     coordinates: {
-      latitude: { 
+      latitude: {
         type: Number,
         min: -90,
         max: 90,
       },
-      longitude: { 
+      longitude: {
         type: Number,
         min: -180,
         max: 180,
@@ -54,4 +54,4 @@ const LocationSchema = new Schema<ILocation>(
   }
 );
 
-export const Location = mongoose.model<ILocation>('Location', LocationSchema);
+export const LocationModel = mongoose.model<ILocation>('LocationModel', LocationSchema);

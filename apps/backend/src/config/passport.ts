@@ -1,5 +1,5 @@
 import passport from 'passport';
-import { User } from '@db';
+import { UserModel } from '@db';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth2';
 import { Strategy as GitHubStrategy } from 'passport-github2';
 
@@ -21,10 +21,10 @@ export const setupGoogleStrategy = () => {
       },
       async (accessToken: any, refreshToken: any, profile: any, done: any) => {
         try {
-          let user = await User.findOne({ googleId: profile.id });
+          let user = await UserModel.findOne({ googleId: profile.id });
 
           if (!user) {
-            user = new User({
+            user = new UserModel({
               googleId: profile.id,
               first_name: profile.given_name,
               last_name: profile.family_name,
@@ -63,11 +63,11 @@ export const setupGitHubStrategy = () => {
       async (accessToken: any, refreshToken: any, profile: any, done: any) => {
         console.log(profile);
         try {
-          let user = await User.findOne({ githubId: profile.id });
+          let user = await UserModel.findOne({ githubId: profile.id });
           const displayName = profile.displayName;
           const [first_name, last_name = ''] = displayName?.split(' ') || [];
           if (!user) {
-            user = new User({
+            user = new UserModel({
               githubId: profile.id,
               first_name: first_name,
               last_name: last_name,

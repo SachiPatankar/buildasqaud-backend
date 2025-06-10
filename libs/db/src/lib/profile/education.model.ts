@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export interface IEducation extends Document {
   _id: string;
-  profile_id: string;
+  user_id: string;
   institution_name: string;
   location_id?: string;
   degree?: string;
@@ -23,27 +23,27 @@ const EducationSchema = new Schema<IEducation>(
       type: String,
       default: uuidv4,
     },
-    profile_id: { 
-      type: String, 
+    user_id: {
+      type: String,
       required: true,
     },
-    institution_name: { 
-      type: String, 
+    institution_name: {
+      type: String,
       required: true,
       trim: true,
     },
-    degree: { 
+    degree: {
       type: String,
       trim: true,
     },
-    field_of_study: { 
+    field_of_study: {
       type: String,
       trim: true,
     },
-    start_date: { 
+    start_date: {
       type: Date,
     },
-    end_date: { 
+    end_date: {
       type: Date,
     },
     is_current: {
@@ -59,7 +59,7 @@ const EducationSchema = new Schema<IEducation>(
       trim: true,
       maxlength: 500,
     },
-    location_id: { 
+    location_id: {
       type: String,
     },
   },
@@ -71,6 +71,9 @@ const EducationSchema = new Schema<IEducation>(
   }
 );
 
-EducationSchema.index({ profile_id: 1 });
+EducationSchema.index({ user_id: 1 });
 
-export const Education = mongoose.model<IEducation>('Education', EducationSchema);
+export const EducationModel = mongoose.model<IEducation>(
+  'EducationModel',
+  EducationSchema
+);

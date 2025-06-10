@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export interface IExperience extends Document {
   _id: string;
-  profile_id: string;
+  user_id: string;
   company_name: string;
   position: string;
   start_date?: Date;
@@ -11,7 +11,12 @@ export interface IExperience extends Document {
   is_current?: boolean;
   description?: string;
   location_id?: string;
-  employment_type?: 'full-time' | 'part-time' | 'contract' | 'internship' | 'freelance';
+  employment_type?:
+    | 'full-time'
+    | 'part-time'
+    | 'contract'
+    | 'internship'
+    | 'freelance';
   created_at?: Date;
   updated_at?: Date;
 }
@@ -22,24 +27,24 @@ const ExperienceSchema = new Schema<IExperience>(
       type: String,
       default: uuidv4,
     },
-    profile_id: { 
-      type: String, 
+    user_id: {
+      type: String,
       required: true,
     },
-    company_name: { 
-      type: String, 
-      required: true,
-      trim: true,
-    },
-    position: { 
-      type: String, 
+    company_name: {
+      type: String,
       required: true,
       trim: true,
     },
-    start_date: { 
+    position: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    start_date: {
       type: Date,
     },
-    end_date: { 
+    end_date: {
       type: Date,
     },
     is_current: {
@@ -55,7 +60,7 @@ const ExperienceSchema = new Schema<IExperience>(
       type: String,
       enum: ['full-time', 'part-time', 'contract', 'internship', 'freelance'],
     },
-    location_id: { 
+    location_id: {
       type: String,
     },
   },
@@ -67,6 +72,9 @@ const ExperienceSchema = new Schema<IExperience>(
   }
 );
 
-ExperienceSchema.index({ profile_id: 1 });
+ExperienceSchema.index({ user_id: 1 });
 
-export const Experience = mongoose.model<IExperience>('Experience', ExperienceSchema);
+export const ExperienceModel = mongoose.model<IExperience>(
+  'ExperienceModel',
+  ExperienceSchema
+);
