@@ -7,6 +7,7 @@ export interface IUserSkill extends Document {
   skill_name: string;
   proficiency_level: 'beginner' | 'intermediate' | 'advanced' | 'expert';
   years_experience?: number;
+  is_top: Boolean;
   created_at: Date;
   updated_at: Date;
 }
@@ -35,6 +36,10 @@ const UserSkillSchema = new Schema<IUserSkill>(
       type: Number,
       min: 0,
       max: 50,
+    },
+    is_top: {
+      type: Boolean,
+      default: false,
     },
   },
   {

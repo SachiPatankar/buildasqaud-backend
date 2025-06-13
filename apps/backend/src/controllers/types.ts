@@ -1,5 +1,6 @@
 import express from 'express';
 import { IUser } from '@db';
+import { Request, Response, RequestHandler } from 'express';
 
 declare module 'express' {
   interface Request {
@@ -17,11 +18,39 @@ export interface IHomeController {
 
 export interface IAuthController {
   loginUser: (
-    req: express.Request,
-    res: express.Response
-  ) => Promise<express.Response>;
+    req: Request,
+    res: Response
+  ) => Promise<Response>;
+
   signupUser: (
-    req: express.Request,
-    res: express.Response
-  ) => Promise<express.Response>;
+    req: Request,
+    res: Response
+  ) => Promise<Response>;
+
+  googleLogin: RequestHandler;
+  googleCallback: RequestHandler;
+
+  githubLogin: RequestHandler;
+  githubCallback: RequestHandler;
+
+  forgotPassword: (
+    req: Request,
+    res: Response
+  ) => Promise<Response>;
+
+  resetPassword: (
+    req: Request,
+    res: Response
+  ) => Promise<Response>;
+
+  getUsers: (
+    req: Request,
+    res: Response
+  ) => Promise<Response>;
+
+  deleteUser: (
+    req: Request,
+    res: Response
+  ) => Promise<Response>;
 }
+

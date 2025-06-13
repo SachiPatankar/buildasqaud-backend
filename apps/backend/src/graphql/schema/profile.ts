@@ -27,8 +27,14 @@ const typeDefs = gql`
   }
 
   extend type Mutation {
-    createAchievement(userId: String!, input: CreateAchievementInput!): Achievement!
-    updateAchievement(achievementId: String!, input: UpdateAchievementInput!): Achievement!
+    createAchievement(
+      userId: String!
+      input: CreateAchievementInput!
+    ): Achievement!
+    updateAchievement(
+      achievementId: String!
+      input: UpdateAchievementInput!
+    ): Achievement!
     deleteAchievement(achievementId: String!): Boolean!
   }
 
@@ -78,7 +84,10 @@ const typeDefs = gql`
 
   extend type Mutation {
     createEducation(userId: String!, input: CreateEducationInput!): Education!
-    updateEducation(educationId: String!, input: UpdateEducationInput!): Education!
+    updateEducation(
+      educationId: String!
+      input: UpdateEducationInput!
+    ): Education!
     deleteEducation(educationId: String!): Boolean!
   }
 
@@ -124,8 +133,14 @@ const typeDefs = gql`
   }
 
   extend type Mutation {
-    createExperience(userId: String!, input: CreateExperienceInput!): Experience!
-    updateExperience(experienceId: String!, input: UpdateExperienceInput!): Experience!
+    createExperience(
+      userId: String!
+      input: CreateExperienceInput!
+    ): Experience!
+    updateExperience(
+      experienceId: String!
+      input: UpdateExperienceInput!
+    ): Experience!
     deleteExperience(experienceId: String!): Boolean!
   }
 
@@ -204,7 +219,10 @@ const typeDefs = gql`
 
   extend type Mutation {
     createUserSkill(userId: String!, input: CreateUserSkillInput!): UserSkill!
-    updateUserSkill(userSkillId: String!, input: UpdateUserSkillInput!): UserSkill!
+    updateUserSkill(
+      userSkillId: String!
+      input: UpdateUserSkillInput!
+    ): UserSkill!
     deleteUserSkill(userSkillId: String!): Boolean!
   }
 `;

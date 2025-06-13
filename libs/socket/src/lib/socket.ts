@@ -1,4 +1,3 @@
-// socket.ts
 import { Server as IOServer, Socket as IOSocket } from 'socket.io';
 import { Server as HTTPServer } from 'http';
 
@@ -19,35 +18,26 @@ export function initSocket(server: HTTPServer): IOServer {
   io.on('connection', (socket: IOSocket) => {
     console.log(`🔌 Socket connected: ${socket.id}`);
 
-    // join a chat room
-    socket.on(
-      'joinChat',
-      (
-        chatId: string,
-        ack?: (status: { ok: boolean; room: string }) => void
-      ) => {
-        socket.join(chatId);
-        console.log(`↪️ ${socket.id} joined ${chatId}`);
-        ack?.({ ok: true, room: chatId });
-      }
-    );
+    // Handle message events
+    socket.on('sendMessage', (chatId: string, message: any) => {
+      socket.to(chatId).emit('receiveMessage', message); // Emit to chat room
+    });
 
-    // leave a chat room
-    socket.on(
-      'leaveChat',
-      (
-        chatId: string,
-        ack?: (status: { ok: boolean; room: string }) => void
-      ) => {
-        socket.leave(chatId);
-        console.log(`↩️ ${socket.id} left ${chatId}`);
-        ack?.({ ok: true, room: chatId });
-      }
-    );
+    // Handle user joining chat room
+    socket.on('joinChat', (chatId: string) => {
+      socket.join(chatId);
+      console.log(`↪️ ${socket.id} joined ${chatId}`);
+    });
 
-    // handle disconnects
-    socket.on('disconnect', (reason) => {
-      console.log(`❌ Socket disconnected: ${socket.id} (${reason})`);
+    // Handle user leaving chat room
+    socket.on('leaveChat', (chatId: string) => {
+      socket.leave(chatId);
+      console.log(`↩️ ${socket.id} left ${chatId}`);
+    });
+
+    // Handle disconnects
+    socket.on('disconnect', () => {
+      console.log(`❌ Socket disconnected: ${socket.id}`);
     });
   });
 
@@ -60,9 +50,7 @@ export function initSocket(server: HTTPServer): IOServer {
  */
 export function getIO(): IOServer {
   if (!io) {
-    throw new Error(
-      'Socket.io not initialized. Make sure you called initSocket(server) first.'
-    );
+    throw new Error('Socket.io not initialized. Make sure you called initSocket(server) first.');
   }
   return io;
 }

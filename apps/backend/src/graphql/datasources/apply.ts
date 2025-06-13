@@ -8,15 +8,21 @@ export default class ApplicationDataSource implements IApplicationDataSource {
   }
 
   async getApplicationsByUser(userId: string): Promise<Application[]> {
-    return ApplicationModel.find({ applicant_id: userId }).sort({ created_at: -1 });
+    return ApplicationModel.find({ applicant_id: userId }).sort({
+      created_at: -1,
+    });
   }
 
-  async applyToPost(postId: string, applicantId: string, message: string): Promise<Application> {
+  async applyToPost(
+    postId: string,
+    applicantId: string,
+    message: string
+  ): Promise<Application> {
     const newApplication = new ApplicationModel({
       post_id: postId,
       applicant_id: applicantId,
       message,
-      status: 'pending',  // New applications start with 'pending' status
+      status: 'pending', // New applications start with 'pending' status
     });
     return newApplication.save();
   }
@@ -33,7 +39,10 @@ export default class ApplicationDataSource implements IApplicationDataSource {
     return true;
   }
 
-  async updateApplicationStatus(applicationId: string, status: string): Promise<Application> {
+  async updateApplicationStatus(
+    applicationId: string,
+    status: string
+  ): Promise<Application> {
     const application = await ApplicationModel.findByIdAndUpdate(
       applicationId,
       { status },

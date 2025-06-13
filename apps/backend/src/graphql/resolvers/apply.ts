@@ -16,7 +16,9 @@ const resolvers = {
       context: ApolloContext
     ): Promise<Application[]> => {
       // Use context.currentUser.id to get the current user's ID instead of userId argument
-      return context.dataSources.application.getApplicationsByUser(context.currentUser.id);
+      return context.dataSources.application.getApplicationsByUser(
+        context.currentUser.id
+      );
     },
   },
 
@@ -27,7 +29,11 @@ const resolvers = {
       context: ApolloContext
     ): Promise<Application> => {
       // Use context.currentUser.id as the applicant_id
-      return context.dataSources.application.applyToPost(postId, context.currentUser.id, message);
+      return context.dataSources.application.applyToPost(
+        postId,
+        context.currentUser.id,
+        message
+      );
     },
     cancelApplyToPost: async (
       _: any,
@@ -41,7 +47,10 @@ const resolvers = {
       { applicationId, status }: { applicationId: string; status: string },
       context: ApolloContext
     ): Promise<Application> => {
-      return context.dataSources.application.updateApplicationStatus(applicationId, status);
+      return context.dataSources.application.updateApplicationStatus(
+        applicationId,
+        status
+      );
     },
   },
 };

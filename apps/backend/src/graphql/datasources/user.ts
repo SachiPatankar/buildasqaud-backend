@@ -1,65 +1,44 @@
-import bcrypt from 'bcrypt';
-import { UserModel } from '@db';
 import { IUserDataSource } from './types';
-import { GraphQLError } from 'graphql';
-export default class UserSource implements IUserDataSource {
-  getUsers = async (page = 1, limit = 10) => {
-    const skip = (page - 1) * limit;
-    return UserModel.find({}).sort({ created_at: -1 }).skip(skip).limit(limit);
-  };
+import { UserModel } from '@db'; // Assuming UserModel is in @db
+import { User, CreateUserInput, UpdateUserInput } from '../../types/generated'; // Generated types from codegen
 
-  getUserById = async (userId: string) => {
+export default class UserDataSource implements IUserDataSource {
+  // Create a new user
+  async createUser(input: CreateUserInput): Promise<User> {
+    const newUser = new UserModel({
+      ...input,
+      connections_count: 0, // Initialize with 0 connections
+    });
+
+    await newUser.save();
+    return newUser;
+  }
+
+  // Update an existing user
+  async updateUser(input: UpdateUserInput, userId: string): Promise<User> {
+    const updatedUser = await UserModel.findByIdAndUpdate(userId, input, { new: true });
+    if (!updatedUser) throw new Error('User not found');
+    return updatedUser;
+  }
+
+  // Delete a user by their ID
+  async deleteUser(userId: string): Promise<boolean> {
+    const deletedUser = await UserModel.findByIdAndDelete(userId);
+    return deletedUser ? true : false;
+  }
+
+  // Change the user's password
+  async changePassword(userId: string, oldPassword: string, newPassword: string): Promise<boolean> {
     const user = await UserModel.findById(userId);
-    if (!user) throw new GraphQLError(`User with ID ${userId} not found`);
-    return user;
-  };
-
-  updateUserPhoto = async (userId: string, photoUrl: string) => {
-    const user = await UserModel.findByIdAndUpdate(
-      userId,
-      { photo: photoUrl },
-      { new: true }
-    );
-    if (!user) throw new GraphQLError(`User with ID ${userId} not found`);
-    return user;
-  };
-
-  deletePhoto = async (userId: string) => {
-    const user = await UserModel.findByIdAndUpdate(
-      userId,
-      { $unset: { photo: 1 } },
-      { new: true }
-    );
-    if (!user) throw new GraphQLError(`User with ID ${userId} not found`);
-    return user;
-  };
-
-  // — New: update first_name & last_name —
-  updateUser = async (
-    userId: string,
-    data: { first_name?: string; last_name?: string }
-  ) => {
-    const user = await UserModel.findByIdAndUpdate(userId, data, { new: true });
-    if (!user) throw new GraphQLError(`User with ID ${userId} not found`);
-    return user;
-  };
-
-  // — New: change password —
-  changePassword = async (
-    userId: string,
-    oldPassword: string,
-    newPassword: string
-  ) => {
-    const user = await UserModel.findById(userId);
-    if (!user) throw new GraphQLError('User not found');
-    if (!user.password) throw new GraphQLError('No password set on account');
-
-    const match = await bcrypt.compare(oldPassword, user.password);
-    if (!match) throw new GraphQLError('Incorrect current password');
-
-    const hashed = await bcrypt.hash(newPassword, 10);
-    user.password = hashed;
+    if (!user || user.password !== oldPassword) throw new Error('Invalid password');
+    
+    user.password = newPassword;
     await user.save();
     return true;
-  };
+  }
+
+  // Fetch a user by their ID
+  async loadUserById(userId: string): Promise<User | null> {
+    return UserModel.findById(userId); // Assuming user ID is the primary key
+  }
 }

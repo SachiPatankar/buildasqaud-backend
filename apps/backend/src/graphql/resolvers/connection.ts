@@ -1,7 +1,5 @@
 import { ApolloContext } from '../types';
-import {
-  Connection,
-} from '../../types/generated'; // Import generated types
+import { Connection } from '../../types/generated'; // Import generated types
 
 const resolvers = {
   Query: {
@@ -28,20 +26,34 @@ const resolvers = {
     },
     checkConnectionStatus: async (
       _: any,
-      { requesterUserId, addresseeUserId }: { requesterUserId: string, addresseeUserId: string },
+      {
+        requesterUserId,
+        addresseeUserId,
+      }: { requesterUserId: string; addresseeUserId: string },
       context: ApolloContext
     ): Promise<string> => {
-      return context.dataSources.connection.checkConnectionStatus(requesterUserId, addresseeUserId);
+      return context.dataSources.connection.checkConnectionStatus(
+        requesterUserId,
+        addresseeUserId
+      );
     },
   },
 
   Mutation: {
     sendFriendReq: async (
       _: any,
-      { requesterUserId, addresseeUserId, message }: { requesterUserId: string, addresseeUserId: string, message: string },
+      {
+        requesterUserId,
+        addresseeUserId,
+        message,
+      }: { requesterUserId: string; addresseeUserId: string; message: string },
       context: ApolloContext
     ): Promise<Connection> => {
-      return context.dataSources.connection.sendFriendReq(requesterUserId, addresseeUserId, message);
+      return context.dataSources.connection.sendFriendReq(
+        requesterUserId,
+        addresseeUserId,
+        message
+      );
     },
     acceptFriendReq: async (
       _: any,
@@ -59,10 +71,16 @@ const resolvers = {
     },
     blockUser: async (
       _: any,
-      { requesterUserId, addresseeUserId }: { requesterUserId: string, addresseeUserId: string },
+      {
+        requesterUserId,
+        addresseeUserId,
+      }: { requesterUserId: string; addresseeUserId: string },
       context: ApolloContext
     ): Promise<Connection> => {
-      return context.dataSources.connection.blockUser(requesterUserId, addresseeUserId);
+      return context.dataSources.connection.blockUser(
+        requesterUserId,
+        addresseeUserId
+      );
     },
     removeConnection: async (
       _: any,

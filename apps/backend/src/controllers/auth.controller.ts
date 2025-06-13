@@ -1,3 +1,5 @@
+// src/controllers/AuthController.ts
+
 import { Request, Response } from 'express';
 import { UserModel, IUser } from '@db';
 import jwt from 'jsonwebtoken';
@@ -5,7 +7,7 @@ import bcrypt from 'bcrypt';
 import validator from 'validator';
 import { IAuthController } from './types';
 import passport from 'passport';
-const nodemailer = require('nodemailer');
+import nodemailer from 'nodemailer';
 
 const {
   JWT_SECRET,
@@ -31,7 +33,6 @@ export class AuthController implements IAuthController {
   loginUser = async (req: Request, res: Response): Promise<Response> => {
     try {
       let { email, password } = req.body;
-
       if (email) email = email.trim();
       if (password) password = password.trim();
 
@@ -40,20 +41,15 @@ export class AuthController implements IAuthController {
       }
 
       const user: IUser | null = await UserModel.findOne({ email });
+      const match = user ? await bcrypt.compare(password, user.password!) : false;
 
-      if (!user) {
-        return res.status(400).json({ error: 'Email not valid' });
-      }
-
-      const match = await bcrypt.compare(password, user.password!);
-      if (!match) {
-        return res.status(400).json({ error: 'Incorrect Password' });
+      if (!user || !match) {
+        // FIX (Point 2): generic error to avoid user enumeration
+        return res.status(400).json({ error: 'Invalid credentials' });
       }
 
       const token = this.createToken(user._id, user.email);
       return res.status(200).json({ email, token });
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
     }
@@ -63,11 +59,10 @@ export class AuthController implements IAuthController {
     try {
       const { first_name, last_name } = req.body;
       let { email, password } = req.body;
-
       if (email) email = email.trim();
       if (password) password = password.trim();
 
-      if (!first_name || !last_name || !email || !password) {
+      if (!first_name || !email || !password) {
         return res.status(400).json({ error: 'All fields must be filled' });
       }
 
@@ -80,9 +75,9 @@ export class AuthController implements IAuthController {
       }
 
       const exists: IUser | null = await UserModel.findOne({ email });
-
       if (exists) {
-        return res.status(400).json({ error: 'Email already in database' });
+        // FIX (Point 2): generic response instead of revealing duplication
+        return res.status(400).json({ error: 'Unable to register with provided credentials' });
       }
 
       const salt = await bcrypt.genSalt(10);
@@ -96,9 +91,7 @@ export class AuthController implements IAuthController {
       });
 
       const token = this.createToken(user._id, user.email);
-      return res.status(200).json({ email, token });
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return res.status(201).json({ email, token });  // 201 on resource creation
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
     }
@@ -109,16 +102,16 @@ export class AuthController implements IAuthController {
   });
 
   googleCallback = passport.authenticate('google', {
-    successRedirect: GOOGLE_SUCCESS_REDIRECT, //currently hardcoded for my setup,need to change when connecting with our frontend
+    successRedirect: GOOGLE_SUCCESS_REDIRECT,
     failureRedirect: GOOGLE_FAILURE_REDIRECT,
   });
 
   githubLogin = passport.authenticate('github', {
-    scope: ['profile', 'email'],
+    scope: ['user:email'], // FIX (Point 7): correct GitHub scope
   });
 
   githubCallback = passport.authenticate('github', {
-    successRedirect: GITHUB_SUCCESS_REDIRECT, //currently hardcoded for my setup,need to change when connecting with our frontend
+    successRedirect: GITHUB_SUCCESS_REDIRECT,
     failureRedirect: GITHUB_FAILURE_REDIRECT,
   });
 
@@ -131,7 +124,10 @@ export class AuthController implements IAuthController {
       const user: IUser | null = await UserModel.findOne({ email });
 
       if (!user) {
-        return res.status(404).json({ status: 'User not present' });
+        // FIX (Point 2): always return success to avoid enumeration
+        return res
+          .status(200)
+          .json({ status: 'If that email is registered you will receive reset instructions' });
       }
 
       const token = this.createToken(user._id, user.email);
@@ -145,7 +141,8 @@ export class AuthController implements IAuthController {
       });
 
       const mailOptions = {
-        from: '',
+        // FIX (Point 1): set a valid From address
+        from: `"Your App Name" <${NODEMAILER_EMAIL}>`,
         to: user.email,
         subject: 'Reset your Password',
         text: `${RESET_PASSWORD_BASE_URL}/${user._id}/${token}`,
@@ -170,7 +167,18 @@ export class AuthController implements IAuthController {
       const { id, token } = req.params;
       const { password } = req.body;
 
+      // FIX (Point 4): verify token and bind to user ID
       const decoded = jwt.verify(token, JWT_SECRET!);
+      if (typeof decoded === 'object' && decoded.sub !== id) {
+        return res
+          .status(400)
+          .json({ status: 'Failed', message: 'Invalid token or server error' });
+      }
+
+      // FIX (Point 3): enforce strong password on reset
+      if (!validator.isStrongPassword(password)) {
+        return res.status(400).json({ error: 'Password is not strong enough' });
+      }
 
       const salt = await bcrypt.genSalt(10);
       const hash = await bcrypt.hash(password, salt);
@@ -187,14 +195,14 @@ export class AuthController implements IAuthController {
   };
 
   public async getUsers(req: Request, res: Response): Promise<Response> {
-    const users = await UserModel.find({});
+    // FIX (Point 5): exclude password hashes
+    const users = await UserModel.find({}, '-password');
     return res.status(200).json(users);
   }
 
   public async deleteUser(req: Request, res: Response): Promise<Response> {
     try {
       const { email } = req.body;
-
       const deletedUser = await UserModel.findOneAndDelete({ email });
 
       if (!deletedUser) {

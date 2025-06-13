@@ -4,7 +4,11 @@ import { Connection } from '../../types/generated'; // Import generated types fo
 
 export default class ConnectionDataSource implements IConnectionDataSource {
   // Send a friend request
-  async sendFriendReq(requesterUserId: string, addresseeUserId: string, message: string): Promise<Connection> {
+  async sendFriendReq(
+    requesterUserId: string,
+    addresseeUserId: string,
+    message: string
+  ): Promise<Connection> {
     const newConnection = new ConnectionModel({
       requester_user_id: requesterUserId,
       addressee_user_id: addresseeUserId,
@@ -30,7 +34,10 @@ export default class ConnectionDataSource implements IConnectionDataSource {
   }
 
   // Block a user
-  async blockUser(requesterUserId: string, addresseeUserId: string): Promise<Connection> {
+  async blockUser(
+    requesterUserId: string,
+    addresseeUserId: string
+  ): Promise<Connection> {
     const connection = await ConnectionModel.findOneAndUpdate(
       {
         requester_user_id: requesterUserId,
@@ -51,10 +58,7 @@ export default class ConnectionDataSource implements IConnectionDataSource {
   // Load connections list for a user
   async loadConnectionsList(userId: string): Promise<Connection[]> {
     return ConnectionModel.find({
-      $or: [
-        { requester_user_id: userId },
-        { addressee_user_id: userId }
-      ]
+      $or: [{ requester_user_id: userId }, { addressee_user_id: userId }],
     });
   }
 
@@ -63,8 +67,8 @@ export default class ConnectionDataSource implements IConnectionDataSource {
     return ConnectionModel.find({
       $or: [
         { requester_user_id: userId, status: 'pending' },
-        { addressee_user_id: userId, status: 'pending' }
-      ]
+        { addressee_user_id: userId, status: 'pending' },
+      ],
     });
   }
 
@@ -77,12 +81,21 @@ export default class ConnectionDataSource implements IConnectionDataSource {
   }
 
   // Check connection status between two users
-  async checkConnectionStatus(requesterUserId: string, addresseeUserId: string): Promise<string> {
+  async checkConnectionStatus(
+    requesterUserId: string,
+    addresseeUserId: string
+  ): Promise<string> {
     const connection = await ConnectionModel.findOne({
       $or: [
-        { requester_user_id: requesterUserId, addressee_user_id: addresseeUserId },
-        { requester_user_id: addresseeUserId, addressee_user_id: requesterUserId }
-      ]
+        {
+          requester_user_id: requesterUserId,
+          addressee_user_id: addresseeUserId,
+        },
+        {
+          requester_user_id: addresseeUserId,
+          addressee_user_id: requesterUserId,
+        },
+      ],
     });
     return connection ? connection.status : 'none';
   }

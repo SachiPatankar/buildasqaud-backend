@@ -6,6 +6,8 @@ import postSchema from './post';
 import applySchema from './apply';
 import profileSchema from './profile';
 import connectionSchema from './connection';
+import peopleSchema from './people';
+import chatSchema from './chat';
 
 const rootDefs = gql`
   type Query {
@@ -22,6 +24,16 @@ const rootDefs = gql`
 `;
 
 const typeDefs: DocumentNode[] = [];
-typeDefs.push(rootDefs, userSchema, s3Schema, postSchema, applySchema, profileSchema, connectionSchema);
+typeDefs.push(
+  rootDefs,
+  userSchema,
+  s3Schema,
+  postSchema,
+  applySchema,
+  profileSchema,
+  connectionSchema,
+  peopleSchema,
+  chatSchema
+);
 
 export default typeDefs;

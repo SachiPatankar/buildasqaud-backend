@@ -7,7 +7,7 @@ import {
   UserSkillModel,
 } from '@db'; // Assuming models are in @db
 
-import { 
+import {
   CreateAchievementInput,
   UpdateAchievementInput,
   CreateEducationInput,
@@ -21,7 +21,6 @@ import {
 } from '../../types/generated'; // Import generated types
 
 export default class ProfileDataSource implements IProfileDataSource {
-
   // ACHIEVEMENT DATA SOURCE METHODS
   async createAchievement(userId: string, input: CreateAchievementInput) {
     const newAchievement = new AchievementModel({
@@ -31,8 +30,13 @@ export default class ProfileDataSource implements IProfileDataSource {
     return newAchievement.save();
   }
 
-  async updateAchievement(achievementId: string, input: UpdateAchievementInput) {
-    return AchievementModel.findByIdAndUpdate(achievementId, input, { new: true });
+  async updateAchievement(
+    achievementId: string,
+    input: UpdateAchievementInput
+  ) {
+    return AchievementModel.findByIdAndUpdate(achievementId, input, {
+      new: true,
+    });
   }
 
   async deleteAchievement(achievementId: string) {
@@ -76,7 +80,9 @@ export default class ProfileDataSource implements IProfileDataSource {
   }
 
   async updateExperience(experienceId: string, input: UpdateExperienceInput) {
-    return ExperienceModel.findByIdAndUpdate(experienceId, input, { new: true });
+    return ExperienceModel.findByIdAndUpdate(experienceId, input, {
+      new: true,
+    });
   }
 
   async deleteExperience(experienceId: string) {

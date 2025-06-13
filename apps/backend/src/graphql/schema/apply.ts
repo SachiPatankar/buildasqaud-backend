@@ -19,9 +19,16 @@ const typeDefs = gql`
   }
 
   extend type Mutation {
-    applyToPost(postId: String!, applicantId: String!, message: String): Application!
+    applyToPost(
+      postId: String!
+      applicantId: String!
+      message: String
+    ): Application!
     cancelApplyToPost(applicationId: String!): Boolean!
-    updateApplicationStatus(applicationId: String!, status: String!): Application!
+    updateApplicationStatus(
+      applicationId: String!
+      status: String!
+    ): Application!
   }
 `;
 

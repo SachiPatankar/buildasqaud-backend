@@ -1,53 +1,57 @@
-import { UserModel } from '@db';
 import { ApolloContext } from '../types';
+import {
+  CreateUserInput,
+  UpdateUserInput,
+  User,
+} from '../../types/generated'; // Generated types from codegen
 
 const resolvers = {
-  Mutation: {
-    // — update first_name & last_name —
-    updateUser: async (
+  Query: {
+    // Query to load a user by their ID
+    loadUserById: async (
       _: any,
-      { input }: { input: { first_name?: string; last_name?: string } },
-      { dataSources, currentUser }: ApolloContext
-    ) => dataSources.user.updateUser(currentUser.id, input),
+      { userId }: { userId: string },
+      context: ApolloContext
+    ): Promise<User | null> => {
+      return context.dataSources.user.loadUserById(userId);
+    },
+  },
 
-    // — change password —
-    changePassword: async (
+  Mutation: {
+    // Mutation to create a new user
+    createUser: async (
       _: any,
-      {
-        oldPassword,
-        newPassword,
-      }: { oldPassword: string; newPassword: string },
-      { dataSources, currentUser }: ApolloContext
-    ) => {
-      await dataSources.user.changePassword(
-        currentUser.id,
-        oldPassword,
-        newPassword
-      );
-      return true;
+      { input }: { input: CreateUserInput },
+      context: ApolloContext
+    ): Promise<User> => {
+      return context.dataSources.user.createUser(input);
     },
 
-    updateUserPhoto: async (
+    // Mutation to update an existing user's profile
+    updateUser: async (
       _: any,
-      { photoUrl }: { photoUrl: string },
-      { dataSources, currentUser }: ApolloContext
-    ) => dataSources.user.updateUserPhoto(currentUser.id, photoUrl),
+      { input }: { input: UpdateUserInput },
+      context: ApolloContext
+    ): Promise<User> => {
+      return context.dataSources.user.updateUser(input, context.currentUser.id);
+    },
 
-    deletePhoto: async (
+    // Mutation to delete a user
+    deleteUser: async (
       _: any,
-      __: any,
-      { dataSources, currentUser }: ApolloContext
-    ) => {
-      // atomically unset & get old URL
-      const before = await UserModel.findByIdAndUpdate(
-        currentUser.id,
-        { $unset: { photo: 1 } },
-        { new: false }
-      );
-      if (before?.photo) {
-        await dataSources.s3.deleteProfilePhoto(before.photo);
-      }
-      return { _id: currentUser.id };
+      { userId }: { userId: string },
+      context: ApolloContext
+    ): Promise<boolean> => {
+      return context.dataSources.user.deleteUser(userId);
+    },
+
+    // Mutation to change the user's password
+    changePassword: async (
+      _: any,
+      { oldPassword, newPassword }: { oldPassword: string; newPassword: string },
+      context: ApolloContext
+    ): Promise<boolean> => {
+      return context.dataSources.user.changePassword(context.currentUser.id, oldPassword, newPassword);
     },
   },
 };

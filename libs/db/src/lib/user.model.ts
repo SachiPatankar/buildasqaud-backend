@@ -9,7 +9,7 @@ export interface ILink {
 export interface IUser extends Document {
   _id: string;
   email: string;
-  first_name?: string;
+  first_name: string;
   last_name?: string;
   password?: string;
   photo?: string;
@@ -19,11 +19,11 @@ export interface IUser extends Document {
   bio?: string;
   location_id?: string;
   connections_count: number;
-  links: ILink[];
+  links?: ILink[];
   is_online?: boolean;
   last_seen?: Date;
-  created_at?: Date;
-  updated_at?: Date;
+  created_at: Date;
+  updated_at: Date;
 }
 
 const LinkSchema = new Schema<ILink>(
@@ -58,6 +58,7 @@ const UserSchema = new Schema<IUser>(
     first_name: {
       type: String,
       trim: true,
+      required: true,
     },
     last_name: {
       type: String,

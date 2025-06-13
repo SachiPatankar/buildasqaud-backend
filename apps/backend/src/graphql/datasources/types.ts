@@ -3,10 +3,10 @@ import {
   UpdatePostInput,
   PostFilterInput,
   Post,
-} from '../../types/generated'; 
+} from '../../types/generated';
 import { SavedPost } from '../../types/generated';
 import { Application } from '../../types/generated';
-import { 
+import {
   CreateAchievementInput,
   UpdateAchievementInput,
   CreateEducationInput,
@@ -22,8 +22,11 @@ import {
   Experience,
   Project,
   UserSkill,
-} from '../../types/generated'; 
+} from '../../types/generated';
 import { Connection } from '../../types/generated';
+import { User, CreateUserInput, UpdateUserInput } from '../../types/generated';
+import { Person, PeopleFilterInput } from '../../types/generated';
+import { Message, Chat } from '../../types/generated'; // Generated types from codegen
 
 export interface IDataSource {
   user: IUserDataSource;
@@ -33,23 +36,10 @@ export interface IDataSource {
   application: IApplicationDataSource; // Application data source
   profile: IProfileDataSource; // Profile data source
   connection: IConnectionDataSource; // Connection data source
+  people: IPeopleDataSource; // People data source
+  chat : IChatDataSource; // Chat data source
 }
 
-export interface IUserDataSource {
-  getUsers(page?: number, limit?: number): Promise<any>;
-  getUserById(userId: string): Promise<any>;
-  updateUserPhoto(userId: string, photoUrl: string): Promise<any>;
-  deletePhoto(userId: string): Promise<any>;
-  updateUser(
-    userId: string,
-    data: { first_name?: string; last_name?: string }
-  ): Promise<any>;
-  changePassword(
-    userId: string,
-    oldPassword: string,
-    newPassword: string
-  ): Promise<boolean>;
-}
 
 export interface IS3DataSource {
   getPresignedUrl: (
@@ -61,6 +51,15 @@ export interface IS3DataSource {
   }>;
   deleteProfilePhoto: (photoUrl: string) => Promise<boolean>;
 }
+
+export interface IUserDataSource {
+  createUser(input: CreateUserInput): Promise<User>; // Create a new user
+  updateUser(input: UpdateUserInput, userId: string): Promise<User>; // Update an existing user by ID
+  deleteUser(userId: string): Promise<boolean>; // Delete a user by ID
+  changePassword(userId: string, oldPassword: string, newPassword: string): Promise<boolean>; // Change a user's password
+  loadUserById(userId: string): Promise<User | null>; // Fetch a user by their ID
+}
+
 
 export interface IPostDataSource {
   loadPosts(page: number, limit: number): Promise<Post[]>;
@@ -82,27 +81,52 @@ export interface ISavedPostDataSource {
 export interface IApplicationDataSource {
   loadApplicationsByPostId(postId: string): Promise<Application[]>;
   getApplicationsByUser(userId: string): Promise<Application[]>;
-  applyToPost(postId: string, applicantId: string, message: string): Promise<Application>;
+  applyToPost(
+    postId: string,
+    applicantId: string,
+    message: string
+  ): Promise<Application>;
   cancelApplyToPost(applicationId: string): Promise<boolean>;
-  updateApplicationStatus(applicationId: string, status: string): Promise<Application>;
+  updateApplicationStatus(
+    applicationId: string,
+    status: string
+  ): Promise<Application>;
 }
 
 export interface IProfileDataSource {
   // ACHIEVEMENT DATA SOURCE METHODS
-  createAchievement(userId: string, input: CreateAchievementInput): Promise<Achievement>;
-  updateAchievement(achievementId: string, input: UpdateAchievementInput): Promise<Achievement>;
+  createAchievement(
+    userId: string,
+    input: CreateAchievementInput
+  ): Promise<Achievement>;
+  updateAchievement(
+    achievementId: string,
+    input: UpdateAchievementInput
+  ): Promise<Achievement>;
   deleteAchievement(achievementId: string): Promise<boolean>;
   getAchievementsByUser(userId: string): Promise<Achievement[]>;
 
   // EDUCATION DATA SOURCE METHODS
-  createEducation(userId: string, input: CreateEducationInput): Promise<Education>;
-  updateEducation(educationId: string, input: UpdateEducationInput): Promise<Education>;
+  createEducation(
+    userId: string,
+    input: CreateEducationInput
+  ): Promise<Education>;
+  updateEducation(
+    educationId: string,
+    input: UpdateEducationInput
+  ): Promise<Education>;
   deleteEducation(educationId: string): Promise<boolean>;
   getEducationByUser(userId: string): Promise<Education[]>;
 
   // EXPERIENCE DATA SOURCE METHODS
-  createExperience(userId: string, input: CreateExperienceInput): Promise<Experience>;
-  updateExperience(experienceId: string, input: UpdateExperienceInput): Promise<Experience>;
+  createExperience(
+    userId: string,
+    input: CreateExperienceInput
+  ): Promise<Experience>;
+  updateExperience(
+    experienceId: string,
+    input: UpdateExperienceInput
+  ): Promise<Experience>;
   deleteExperience(experienceId: string): Promise<boolean>;
   getExperienceByUser(userId: string): Promise<Experience[]>;
 
@@ -113,21 +137,50 @@ export interface IProfileDataSource {
   getProjectsByUser(userId: string): Promise<Project[]>;
 
   // USER SKILLS DATA SOURCE METHODS
-  createUserSkill(userId: string, input: CreateUserSkillInput): Promise<UserSkill>;
-  updateUserSkill(userSkillId: string, input: UpdateUserSkillInput): Promise<UserSkill>;
+  createUserSkill(
+    userId: string,
+    input: CreateUserSkillInput
+  ): Promise<UserSkill>;
+  updateUserSkill(
+    userSkillId: string,
+    input: UpdateUserSkillInput
+  ): Promise<UserSkill>;
   deleteUserSkill(userSkillId: string): Promise<boolean>;
   getSkillsByUser(userId: string): Promise<UserSkill[]>;
 }
 
 export interface IConnectionDataSource {
-  sendFriendReq(requesterUserId: string, addresseeUserId: string, message: string): Promise<Connection>;
+  sendFriendReq(
+    requesterUserId: string,
+    addresseeUserId: string,
+    message: string
+  ): Promise<Connection>;
   acceptFriendReq(connectionId: string): Promise<Connection>;
   declineFriendReq(connectionId: string): Promise<boolean>;
-  blockUser(requesterUserId: string, addresseeUserId: string): Promise<Connection>;
+  blockUser(
+    requesterUserId: string,
+    addresseeUserId: string
+  ): Promise<Connection>;
   removeConnection(connectionId: string): Promise<boolean>;
   loadConnectionsList(userId: string): Promise<Connection[]>;
   loadPendingFriendRequests(userId: string): Promise<Connection[]>;
   loadSentFriendRequests(userId: string): Promise<Connection[]>;
-  checkConnectionStatus(requesterUserId: string, addresseeUserId: string): Promise<string>
+  checkConnectionStatus(
+    requesterUserId: string,
+    addresseeUserId: string
+  ): Promise<string>;
+}
 
+export interface IPeopleDataSource {
+  loadPeople(page: number, limit: number): Promise<Person[]>; // Load a list of people with limited fields
+  loadPeopleByFilter(filter: PeopleFilterInput, page: number, limit: number): Promise<Person[]>; // Load people based on filters
+}
+
+export interface IChatDataSource {
+  sendMessage(chatId: string, senderId: string, content: string): Promise<Message>
+  editMessage(messageId: string, content: string): Promise<Message>
+  deleteMessage(messageId: string): Promise<boolean>
+  getMessagesForChat(chatId: string, page: number, limit: number): Promise<Message[]>
+  getChatListForUser(userId: string): Promise<Chat[]>
+  getUnreadCountForChats(userId: string): Promise<{ chat_id: string, unread_count: number }[]> 
 }

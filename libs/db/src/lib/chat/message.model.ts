@@ -14,8 +14,8 @@ export interface IMessage extends Document {
   is_deleted: boolean;
   deleted_for: string[];
   reply_to_message_id?: string;
-  created_at?: Date;
-  updated_at?: Date;
+  created_at: Date;
+  updated_at: Date;
 }
 
 const MessageSchema = new Schema<IMessage>(
