@@ -448,7 +448,33 @@ export type Post = {
   applications_count: Scalars['Int']['output'];
   created_at: Scalars['Date']['output'];
   description?: Maybe<Scalars['String']['output']>;
+  experience_level?: Maybe<Scalars['String']['output']>;
   location_id?: Maybe<Scalars['String']['output']>;
+  posted_by: Scalars['String']['output'];
+  project_phase?: Maybe<Scalars['String']['output']>;
+  project_type?: Maybe<Scalars['String']['output']>;
+  requirements?: Maybe<Requirement>;
+  status: Scalars['String']['output'];
+  tech_stack?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
+  title: Scalars['String']['output'];
+  updated_at: Scalars['Date']['output'];
+  views_count: Scalars['Int']['output'];
+  work_mode?: Maybe<Scalars['String']['output']>;
+};
+
+export type PostDetails = {
+  __typename?: 'PostDetails';
+  _id: Scalars['String']['output'];
+  applications_count: Scalars['Int']['output'];
+  created_at: Scalars['Date']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  experience_level?: Maybe<Scalars['String']['output']>;
+  first_name: Scalars['String']['output'];
+  is_applied: Scalars['Boolean']['output'];
+  is_saved: Scalars['Boolean']['output'];
+  last_name?: Maybe<Scalars['String']['output']>;
+  location_id?: Maybe<Scalars['String']['output']>;
+  photo?: Maybe<Scalars['String']['output']>;
   posted_by: Scalars['String']['output'];
   project_phase?: Maybe<Scalars['String']['output']>;
   project_type?: Maybe<Scalars['String']['output']>;
@@ -467,6 +493,28 @@ export type PostFilterInput = {
   status?: InputMaybe<Scalars['String']['input']>;
   tech_stack?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
   work_mode?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type PostSummary = {
+  __typename?: 'PostSummary';
+  _id: Scalars['String']['output'];
+  applications_count: Scalars['Int']['output'];
+  created_at: Scalars['Date']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  experience_level?: Maybe<Scalars['String']['output']>;
+  first_name: Scalars['String']['output'];
+  is_applied: Scalars['Boolean']['output'];
+  is_saved: Scalars['Boolean']['output'];
+  last_name?: Maybe<Scalars['String']['output']>;
+  location_id?: Maybe<Scalars['String']['output']>;
+  photo?: Maybe<Scalars['String']['output']>;
+  posted_by: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  tech_stack?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
+  title: Scalars['String']['output'];
+  updated_at: Scalars['Date']['output'];
+  views_count: Scalars['Int']['output'];
+  work_mode?: Maybe<Scalars['String']['output']>;
 };
 
 export type PresignedUrlResult = {
@@ -511,9 +559,9 @@ export type Query = {
   loadPendingFriendRequests: Array<Maybe<Connection>>;
   loadPeople: Array<Maybe<Person>>;
   loadPeopleByFilter: Array<Maybe<Person>>;
-  loadPostByFilter: Array<Maybe<Post>>;
-  loadPostById?: Maybe<Post>;
-  loadPosts: Array<Maybe<Post>>;
+  loadPostByFilter: Array<Maybe<PostSummary>>;
+  loadPostById?: Maybe<PostDetails>;
+  loadPosts: Array<Maybe<PostSummary>>;
   loadSentFriendRequests: Array<Maybe<Connection>>;
   loadUserById?: Maybe<User>;
 };
@@ -624,7 +672,6 @@ export type Requirement = {
   __typename?: 'Requirement';
   desired_roles?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
   desired_skills?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
-  preferred_experience?: Maybe<Scalars['String']['output']>;
 };
 
 export type RequirementInput = {

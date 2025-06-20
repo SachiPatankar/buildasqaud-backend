@@ -5,7 +5,6 @@ import { v4 as uuidv4 } from 'uuid';
 export interface IRequirement {
   desired_skills?: string[];
   desired_roles?: string[];
-  preferred_experience?: string;
 }
 
 export interface IPost extends Document {
@@ -22,7 +21,6 @@ export interface IPost extends Document {
     | 'testing'
     | 'deployment'
     | 'maintenance';
-  people_required?: number;
   project_type?:
     | 'academic'
     | 'startup'
@@ -31,6 +29,7 @@ export interface IPost extends Document {
     | 'personal'
     | 'freelance';
   work_mode?: 'remote' | 'hybrid' | 'in_person';
+  experience_level?: string; // Added for experience level
   location_id?: string;
   status: 'open' | 'closed' | 'paused' | 'completed';
   views_count: number;
@@ -53,10 +52,6 @@ const RequirementSchema = new Schema<IRequirement>(
         trim: true,
       },
     ],
-    preferred_experience: {
-      type: String,
-      trim: true,
-    },
   },
   { _id: false }
 );
@@ -116,6 +111,10 @@ const PostSchema = new Schema<IPost>(
     work_mode: {
       type: String,
       enum: ['remote', 'hybrid', 'in_person'],
+    },
+    experience_level: {
+      type: String,
+      enum:  ['beginner', 'intermediate', 'advanced', 'not_specified'],
     },
     location_id: {
       type: String,

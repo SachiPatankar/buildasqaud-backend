@@ -4,7 +4,7 @@ import { Request, Response, RequestHandler } from 'express';
 
 declare module 'express' {
   interface Request {
-    user?: IUser;
+    user?: Partial<IUser>; // Optional user object
   }
 }
 

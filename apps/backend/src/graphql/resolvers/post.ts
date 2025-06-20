@@ -6,6 +6,8 @@ import {
   UpdatePostInput,
   PostFilterInput,
   SavedPost,
+  PostSummary,
+  PostDetails,
 } from '../../types/generated';
 const resolvers = {
   Query: {
@@ -13,22 +15,22 @@ const resolvers = {
       _: any,
       { page = 1, limit = 10 }: { page: number; limit: number },
       context: ApolloContext
-    ): Promise<Post[]> => {
-      return context.dataSources.post.loadPosts(page, limit);
+    ): Promise<PostSummary[]> => {
+      return context.dataSources.post.loadPosts(page, limit, context.currentUser.id);
     },
     loadPostById: async (
       _: any,
       { postId }: { postId: string },
       context: ApolloContext
-    ): Promise<Post | null> => {
-      return context.dataSources.post.loadPostById(postId);
+    ): Promise<PostDetails | null> => {
+      return context.dataSources.post.loadPostById(postId, context.currentUser.id);
     },
     loadPostByFilter: async (
       _: any,
       { filter }: { filter: PostFilterInput },
       context: ApolloContext
-    ): Promise<Post[]> => {
-      return context.dataSources.post.loadPostByFilter(filter);
+    ): Promise<PostSummary[]> => {
+      return context.dataSources.post.loadPostByFilter(filter, context.currentUser.id);
     },
     getSavedPosts: async (
       _: any,

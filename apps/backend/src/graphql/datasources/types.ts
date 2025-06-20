@@ -3,6 +3,8 @@ import {
   UpdatePostInput,
   PostFilterInput,
   Post,
+  PostSummary,
+  PostDetails,
 } from '../../types/generated';
 import { SavedPost } from '../../types/generated';
 import { Application } from '../../types/generated';
@@ -62,9 +64,9 @@ export interface IUserDataSource {
 
 
 export interface IPostDataSource {
-  loadPosts(page: number, limit: number): Promise<Post[]>;
-  loadPostById(postId: string): Promise<Post | null>;
-  loadPostByFilter(filter: PostFilterInput): Promise<Post[]>;
+  loadPosts(page: number, limit: number, curreent_user_id:string): Promise<PostSummary[]>;
+  loadPostById(postId: string, current_user_id:string): Promise<PostDetails | null>;
+  loadPostByFilter(filter: PostFilterInput,  current_user_id:string ): Promise<PostSummary[]>;
   createPost(input: CreatePostInput, postedBy: string): Promise<Post>;
   updatePost(postId: string, input: UpdatePostInput): Promise<Post | null>;
   deletePost(postId: string): Promise<boolean>;
