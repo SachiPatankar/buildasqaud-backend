@@ -50,7 +50,7 @@ const typeDefs = gql`
   }
 
   extend type Query {
-    loadUserById(userId: String!): User
+    loadUserById(userId: String): User
   }
 
   extend type Mutation {

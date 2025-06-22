@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-dotenv.config();   // FIX #1: load env vars before you use process.env
+dotenv.config(); // FIX #1: load env vars before you use process.env
 
 import express from 'express';
 import { createServer } from 'http';
@@ -9,7 +9,7 @@ import passport from 'passport';
 
 import { connectMongoDB } from '@db';
 import routes from './routes';
-import { setupPassport } from './config/passport'; 
+import { setupPassport } from './config/passport';
 
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
@@ -64,7 +64,7 @@ async function startServer() {
     // 4) Session + Passport
     app.use(
       session({
-        secret: SESSION_SECRET,       // FIX #2: needed for passport sessions
+        secret: SESSION_SECRET, // FIX #2: needed for passport sessions
         resave: false,
         saveUninitialized: false,
         cookie: {
@@ -73,7 +73,7 @@ async function startServer() {
         },
       })
     );
-    setupPassport();            // FIX #3: setup passport strategies
+    setupPassport(); // FIX #3: setup passport strategies
     app.use(passport.initialize());
     app.use(passport.session());
 
@@ -124,4 +124,3 @@ async function startServer() {
 (async () => {
   await startServer();
 })();
-

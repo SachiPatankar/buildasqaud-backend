@@ -21,40 +21,55 @@ const resolvers = {
   Query: {
     getAchievementsByUser: async (
       _: any,
-      { userId }: { userId: string },
+      { userId }: { userId?: string },
       context: ApolloContext
     ): Promise<Achievement[]> => {
-      return context.dataSources.profile.getAchievementsByUser(userId);
+      const id = userId || context.currentUser?.id;
+      if (!id) throw new Error("Unauthorized");
+      return context.dataSources.profile.getAchievementsByUser(id);
     },
+
     getEducationByUser: async (
       _: any,
-      { userId }: { userId: string },
+      { userId }: { userId?: string },
       context: ApolloContext
     ): Promise<Education[]> => {
-      return context.dataSources.profile.getEducationByUser(userId);
+      const id = userId || context.currentUser?.id;
+      if (!id) throw new Error("Unauthorized");
+      return context.dataSources.profile.getEducationByUser(id);
     },
+
     getExperienceByUser: async (
       _: any,
-      { userId }: { userId: string },
+      { userId }: { userId?: string },
       context: ApolloContext
     ): Promise<Experience[]> => {
-      return context.dataSources.profile.getExperienceByUser(userId);
+      const id = userId || context.currentUser?.id;
+      if (!id) throw new Error("Unauthorized");
+      return context.dataSources.profile.getExperienceByUser(id);
     },
+
     getProjectsByUser: async (
       _: any,
-      { userId }: { userId: string },
+      { userId }: { userId?: string },
       context: ApolloContext
     ): Promise<Project[]> => {
-      return context.dataSources.profile.getProjectsByUser(userId);
+      const id = userId || context.currentUser?.id;
+      if (!id) throw new Error("Unauthorized");
+      return context.dataSources.profile.getProjectsByUser(id);
     },
+
     getSkillsByUser: async (
       _: any,
-      { userId }: { userId: string },
+      { userId }: { userId?: string },
       context: ApolloContext
     ): Promise<UserSkill[]> => {
-      return context.dataSources.profile.getSkillsByUser(userId);
+      const id = userId || context.currentUser?.id;
+      if (!id) throw new Error("Unauthorized");
+      return context.dataSources.profile.getSkillsByUser(id);
     },
   },
+
 
   Mutation: {
     createAchievement: async (

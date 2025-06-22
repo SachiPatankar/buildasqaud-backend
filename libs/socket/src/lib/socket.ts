@@ -50,7 +50,9 @@ export function initSocket(server: HTTPServer): IOServer {
  */
 export function getIO(): IOServer {
   if (!io) {
-    throw new Error('Socket.io not initialized. Make sure you called initSocket(server) first.');
+    throw new Error(
+      'Socket.io not initialized. Make sure you called initSocket(server) first.'
+    );
   }
   return io;
 }

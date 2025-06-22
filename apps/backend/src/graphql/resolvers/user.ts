@@ -1,9 +1,5 @@
 import { ApolloContext } from '../types';
-import {
-  CreateUserInput,
-  UpdateUserInput,
-  User,
-} from '../../types/generated'; // Generated types from codegen
+import { CreateUserInput, UpdateUserInput, User } from '../../types/generated'; // Generated types from codegen
 
 const resolvers = {
   Query: {
@@ -48,10 +44,17 @@ const resolvers = {
     // Mutation to change the user's password
     changePassword: async (
       _: any,
-      { oldPassword, newPassword }: { oldPassword: string; newPassword: string },
+      {
+        oldPassword,
+        newPassword,
+      }: { oldPassword: string; newPassword: string },
       context: ApolloContext
     ): Promise<boolean> => {
-      return context.dataSources.user.changePassword(context.currentUser.id, oldPassword, newPassword);
+      return context.dataSources.user.changePassword(
+        context.currentUser.id,
+        oldPassword,
+        newPassword
+      );
     },
   },
 };

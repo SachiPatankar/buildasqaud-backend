@@ -11,7 +11,7 @@ const typeDefs = gql`
     location_id: String
     title: String
     bio: String
-    top_skills: [UserSkill] 
+    top_skills: [UserSkill]
   }
 
   input PeopleFilterInput {
@@ -19,12 +19,16 @@ const typeDefs = gql`
     last_name: String
     location_id: String
     title: String
-    skills: [String] 
+    skills: [String]
   }
 
   extend type Query {
     loadPeople(page: Int, limit: Int): [Person]!
-    loadPeopleByFilter(filter: PeopleFilterInput!, page: Int, limit: Int): [Person]!
+    loadPeopleByFilter(
+      filter: PeopleFilterInput!
+      page: Int
+      limit: Int
+    ): [Person]!
   }
 `;
 

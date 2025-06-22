@@ -16,7 +16,9 @@ export default class UserDataSource implements IUserDataSource {
 
   // Update an existing user
   async updateUser(input: UpdateUserInput, userId: string): Promise<User> {
-    const updatedUser = await UserModel.findByIdAndUpdate(userId, input, { new: true });
+    const updatedUser = await UserModel.findByIdAndUpdate(userId, input, {
+      new: true,
+    });
     if (!updatedUser) throw new Error('User not found');
     return updatedUser;
   }
@@ -28,10 +30,15 @@ export default class UserDataSource implements IUserDataSource {
   }
 
   // Change the user's password
-  async changePassword(userId: string, oldPassword: string, newPassword: string): Promise<boolean> {
+  async changePassword(
+    userId: string,
+    oldPassword: string,
+    newPassword: string
+  ): Promise<boolean> {
     const user = await UserModel.findById(userId);
-    if (!user || user.password !== oldPassword) throw new Error('Invalid password');
-    
+    if (!user || user.password !== oldPassword)
+      throw new Error('Invalid password');
+
     user.password = newPassword;
     await user.save();
     return true;

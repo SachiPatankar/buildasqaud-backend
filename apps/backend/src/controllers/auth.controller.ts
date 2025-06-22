@@ -41,7 +41,9 @@ export class AuthController implements IAuthController {
       }
 
       const user: IUser | null = await UserModel.findOne({ email });
-      const match = user ? await bcrypt.compare(password, user.password!) : false;
+      const match = user
+        ? await bcrypt.compare(password, user.password!)
+        : false;
 
       if (!user || !match) {
         // FIX (Point 2): generic error to avoid user enumeration
@@ -77,7 +79,9 @@ export class AuthController implements IAuthController {
       const exists: IUser | null = await UserModel.findOne({ email });
       if (exists) {
         // FIX (Point 2): generic response instead of revealing duplication
-        return res.status(400).json({ error: 'Unable to register with provided credentials' });
+        return res
+          .status(400)
+          .json({ error: 'Unable to register with provided credentials' });
       }
 
       const salt = await bcrypt.genSalt(10);
@@ -91,7 +95,7 @@ export class AuthController implements IAuthController {
       });
 
       const token = this.createToken(user._id, user.email);
-      return res.status(201).json({ email, token });  // 201 on resource creation
+      return res.status(201).json({ email, token }); // 201 on resource creation
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
     }
@@ -127,7 +131,10 @@ export class AuthController implements IAuthController {
         // FIX (Point 2): always return success to avoid enumeration
         return res
           .status(200)
-          .json({ status: 'If that email is registered you will receive reset instructions' });
+          .json({
+            status:
+              'If that email is registered you will receive reset instructions',
+          });
       }
 
       const token = this.createToken(user._id, user.email);

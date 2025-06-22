@@ -17,15 +17,9 @@ export interface IHomeController {
 }
 
 export interface IAuthController {
-  loginUser: (
-    req: Request,
-    res: Response
-  ) => Promise<Response>;
+  loginUser: (req: Request, res: Response) => Promise<Response>;
 
-  signupUser: (
-    req: Request,
-    res: Response
-  ) => Promise<Response>;
+  signupUser: (req: Request, res: Response) => Promise<Response>;
 
   googleLogin: RequestHandler;
   googleCallback: RequestHandler;
@@ -33,24 +27,11 @@ export interface IAuthController {
   githubLogin: RequestHandler;
   githubCallback: RequestHandler;
 
-  forgotPassword: (
-    req: Request,
-    res: Response
-  ) => Promise<Response>;
+  forgotPassword: (req: Request, res: Response) => Promise<Response>;
 
-  resetPassword: (
-    req: Request,
-    res: Response
-  ) => Promise<Response>;
+  resetPassword: (req: Request, res: Response) => Promise<Response>;
 
-  getUsers: (
-    req: Request,
-    res: Response
-  ) => Promise<Response>;
+  getUsers: (req: Request, res: Response) => Promise<Response>;
 
-  deleteUser: (
-    req: Request,
-    res: Response
-  ) => Promise<Response>;
+  deleteUser: (req: Request, res: Response) => Promise<Response>;
 }
-

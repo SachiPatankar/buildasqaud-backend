@@ -4,14 +4,18 @@ import {
   EditMessageInput,
   DeleteMessageInput,
   Message,
-  Chat
+  Chat,
 } from '../../types/generated'; // Generated types from codegen
 
 const resolvers = {
   Query: {
     getMessagesForChat: async (
       _: any,
-      { chatId, page = 1, limit = 10 }: { chatId: string; page: number; limit: number },
+      {
+        chatId,
+        page = 1,
+        limit = 10,
+      }: { chatId: string; page: number; limit: number },
       context: ApolloContext
     ): Promise<Message[]> => {
       return context.dataSources.chat.getMessagesForChat(chatId, page, limit);
@@ -29,9 +33,9 @@ const resolvers = {
       _: any,
       { userId }: { userId: string },
       context: ApolloContext
-    ): Promise<{ chat_id: string, unread_count: number }[]> => {
+    ): Promise<{ chat_id: string; unread_count: number }[]> => {
       return context.dataSources.chat.getUnreadCountForChats(userId);
-    }
+    },
   },
 
   Mutation: {
@@ -40,7 +44,11 @@ const resolvers = {
       { input }: { input: SendMessageInput },
       context: ApolloContext
     ): Promise<Message> => {
-      return context.dataSources.chat.sendMessage(input.chatId, input.senderId, input.content);
+      return context.dataSources.chat.sendMessage(
+        input.chatId,
+        input.senderId,
+        input.content
+      );
     },
 
     editMessage: async (
@@ -48,7 +56,10 @@ const resolvers = {
       { input }: { input: EditMessageInput },
       context: ApolloContext
     ): Promise<Message> => {
-      return context.dataSources.chat.editMessage(input.messageId, input.content);
+      return context.dataSources.chat.editMessage(
+        input.messageId,
+        input.content
+      );
     },
 
     deleteMessage: async (
@@ -57,8 +68,8 @@ const resolvers = {
       context: ApolloContext
     ): Promise<boolean> => {
       return context.dataSources.chat.deleteMessage(input.messageId);
-    }
-  }
+    },
+  },
 };
 
 export default resolvers;

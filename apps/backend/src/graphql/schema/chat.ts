@@ -31,7 +31,7 @@ const typeDefs = gql`
     created_at: Date!
     updated_at: Date!
   }
-    input SendMessageInput {
+  input SendMessageInput {
     chatId: String!
     senderId: String!
     content: String!

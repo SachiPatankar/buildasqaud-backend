@@ -23,12 +23,12 @@ const typeDefs = gql`
   }
 
   extend type Query {
-    getAchievementsByUser(userId: String!): [Achievement]!
+    getAchievementsByUser(userId: String): [Achievement]!
   }
 
   extend type Mutation {
     createAchievement(
-      userId: String!
+      userId: String
       input: CreateAchievementInput!
     ): Achievement!
     updateAchievement(
@@ -79,11 +79,11 @@ const typeDefs = gql`
   }
 
   extend type Query {
-    getEducationByUser(userId: String!): [Education]!
+    getEducationByUser(userId: String): [Education]!
   }
 
   extend type Mutation {
-    createEducation(userId: String!, input: CreateEducationInput!): Education!
+    createEducation(userId: String, input: CreateEducationInput!): Education!
     updateEducation(
       educationId: String!
       input: UpdateEducationInput!
@@ -129,12 +129,12 @@ const typeDefs = gql`
   }
 
   extend type Query {
-    getExperienceByUser(userId: String!): [Experience]!
+    getExperienceByUser(userId: String): [Experience]!
   }
 
   extend type Mutation {
     createExperience(
-      userId: String!
+      userId: String
       input: CreateExperienceInput!
     ): Experience!
     updateExperience(
@@ -182,11 +182,11 @@ const typeDefs = gql`
   }
 
   extend type Query {
-    getProjectsByUser(userId: String!): [Project]!
+    getProjectsByUser(userId: String): [Project]!
   }
 
   extend type Mutation {
-    createProject(userId: String!, input: CreateProjectInput!): Project!
+    createProject(userId: String, input: CreateProjectInput!): Project!
     updateProject(projectId: String!, input: UpdateProjectInput!): Project!
     deleteProject(projectId: String!): Boolean!
   }
@@ -214,11 +214,11 @@ const typeDefs = gql`
   }
 
   extend type Query {
-    getSkillsByUser(userId: String!): [UserSkill]!
+    getSkillsByUser(userId: String): [UserSkill]!
   }
 
   extend type Mutation {
-    createUserSkill(userId: String!, input: CreateUserSkillInput!): UserSkill!
+    createUserSkill(userId: String, input: CreateUserSkillInput!): UserSkill!
     updateUserSkill(
       userSkillId: String!
       input: UpdateUserSkillInput!

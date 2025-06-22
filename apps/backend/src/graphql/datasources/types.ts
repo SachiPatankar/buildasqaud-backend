@@ -39,9 +39,8 @@ export interface IDataSource {
   profile: IProfileDataSource; // Profile data source
   connection: IConnectionDataSource; // Connection data source
   people: IPeopleDataSource; // People data source
-  chat : IChatDataSource; // Chat data source
+  chat: IChatDataSource; // Chat data source
 }
-
 
 export interface IS3DataSource {
   getPresignedUrl: (
@@ -58,15 +57,28 @@ export interface IUserDataSource {
   createUser(input: CreateUserInput): Promise<User>; // Create a new user
   updateUser(input: UpdateUserInput, userId: string): Promise<User>; // Update an existing user by ID
   deleteUser(userId: string): Promise<boolean>; // Delete a user by ID
-  changePassword(userId: string, oldPassword: string, newPassword: string): Promise<boolean>; // Change a user's password
+  changePassword(
+    userId: string,
+    oldPassword: string,
+    newPassword: string
+  ): Promise<boolean>; // Change a user's password
   loadUserById(userId: string): Promise<User | null>; // Fetch a user by their ID
 }
 
-
 export interface IPostDataSource {
-  loadPosts(page: number, limit: number, curreent_user_id:string): Promise<PostSummary[]>;
-  loadPostById(postId: string, current_user_id:string): Promise<PostDetails | null>;
-  loadPostByFilter(filter: PostFilterInput,  current_user_id:string ): Promise<PostSummary[]>;
+  loadPosts(
+    page: number,
+    limit: number,
+    curreent_user_id: string
+  ): Promise<PostSummary[]>;
+  loadPostById(
+    postId: string,
+    current_user_id: string
+  ): Promise<PostDetails | null>;
+  loadPostByFilter(
+    filter: PostFilterInput,
+    current_user_id: string
+  ): Promise<PostSummary[]>;
   createPost(input: CreatePostInput, postedBy: string): Promise<Post>;
   updatePost(postId: string, input: UpdatePostInput): Promise<Post | null>;
   deletePost(postId: string): Promise<boolean>;
@@ -175,14 +187,28 @@ export interface IConnectionDataSource {
 
 export interface IPeopleDataSource {
   loadPeople(page: number, limit: number): Promise<Person[]>; // Load a list of people with limited fields
-  loadPeopleByFilter(filter: PeopleFilterInput, page: number, limit: number): Promise<Person[]>; // Load people based on filters
+  loadPeopleByFilter(
+    filter: PeopleFilterInput,
+    page: number,
+    limit: number
+  ): Promise<Person[]>; // Load people based on filters
 }
 
 export interface IChatDataSource {
-  sendMessage(chatId: string, senderId: string, content: string): Promise<Message>
-  editMessage(messageId: string, content: string): Promise<Message>
-  deleteMessage(messageId: string): Promise<boolean>
-  getMessagesForChat(chatId: string, page: number, limit: number): Promise<Message[]>
-  getChatListForUser(userId: string): Promise<Chat[]>
-  getUnreadCountForChats(userId: string): Promise<{ chat_id: string, unread_count: number }[]> 
+  sendMessage(
+    chatId: string,
+    senderId: string,
+    content: string
+  ): Promise<Message>;
+  editMessage(messageId: string, content: string): Promise<Message>;
+  deleteMessage(messageId: string): Promise<boolean>;
+  getMessagesForChat(
+    chatId: string,
+    page: number,
+    limit: number
+  ): Promise<Message[]>;
+  getChatListForUser(userId: string): Promise<Chat[]>;
+  getUnreadCountForChats(
+    userId: string
+  ): Promise<{ chat_id: string; unread_count: number }[]>;
 }

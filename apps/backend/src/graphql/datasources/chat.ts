@@ -5,7 +5,11 @@ import { Message, Chat } from '../../types/generated'; // Generated types from c
 
 export default class ChatDataSource implements IChatDataSource {
   // Send a message and emit via socket
-  async sendMessage(chatId: string, senderId: string, content: string): Promise<Message> {
+  async sendMessage(
+    chatId: string,
+    senderId: string,
+    content: string
+  ): Promise<Message> {
     const newMessage = new MessageModel({
       chat_id: chatId,
       sender_id: senderId,
@@ -64,7 +68,11 @@ export default class ChatDataSource implements IChatDataSource {
   }
 
   // Get all messages in a chat
-  async getMessagesForChat(chatId: string, page: number, limit: number): Promise<Message[]> {
+  async getMessagesForChat(
+    chatId: string,
+    page: number,
+    limit: number
+  ): Promise<Message[]> {
     return MessageModel.find({ chat_id: chatId })
       .skip((page - 1) * limit)
       .limit(limit)
@@ -77,7 +85,9 @@ export default class ChatDataSource implements IChatDataSource {
   }
 
   // Get unread message count for each chat for a user
-  async getUnreadCountForChats(userId: string): Promise<{ chat_id: string, unread_count: number }[]> {
+  async getUnreadCountForChats(
+    userId: string
+  ): Promise<{ chat_id: string; unread_count: number }[]> {
     const chats = await ChatModel.find({ participant_ids: userId });
     const unreadCounts = [];
 

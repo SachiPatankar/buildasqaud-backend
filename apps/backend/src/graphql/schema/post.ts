@@ -28,7 +28,7 @@ const typeDefs = gql`
     updated_at: Date!
   }
 
-    type PostSummary {
+  type PostSummary {
     _id: String!
     title: String!
     description: String
@@ -44,7 +44,7 @@ const typeDefs = gql`
     views_count: Int!
     applications_count: Int!
     is_saved: Boolean!
-    is_applied: Boolean!
+    is_applied: String
     created_at: Date!
     updated_at: Date!
   }
@@ -68,7 +68,7 @@ const typeDefs = gql`
     project_phase: String
     project_type: String
     is_saved: Boolean!
-    is_applied: Boolean!
+    is_applied: String
     created_at: Date!
     updated_at: Date!
   }
@@ -84,7 +84,7 @@ const typeDefs = gql`
     loadPosts(page: Int, limit: Int): [PostSummary]!
     loadPostById(postId: String!): PostDetails
     loadPostByFilter(filter: PostFilterInput!): [PostSummary]!
-    getSavedPosts(userId: String!): [SavedPost]!
+    getSavedPosts: [SavedPost]!
   }
 
   input PostFilterInput {

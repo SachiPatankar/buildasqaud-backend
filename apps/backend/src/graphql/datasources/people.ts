@@ -4,7 +4,6 @@ import { UserSkillModel } from '@db'; // Assuming the UserSkill model is in @db
 import { Person, PeopleFilterInput } from '../../types/generated'; // Generated types from codegen
 
 export default class PeopleDataSource implements IPeopleDataSource {
-  
   async loadPeople(page: number, limit: number): Promise<Person[]> {
     const users = await UserModel.find()
       .skip((page - 1) * limit)
@@ -21,7 +20,7 @@ export default class PeopleDataSource implements IPeopleDataSource {
         return {
           ...user.toObject(),
           top_skills: topSkills,
-        }; 
+        };
       })
     );
 
@@ -56,5 +55,4 @@ export default class PeopleDataSource implements IPeopleDataSource {
 
     return peopleWithTopSkills;
   }
-
 }

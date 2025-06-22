@@ -114,7 +114,7 @@ const PostSchema = new Schema<IPost>(
     },
     experience_level: {
       type: String,
-      enum:  ['beginner', 'intermediate', 'advanced', 'not_specified'],
+      enum: ['beginner', 'intermediate', 'advanced', 'not_specified'],
     },
     location_id: {
       type: String,

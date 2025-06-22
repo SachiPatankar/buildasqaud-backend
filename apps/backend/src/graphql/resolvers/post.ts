@@ -16,21 +16,31 @@ const resolvers = {
       { page = 1, limit = 10 }: { page: number; limit: number },
       context: ApolloContext
     ): Promise<PostSummary[]> => {
-      return context.dataSources.post.loadPosts(page, limit, context.currentUser.id);
+      return context.dataSources.post.loadPosts(
+        page,
+        limit,
+        context.currentUser.id
+      );
     },
     loadPostById: async (
       _: any,
       { postId }: { postId: string },
       context: ApolloContext
     ): Promise<PostDetails | null> => {
-      return context.dataSources.post.loadPostById(postId, context.currentUser.id);
+      return context.dataSources.post.loadPostById(
+        postId,
+        context.currentUser.id
+      );
     },
     loadPostByFilter: async (
       _: any,
       { filter }: { filter: PostFilterInput },
       context: ApolloContext
     ): Promise<PostSummary[]> => {
-      return context.dataSources.post.loadPostByFilter(filter, context.currentUser.id);
+      return context.dataSources.post.loadPostByFilter(
+        filter,
+        context.currentUser.id
+      );
     },
     getSavedPosts: async (
       _: any,

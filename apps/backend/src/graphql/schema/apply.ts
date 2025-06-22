@@ -15,13 +15,12 @@ const typeDefs = gql`
 
   extend type Query {
     loadApplicationsByPostId(postId: String!): [Application]!
-    getApplicationsByUser(userId: String!): [Application]!
+    getApplicationsByUser: [Application]!
   }
 
   extend type Mutation {
     applyToPost(
       postId: String!
-      applicantId: String!
       message: String
     ): Application!
     cancelApplyToPost(applicationId: String!): Boolean!
