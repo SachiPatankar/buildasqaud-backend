@@ -129,12 +129,10 @@ export class AuthController implements IAuthController {
 
       if (!user) {
         // FIX (Point 2): always return success to avoid enumeration
-        return res
-          .status(200)
-          .json({
-            status:
-              'If that email is registered you will receive reset instructions',
-          });
+        return res.status(200).json({
+          status:
+            'If that email is registered you will receive reset instructions',
+        });
       }
 
       const token = this.createToken(user._id, user.email);

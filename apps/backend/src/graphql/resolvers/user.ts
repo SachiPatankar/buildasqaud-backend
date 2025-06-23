@@ -9,7 +9,9 @@ const resolvers = {
       { userId }: { userId: string },
       context: ApolloContext
     ): Promise<User | null> => {
-      return context.dataSources.user.loadUserById(userId);
+      const id = userId || context.currentUser?.id;
+      if (!id) throw new Error('Unauthorized');
+      return context.dataSources.user.loadUserById(id);
     },
   },
 

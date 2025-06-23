@@ -199,7 +199,6 @@ export default class PostDataSource implements IPostDataSource {
       appliedPostStatusMap.set(ap.post_id.toString(), ap.status);
     });
 
-
     const postSummaries = posts.map((post) => {
       const user = userMap[post.posted_by];
 

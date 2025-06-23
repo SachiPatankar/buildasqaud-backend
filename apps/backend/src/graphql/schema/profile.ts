@@ -133,10 +133,7 @@ const typeDefs = gql`
   }
 
   extend type Mutation {
-    createExperience(
-      userId: String
-      input: CreateExperienceInput!
-    ): Experience!
+    createExperience(userId: String, input: CreateExperienceInput!): Experience!
     updateExperience(
       experienceId: String!
       input: UpdateExperienceInput!

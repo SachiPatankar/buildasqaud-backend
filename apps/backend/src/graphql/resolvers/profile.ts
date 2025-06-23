@@ -25,7 +25,7 @@ const resolvers = {
       context: ApolloContext
     ): Promise<Achievement[]> => {
       const id = userId || context.currentUser?.id;
-      if (!id) throw new Error("Unauthorized");
+      if (!id) throw new Error('Unauthorized');
       return context.dataSources.profile.getAchievementsByUser(id);
     },
 
@@ -35,7 +35,7 @@ const resolvers = {
       context: ApolloContext
     ): Promise<Education[]> => {
       const id = userId || context.currentUser?.id;
-      if (!id) throw new Error("Unauthorized");
+      if (!id) throw new Error('Unauthorized');
       return context.dataSources.profile.getEducationByUser(id);
     },
 
@@ -45,7 +45,7 @@ const resolvers = {
       context: ApolloContext
     ): Promise<Experience[]> => {
       const id = userId || context.currentUser?.id;
-      if (!id) throw new Error("Unauthorized");
+      if (!id) throw new Error('Unauthorized');
       return context.dataSources.profile.getExperienceByUser(id);
     },
 
@@ -55,7 +55,7 @@ const resolvers = {
       context: ApolloContext
     ): Promise<Project[]> => {
       const id = userId || context.currentUser?.id;
-      if (!id) throw new Error("Unauthorized");
+      if (!id) throw new Error('Unauthorized');
       return context.dataSources.profile.getProjectsByUser(id);
     },
 
@@ -65,11 +65,10 @@ const resolvers = {
       context: ApolloContext
     ): Promise<UserSkill[]> => {
       const id = userId || context.currentUser?.id;
-      if (!id) throw new Error("Unauthorized");
+      if (!id) throw new Error('Unauthorized');
       return context.dataSources.profile.getSkillsByUser(id);
     },
   },
-
 
   Mutation: {
     createAchievement: async (
