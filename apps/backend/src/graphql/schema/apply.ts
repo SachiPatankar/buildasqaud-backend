@@ -13,8 +13,25 @@ const typeDefs = gql`
     updated_at: Date!
   }
 
+  type ApplicationsByPostIdResponse {
+    _id: String!
+    post_id: String!
+    applicant_id: String!
+    first_name: String!
+    last_name: String
+    photo: String
+    location_id: String
+    title: String
+    bio: String
+    top_skills: [UserSkill]
+    message: String
+    status: String!
+    created_at: Date!
+    updated_at: Date!
+   }
+    
   extend type Query {
-    loadApplicationsByPostId(postId: String!): [Application]!
+    loadApplicationsByPostId(postId: String!): [ApplicationsByPostIdResponse]!
     getApplicationsByUser: [Application]!
   }
 

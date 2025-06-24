@@ -1,5 +1,5 @@
 import { ApolloContext } from '../types';
-import { Application } from '../../types/generated';
+import { Application, ApplicationsByPostIdResponse } from '../../types/generated';
 
 const resolvers = {
   Query: {
@@ -7,7 +7,7 @@ const resolvers = {
       _: any,
       { postId }: { postId: string },
       context: ApolloContext
-    ): Promise<Application[]> => {
+    ): Promise<ApplicationsByPostIdResponse[]> => {
       return context.dataSources.application.loadApplicationsByPostId(postId);
     },
     getApplicationsByUser: async (

@@ -24,6 +24,15 @@ const resolvers = {
     ): Promise<Person[]> => {
       return context.dataSources.people.loadPeopleByFilter(filter, page, limit);
     },
+
+    // Query to load a single person by ID
+    loadPersonById: async (
+      _: any,
+      { id }: { id: string },
+      context: ApolloContext
+    ): Promise<Person> => {
+      return context.dataSources.people.loadPersonById(id);
+    },
   },
 };
 

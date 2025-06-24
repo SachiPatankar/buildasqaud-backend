@@ -84,6 +84,7 @@ const typeDefs = gql`
     loadPosts(page: Int, limit: Int): [PostSummary]!
     loadPostById(postId: String!): PostDetails
     loadPostByFilter(filter: PostFilterInput!): [PostSummary]!
+    loadPostsByUserId(userId: String): [PostSummary]!
     getSavedPosts: [SavedPost]!
   }
 
@@ -103,6 +104,7 @@ const typeDefs = gql`
     savePost(postId: String!): SavedPost!
     unsavePost(postId: String!): Boolean!
     closePost(postId: String!): Post!
+    openPost(postId: String!): Post!
   }
 
   input CreatePostInput {
@@ -113,6 +115,7 @@ const typeDefs = gql`
     project_phase: String
     project_type: String
     work_mode: String
+    experience_level: String
     location_id: String
   }
 
@@ -130,6 +133,8 @@ const typeDefs = gql`
     project_phase: String
     project_type: String
     work_mode: String
+    experience_level: String
+    location_id: String
     status: String
   }
 `;

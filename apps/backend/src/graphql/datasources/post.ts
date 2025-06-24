@@ -259,4 +259,68 @@ export default class PostDataSource implements IPostDataSource {
       { new: true }
     );
   }
+
+  async openPost(postId: string): Promise<Post> {
+    return PostModel.findByIdAndUpdate(
+      postId,
+      { status: 'open' },
+      { new: true }
+    );
+  }
+
+  async loadPostsByUserId(userId: string): Promise<PostSummary[]> {
+    // Find posts by the given userId
+    const posts = await PostModel.find({ posted_by: userId })
+      .sort({ created_at: -1 })
+      .lean()
+      .exec();
+
+    // Retrieve the user who posted the posts
+    const user = await UserModel.findById(userId).lean().exec();
+    if (!user) return [];
+
+    // Get the list of saved posts and applications for the user
+    const savedPosts = await SavedPostModel.find({ user_id: userId })
+      .lean()
+      .exec();
+    const appliedPosts = await ApplicationModel.find({
+      applicant_id: userId,
+    })
+      .lean()
+      .exec();
+
+    // Map post_id to status for quick lookup
+    const appliedPostStatusMap = new Map<string, string>();
+    appliedPosts.forEach((ap) => {
+      appliedPostStatusMap.set(ap.post_id.toString(), ap.status);
+    });
+
+    const savedPostIds = new Set(savedPosts.map((sp) => sp.post_id));
+
+    // Map posts to include user data and check if they are saved or applied
+    const postSummaries = posts.map((post) => {
+      return {
+        _id: post._id,
+        title: post.title,
+        description: post.description,
+        posted_by: post.posted_by,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        photo: user.photo,
+        tech_stack: post.tech_stack,
+        work_mode: post.work_mode,
+        experience_level: post.experience_level,
+        location_id: post.location_id,
+        status: post.status,
+        views_count: post.views_count,
+        applications_count: post.applications_count,
+        is_saved: savedPostIds.has(post._id),
+        is_applied: appliedPostStatusMap.get(post._id.toString()) ?? null,
+        created_at: post.created_at,
+        updated_at: post.updated_at,
+      };
+    });
+
+    return postSummaries;
+  }
 }

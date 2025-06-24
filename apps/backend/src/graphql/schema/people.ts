@@ -29,6 +29,7 @@ const typeDefs = gql`
       page: Int
       limit: Int
     ): [Person]!
+    loadPersonById(id: String!): Person!
   }
 `;
 

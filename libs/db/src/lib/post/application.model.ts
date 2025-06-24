@@ -45,14 +45,6 @@ const ApplicationSchema = new Schema<IApplication>(
   }
 );
 
-ApplicationSchema.index(
-  { post_id: 1, applicant_profile_id: 1 },
-  { unique: true }
-);
-ApplicationSchema.index({ post_id: 1, status: 1 });
-ApplicationSchema.index({ applicant_id: 1, status: 1 });
-ApplicationSchema.index({ created_at: -1 });
-
 export const ApplicationModel = mongoose.model<IApplication>(
   'ApplicationModel',
   ApplicationSchema

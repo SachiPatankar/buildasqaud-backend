@@ -49,6 +49,24 @@ export type Application = {
   updated_at: Scalars['Date']['output'];
 };
 
+export type ApplicationsByPostIdResponse = {
+  __typename?: 'ApplicationsByPostIdResponse';
+  _id: Scalars['String']['output'];
+  applicant_id: Scalars['String']['output'];
+  bio?: Maybe<Scalars['String']['output']>;
+  created_at: Scalars['Date']['output'];
+  first_name: Scalars['String']['output'];
+  last_name?: Maybe<Scalars['String']['output']>;
+  location_id?: Maybe<Scalars['String']['output']>;
+  message?: Maybe<Scalars['String']['output']>;
+  photo?: Maybe<Scalars['String']['output']>;
+  post_id: Scalars['String']['output'];
+  status: Scalars['String']['output'];
+  title?: Maybe<Scalars['String']['output']>;
+  top_skills?: Maybe<Array<Maybe<UserSkill>>>;
+  updated_at: Scalars['Date']['output'];
+};
+
 export type Chat = {
   __typename?: 'Chat';
   _id: Scalars['String']['output'];
@@ -103,6 +121,7 @@ export type CreateExperienceInput = {
 
 export type CreatePostInput = {
   description?: InputMaybe<Scalars['String']['input']>;
+  experience_level?: InputMaybe<Scalars['String']['input']>;
   location_id?: InputMaybe<Scalars['String']['input']>;
   project_phase?: InputMaybe<Scalars['String']['input']>;
   project_type?: InputMaybe<Scalars['String']['input']>;
@@ -234,6 +253,7 @@ export type Mutation = {
   deleteUserSkill: Scalars['Boolean']['output'];
   editMessage: Message;
   incrementPostView: Post;
+  openPost: Post;
   removeConnection: Scalars['Boolean']['output'];
   savePost: SavedPost;
   sendFriendReq: Connection;
@@ -355,6 +375,10 @@ export type MutationEditMessageArgs = {
 };
 
 export type MutationIncrementPostViewArgs = {
+  postId: Scalars['String']['input'];
+};
+
+export type MutationOpenPostArgs = {
   postId: Scalars['String']['input'];
 };
 
@@ -553,14 +577,16 @@ export type Query = {
   getSavedPosts: Array<Maybe<SavedPost>>;
   getSkillsByUser: Array<Maybe<UserSkill>>;
   getUnreadCountForChats: Array<Maybe<UnreadChatCount>>;
-  loadApplicationsByPostId: Array<Maybe<Application>>;
+  loadApplicationsByPostId: Array<Maybe<ApplicationsByPostIdResponse>>;
   loadConnectionsList: Array<Maybe<Connection>>;
   loadPendingFriendRequests: Array<Maybe<Connection>>;
   loadPeople: Array<Maybe<Person>>;
   loadPeopleByFilter: Array<Maybe<Person>>;
+  loadPersonById: Person;
   loadPostByFilter: Array<Maybe<PostSummary>>;
   loadPostById?: Maybe<PostDetails>;
   loadPosts: Array<Maybe<PostSummary>>;
+  loadPostsByUserId: Array<Maybe<PostSummary>>;
   loadSentFriendRequests: Array<Maybe<Connection>>;
   loadUserById?: Maybe<User>;
 };
@@ -632,6 +658,10 @@ export type QueryLoadPeopleByFilterArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
 };
 
+export type QueryLoadPersonByIdArgs = {
+  id: Scalars['String']['input'];
+};
+
 export type QueryLoadPostByFilterArgs = {
   filter: PostFilterInput;
 };
@@ -643,6 +673,10 @@ export type QueryLoadPostByIdArgs = {
 export type QueryLoadPostsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type QueryLoadPostsByUserIdArgs = {
+  userId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type QueryLoadSentFriendRequestsArgs = {
@@ -726,6 +760,8 @@ export type UpdateExperienceInput = {
 
 export type UpdatePostInput = {
   description?: InputMaybe<Scalars['String']['input']>;
+  experience_level?: InputMaybe<Scalars['String']['input']>;
+  location_id?: InputMaybe<Scalars['String']['input']>;
   project_phase?: InputMaybe<Scalars['String']['input']>;
   project_type?: InputMaybe<Scalars['String']['input']>;
   requirements?: InputMaybe<RequirementInput>;

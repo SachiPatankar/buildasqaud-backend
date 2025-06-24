@@ -50,6 +50,14 @@ const resolvers = {
         context.currentUser.id
       );
     },
+    loadPostsByUserId: async (
+      _: any,
+      { userId }: { userId?: string },
+      context: ApolloContext
+    ): Promise<PostSummary[]> => {
+      const resolvedUserId = userId || context.currentUser.id;
+      return context.dataSources.post.loadPostsByUserId(resolvedUserId);
+    },
   },
 
   Mutation: {
@@ -107,6 +115,13 @@ const resolvers = {
       context: ApolloContext
     ): Promise<Post> => {
       return context.dataSources.post.closePost(postId);
+    },
+    openPost: async (
+      _: any,
+      { postId }: { postId: string },
+      context: ApolloContext
+    ): Promise<Post> => {
+      return context.dataSources.post.openPost(postId);
     },
   },
 };

@@ -14,7 +14,7 @@ export default class PeopleDataSource implements IPeopleDataSource {
       users.map(async (user) => {
         const topSkills = await UserSkillModel.find({
           user_id: user._id,
-          isTop: true,
+          is_top: true,
         }).limit(4);
 
         return {
@@ -43,7 +43,7 @@ export default class PeopleDataSource implements IPeopleDataSource {
       users.map(async (user) => {
         const topSkills = await UserSkillModel.find({
           user_id: user._id,
-          isTop: true,
+          is_top: true,
         }).limit(4);
 
         return {
@@ -54,5 +54,20 @@ export default class PeopleDataSource implements IPeopleDataSource {
     );
 
     return peopleWithTopSkills;
+  }
+
+  async loadPersonById(id: string): Promise<Person> {
+    const user = await UserModel.findById(id).select('first_name last_name photo location_id title bio');
+    if (!user) {
+      throw new Error('Person not found');
+    }
+    const topSkills = await UserSkillModel.find({
+      user_id: user._id,
+      is_top: true,
+    }).limit(4);
+    return {
+      ...user.toObject(),
+      top_skills: topSkills,
+    };
   }
 }

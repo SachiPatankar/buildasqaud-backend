@@ -7,7 +7,7 @@ import {
   PostDetails,
 } from '../../types/generated';
 import { SavedPost } from '../../types/generated';
-import { Application } from '../../types/generated';
+import { Application, ApplicationsByPostIdResponse } from '../../types/generated';
 import {
   CreateAchievementInput,
   UpdateAchievementInput,
@@ -69,7 +69,7 @@ export interface IPostDataSource {
   loadPosts(
     page: number,
     limit: number,
-    curreent_user_id: string
+    current_user_id: string
   ): Promise<PostSummary[]>;
   loadPostById(
     postId: string,
@@ -79,11 +79,13 @@ export interface IPostDataSource {
     filter: PostFilterInput,
     current_user_id: string
   ): Promise<PostSummary[]>;
+  loadPostsByUserId(userId: string): Promise<PostSummary[]>;
   createPost(input: CreatePostInput, postedBy: string): Promise<Post>;
   updatePost(postId: string, input: UpdatePostInput): Promise<Post | null>;
   deletePost(postId: string): Promise<boolean>;
   incrementPostView(postId: string): Promise<Post>;
   closePost(postId: string): Promise<Post>;
+  openPost(postId: string): Promise<Post>;
 }
 
 export interface ISavedPostDataSource {
@@ -93,7 +95,7 @@ export interface ISavedPostDataSource {
 }
 
 export interface IApplicationDataSource {
-  loadApplicationsByPostId(postId: string): Promise<Application[]>;
+  loadApplicationsByPostId(postId: string): Promise<ApplicationsByPostIdResponse[]>;
   getApplicationsByUser(userId: string): Promise<Application[]>;
   applyToPost(
     postId: string,
@@ -192,6 +194,7 @@ export interface IPeopleDataSource {
     page: number,
     limit: number
   ): Promise<Person[]>; // Load people based on filters
+  loadPersonById(id: string): Promise<Person>; // Load a single person by ID
 }
 
 export interface IChatDataSource {

@@ -121,7 +121,7 @@ const PostSchema = new Schema<IPost>(
     },
     status: {
       type: String,
-      enum: ['open', 'closed', 'paused', 'completed'],
+      enum: ['open', 'closed'],
       default: 'open',
     },
     views_count: {
