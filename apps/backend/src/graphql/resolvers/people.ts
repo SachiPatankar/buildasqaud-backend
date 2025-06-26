@@ -9,7 +9,7 @@ const resolvers = {
       { page = 1, limit = 10 }: { page: number; limit: number },
       context: ApolloContext
     ): Promise<Person[]> => {
-      return context.dataSources.people.loadPeople(page, limit);
+      return context.dataSources.people.loadPeople(page, limit, context.currentUser.id);
     },
 
     // Query to load a list of people filtered by criteria
@@ -22,7 +22,7 @@ const resolvers = {
       }: { filter: PeopleFilterInput; page: number; limit: number },
       context: ApolloContext
     ): Promise<Person[]> => {
-      return context.dataSources.people.loadPeopleByFilter(filter, page, limit);
+      return context.dataSources.people.loadPeopleByFilter(filter, page, limit, context.currentUser.id);
     },
 
     // Query to load a single person by ID

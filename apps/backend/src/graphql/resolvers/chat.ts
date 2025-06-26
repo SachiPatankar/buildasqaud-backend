@@ -1,10 +1,8 @@
 import { ApolloContext } from '../types';
 import {
-  SendMessageInput,
-  EditMessageInput,
-  DeleteMessageInput,
   Message,
   Chat,
+  UnreadChatCount,
 } from '../../types/generated'; // Generated types from codegen
 
 const resolvers = {
@@ -23,51 +21,51 @@ const resolvers = {
 
     getChatListForUser: async (
       _: any,
-      { userId }: { userId: string },
+      __: any,
       context: ApolloContext
     ): Promise<Chat[]> => {
-      return context.dataSources.chat.getChatListForUser(userId);
+      return context.dataSources.chat.getChatListForUser(context.currentUser.id);
     },
 
     getUnreadCountForChats: async (
       _: any,
-      { userId }: { userId: string },
+      __: any,
       context: ApolloContext
-    ): Promise<{ chat_id: string; unread_count: number }[]> => {
-      return context.dataSources.chat.getUnreadCountForChats(userId);
+    ): Promise<UnreadChatCount[]> => {
+      return context.dataSources.chat.getUnreadCountForChats(context.currentUser.id);
     },
   },
 
   Mutation: {
     sendMessage: async (
       _: any,
-      { input }: { input: SendMessageInput },
+      { chatId, content }: { chatId: string; content: string },
       context: ApolloContext
     ): Promise<Message> => {
       return context.dataSources.chat.sendMessage(
-        input.chatId,
-        input.senderId,
-        input.content
+        chatId,
+        context.currentUser.id,
+        content
       );
     },
 
     editMessage: async (
       _: any,
-      { input }: { input: EditMessageInput },
+      { messageId, content }: { messageId: string; content: string },
       context: ApolloContext
     ): Promise<Message> => {
       return context.dataSources.chat.editMessage(
-        input.messageId,
-        input.content
+        messageId,
+        content
       );
     },
 
     deleteMessage: async (
       _: any,
-      { input }: { input: DeleteMessageInput },
+      { messageId }: { messageId: string },
       context: ApolloContext
     ): Promise<boolean> => {
-      return context.dataSources.chat.deleteMessage(input.messageId);
+      return context.dataSources.chat.deleteMessage(messageId);
     },
   },
 };

@@ -85,7 +85,7 @@ const typeDefs = gql`
     loadPostById(postId: String!): PostDetails
     loadPostByFilter(filter: PostFilterInput!): [PostSummary]!
     loadPostsByUserId(userId: String): [PostSummary]!
-    getSavedPosts: [SavedPost]!
+    getSavedPosts: [PostSummary]
   }
 
   input PostFilterInput {

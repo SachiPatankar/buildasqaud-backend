@@ -5,35 +5,33 @@ const resolvers = {
   Query: {
     loadConnectionsList: async (
       _: any,
-      { userId }: { userId: string },
+      { userId}: { userId: string },
       context: ApolloContext
     ): Promise<Connection[]> => {
-      return context.dataSources.connection.loadConnectionsList(userId);
+      if (userId)return context.dataSources.connection.loadConnectionsList(userId);
+      return context.dataSources.connection.loadConnectionsList(context.currentUser.id);
     },
     loadPendingFriendRequests: async (
       _: any,
-      { userId }: { userId: string },
+      __: any,
       context: ApolloContext
     ): Promise<Connection[]> => {
-      return context.dataSources.connection.loadPendingFriendRequests(userId);
+      return context.dataSources.connection.loadPendingFriendRequests(context.currentUser.id);
     },
     loadSentFriendRequests: async (
       _: any,
-      { userId }: { userId: string },
+      __: any,
       context: ApolloContext
     ): Promise<Connection[]> => {
-      return context.dataSources.connection.loadSentFriendRequests(userId);
+      return context.dataSources.connection.loadSentFriendRequests(context.currentUser.id);
     },
     checkConnectionStatus: async (
       _: any,
-      {
-        requesterUserId,
-        addresseeUserId,
-      }: { requesterUserId: string; addresseeUserId: string },
+      { addresseeUserId }: { addresseeUserId: string },
       context: ApolloContext
     ): Promise<string> => {
       return context.dataSources.connection.checkConnectionStatus(
-        requesterUserId,
+        context.currentUser.id,
         addresseeUserId
       );
     },
@@ -42,15 +40,11 @@ const resolvers = {
   Mutation: {
     sendFriendReq: async (
       _: any,
-      {
-        requesterUserId,
-        addresseeUserId,
-        message,
-      }: { requesterUserId: string; addresseeUserId: string; message: string },
+      { addresseeUserId, message }: { addresseeUserId: string; message: string },
       context: ApolloContext
     ): Promise<Connection> => {
       return context.dataSources.connection.sendFriendReq(
-        requesterUserId,
+        context.currentUser.id,
         addresseeUserId,
         message
       );
@@ -71,14 +65,11 @@ const resolvers = {
     },
     blockUser: async (
       _: any,
-      {
-        requesterUserId,
-        addresseeUserId,
-      }: { requesterUserId: string; addresseeUserId: string },
+      { addresseeUserId }: { addresseeUserId: string },
       context: ApolloContext
     ): Promise<Connection> => {
       return context.dataSources.connection.blockUser(
-        requesterUserId,
+        context.currentUser.id,
         addresseeUserId
       );
     },

@@ -13,27 +13,28 @@ const typeDefs = gql`
     created_at: Date!
     updated_at: Date!
     responded_at: Date
+    first_name: String
+    last_name: String
+    photo: String
   }
 
   extend type Query {
-    loadConnectionsList(userId: String!): [Connection]!
-    loadPendingFriendRequests(userId: String!): [Connection]!
-    loadSentFriendRequests(userId: String!): [Connection]!
+    loadConnectionsList(userId: String): [Connection]!
+    loadPendingFriendRequests: [Connection]!
+    loadSentFriendRequests: [Connection]!
     checkConnectionStatus(
-      requesterUserId: String!
       addresseeUserId: String!
     ): String!
   }
 
   extend type Mutation {
     sendFriendReq(
-      requesterUserId: String!
       addresseeUserId: String!
       message: String
     ): Connection!
     acceptFriendReq(connectionId: String!): Connection!
     declineFriendReq(connectionId: String!): Boolean!
-    blockUser(requesterUserId: String!, addresseeUserId: String!): Connection!
+    blockUser(addresseeUserId: String!): Connection!
     removeConnection(connectionId: String!): Boolean!
   }
 `;

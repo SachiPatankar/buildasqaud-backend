@@ -1,5 +1,5 @@
 import { IUserDataSource } from './types';
-import { UserModel } from '@db'; // Assuming UserModel is in @db
+import { UserModel, ConnectionModel } from '@db'; // Assuming UserModel and ConnectionModel are in @db
 import { User, CreateUserInput, UpdateUserInput } from '../../types/generated'; // Generated types from codegen
 
 export default class UserDataSource implements IUserDataSource {
@@ -45,7 +45,22 @@ export default class UserDataSource implements IUserDataSource {
   }
 
   // Fetch a user by their ID
-  async loadUserById(userId: string): Promise<User | null> {
-    return UserModel.findById(userId); // Assuming user ID is the primary key
+  async loadUserById(userId: string, current_user_id?: string): Promise<User | null> {
+    const user = await UserModel.findById(userId);
+    if (!user) return null;
+    let is_connection = null;
+    if (current_user_id && userId !== current_user_id) {
+      const connection = await ConnectionModel.findOne({
+        $or: [
+          { requester_user_id: current_user_id, addressee_user_id: userId },
+          { requester_user_id: userId, addressee_user_id: current_user_id },
+        ],
+      });
+      is_connection = connection ? connection.status : null;
+    }
+    return {
+      ...user.toObject(),
+      is_connection,
+    };
   }
 }

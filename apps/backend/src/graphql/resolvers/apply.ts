@@ -1,5 +1,9 @@
 import { ApolloContext } from '../types';
-import { Application, ApplicationsByPostIdResponse } from '../../types/generated';
+import {
+  Application,
+  ApplicationsByPostIdResponse,
+  ApplicationsByUserIdResponse,
+} from '../../types/generated';
 
 const resolvers = {
   Query: {
@@ -14,7 +18,7 @@ const resolvers = {
       _: any,
       { userId }: { userId: string },
       context: ApolloContext
-    ): Promise<Application[]> => {
+    ): Promise<ApplicationsByUserIdResponse[]> => {
       // Use context.currentUser.id to get the current user's ID instead of userId argument
       return context.dataSources.application.getApplicationsByUser(
         context.currentUser.id

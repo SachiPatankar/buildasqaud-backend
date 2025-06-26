@@ -67,14 +67,24 @@ export type ApplicationsByPostIdResponse = {
   updated_at: Scalars['Date']['output'];
 };
 
+export type ApplicationsByUserIdResponse = {
+  __typename?: 'ApplicationsByUserIdResponse';
+  application: Application;
+  post: PostSummary;
+};
+
 export type Chat = {
   __typename?: 'Chat';
   _id: Scalars['String']['output'];
   created_at: Scalars['Date']['output'];
+  first_name?: Maybe<Scalars['String']['output']>;
   is_active?: Maybe<Scalars['Boolean']['output']>;
   last_message_at?: Maybe<Scalars['Date']['output']>;
+  last_message_content?: Maybe<Scalars['String']['output']>;
   last_message_id?: Maybe<Scalars['String']['output']>;
+  last_name?: Maybe<Scalars['String']['output']>;
   participant_ids: Array<Scalars['String']['output']>;
+  photo?: Maybe<Scalars['String']['output']>;
   updated_at: Scalars['Date']['output'];
 };
 
@@ -84,7 +94,10 @@ export type Connection = {
   addressee_user_id: Scalars['String']['output'];
   chat_id?: Maybe<Scalars['String']['output']>;
   created_at: Scalars['Date']['output'];
+  first_name?: Maybe<Scalars['String']['output']>;
+  last_name?: Maybe<Scalars['String']['output']>;
   message?: Maybe<Scalars['String']['output']>;
+  photo?: Maybe<Scalars['String']['output']>;
   requester_user_id: Scalars['String']['output'];
   responded_at?: Maybe<Scalars['Date']['output']>;
   status: Scalars['String']['output'];
@@ -155,15 +168,6 @@ export type CreateUserSkillInput = {
   proficiency_level: Scalars['String']['input'];
   skill_name: Scalars['String']['input'];
   years_experience?: InputMaybe<Scalars['Int']['input']>;
-};
-
-export type DeleteMessageInput = {
-  messageId: Scalars['String']['input'];
-};
-
-export type EditMessageInput = {
-  content: Scalars['String']['input'];
-  messageId: Scalars['String']['input'];
 };
 
 export type Education = {
@@ -280,7 +284,6 @@ export type MutationApplyToPostArgs = {
 
 export type MutationBlockUserArgs = {
   addresseeUserId: Scalars['String']['input'];
-  requesterUserId: Scalars['String']['input'];
 };
 
 export type MutationCancelApplyToPostArgs = {
@@ -393,13 +396,11 @@ export type MutationSavePostArgs = {
 export type MutationSendFriendReqArgs = {
   addresseeUserId: Scalars['String']['input'];
   message?: InputMaybe<Scalars['String']['input']>;
-  requesterUserId: Scalars['String']['input'];
 };
 
 export type MutationSendMessageArgs = {
   chatId: Scalars['String']['input'];
   content: Scalars['String']['input'];
-  senderId: Scalars['String']['input'];
 };
 
 export type MutationUnsavePostArgs = {
@@ -458,6 +459,7 @@ export type Person = {
   _id: Scalars['String']['output'];
   bio?: Maybe<Scalars['String']['output']>;
   first_name: Scalars['String']['output'];
+  is_connection?: Maybe<Scalars['String']['output']>;
   last_name?: Maybe<Scalars['String']['output']>;
   location_id?: Maybe<Scalars['String']['output']>;
   photo?: Maybe<Scalars['String']['output']>;
@@ -567,14 +569,14 @@ export type Query = {
   _empty?: Maybe<Scalars['String']['output']>;
   checkConnectionStatus: Scalars['String']['output'];
   getAchievementsByUser: Array<Maybe<Achievement>>;
-  getApplicationsByUser: Array<Maybe<Application>>;
+  getApplicationsByUser: Array<Maybe<ApplicationsByUserIdResponse>>;
   getChatListForUser: Array<Maybe<Chat>>;
   getEducationByUser: Array<Maybe<Education>>;
   getExperienceByUser: Array<Maybe<Experience>>;
   getMessagesForChat: Array<Maybe<Message>>;
   getPresignedUrl: PresignedUrlResult;
   getProjectsByUser: Array<Maybe<Project>>;
-  getSavedPosts: Array<Maybe<SavedPost>>;
+  getSavedPosts?: Maybe<Array<Maybe<PostSummary>>>;
   getSkillsByUser: Array<Maybe<UserSkill>>;
   getUnreadCountForChats: Array<Maybe<UnreadChatCount>>;
   loadApplicationsByPostId: Array<Maybe<ApplicationsByPostIdResponse>>;
@@ -593,15 +595,10 @@ export type Query = {
 
 export type QueryCheckConnectionStatusArgs = {
   addresseeUserId: Scalars['String']['input'];
-  requesterUserId: Scalars['String']['input'];
 };
 
 export type QueryGetAchievementsByUserArgs = {
   userId?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type QueryGetChatListForUserArgs = {
-  userId: Scalars['String']['input'];
 };
 
 export type QueryGetEducationByUserArgs = {
@@ -631,20 +628,12 @@ export type QueryGetSkillsByUserArgs = {
   userId?: InputMaybe<Scalars['String']['input']>;
 };
 
-export type QueryGetUnreadCountForChatsArgs = {
-  userId: Scalars['String']['input'];
-};
-
 export type QueryLoadApplicationsByPostIdArgs = {
   postId: Scalars['String']['input'];
 };
 
 export type QueryLoadConnectionsListArgs = {
-  userId: Scalars['String']['input'];
-};
-
-export type QueryLoadPendingFriendRequestsArgs = {
-  userId: Scalars['String']['input'];
+  userId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type QueryLoadPeopleArgs = {
@@ -679,10 +668,6 @@ export type QueryLoadPostsByUserIdArgs = {
   userId?: InputMaybe<Scalars['String']['input']>;
 };
 
-export type QueryLoadSentFriendRequestsArgs = {
-  userId: Scalars['String']['input'];
-};
-
 export type QueryLoadUserByIdArgs = {
   userId?: InputMaybe<Scalars['String']['input']>;
 };
@@ -711,12 +696,6 @@ export type SavedPost = {
   created_at: Scalars['Date']['output'];
   post_id: Scalars['String']['output'];
   user_id: Scalars['String']['output'];
-};
-
-export type SendMessageInput = {
-  chatId: Scalars['String']['input'];
-  content: Scalars['String']['input'];
-  senderId: Scalars['String']['input'];
 };
 
 export type Subscription = {
@@ -806,6 +785,7 @@ export type User = {
   created_at: Scalars['Date']['output'];
   email: Scalars['String']['output'];
   first_name: Scalars['String']['output'];
+  is_connection?: Maybe<Scalars['String']['output']>;
   is_online?: Maybe<Scalars['Boolean']['output']>;
   last_name?: Maybe<Scalars['String']['output']>;
   last_seen?: Maybe<Scalars['Date']['output']>;

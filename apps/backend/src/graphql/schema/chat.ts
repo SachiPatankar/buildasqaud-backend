@@ -26,34 +26,24 @@ const typeDefs = gql`
     _id: String!
     participant_ids: [String!]!
     last_message_id: String
+    last_message_content: String
     last_message_at: Date
     is_active: Boolean
     created_at: Date!
     updated_at: Date!
-  }
-  input SendMessageInput {
-    chatId: String!
-    senderId: String!
-    content: String!
-  }
-
-  input EditMessageInput {
-    messageId: String!
-    content: String!
-  }
-
-  input DeleteMessageInput {
-    messageId: String!
+    first_name: String
+    last_name: String
+    photo: String
   }
 
   extend type Query {
     getMessagesForChat(chatId: String!, page: Int, limit: Int): [Message]!
-    getChatListForUser(userId: String!): [Chat]!
-    getUnreadCountForChats(userId: String!): [UnreadChatCount]!
+    getChatListForUser: [Chat]!
+    getUnreadCountForChats: [UnreadChatCount]!
   }
 
   extend type Mutation {
-    sendMessage(chatId: String!, senderId: String!, content: String!): Message!
+    sendMessage(chatId: String!, content: String!): Message!
     editMessage(messageId: String!, content: String!): Message!
     deleteMessage(messageId: String!): Boolean!
   }

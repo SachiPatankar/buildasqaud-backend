@@ -1,5 +1,5 @@
 import { IConnectionDataSource } from './types';
-import { ConnectionModel } from '@db'; // Assuming the model is in @db
+import { ConnectionModel, UserModel } from '@db'; // Assuming the models are in @db
 import { Connection } from '../../types/generated'; // Import generated types for Connection
 
 export default class ConnectionDataSource implements IConnectionDataSource {
@@ -57,26 +57,74 @@ export default class ConnectionDataSource implements IConnectionDataSource {
 
   // Load connections list for a user
   async loadConnectionsList(userId: string): Promise<Connection[]> {
-    return ConnectionModel.find({
+    const connections = await ConnectionModel.find({
       $or: [{ requester_user_id: userId }, { addressee_user_id: userId }],
+    }).lean();
+    // Find the other user in each connection
+    const otherUserIds = connections.map(conn => conn.requester_user_id === userId ? conn.addressee_user_id : conn.requester_user_id);
+    const users = await UserModel.find({ _id: { $in: otherUserIds } }).lean();
+    const userMap = users.reduce((acc, user) => {
+      acc[user._id] = user;
+      return acc;
+    }, {});
+    return connections.map(conn => {
+      const otherId = conn.requester_user_id === userId ? conn.addressee_user_id : conn.requester_user_id;
+      const user = userMap[otherId] || {};
+      return {
+        ...conn,
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
+        photo: user.photo || '',
+      };
     });
   }
 
   // Load pending friend requests for a user
   async loadPendingFriendRequests(userId: string): Promise<Connection[]> {
-    return ConnectionModel.find({
+    const connections = await ConnectionModel.find({
       $or: [
         { requester_user_id: userId, status: 'pending' },
         { addressee_user_id: userId, status: 'pending' },
       ],
+    }).lean();
+    const otherUserIds = connections.map(conn => conn.requester_user_id === userId ? conn.addressee_user_id : conn.requester_user_id);
+    const users = await UserModel.find({ _id: { $in: otherUserIds } }).lean();
+    const userMap = users.reduce((acc, user) => {
+      acc[user._id] = user;
+      return acc;
+    }, {});
+    return connections.map(conn => {
+      const otherId = conn.requester_user_id === userId ? conn.addressee_user_id : conn.requester_user_id;
+      const user = userMap[otherId] || {};
+      return {
+        ...conn,
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
+        photo: user.photo || '',
+      };
     });
   }
 
   // Load sent friend requests for a user
   async loadSentFriendRequests(userId: string): Promise<Connection[]> {
-    return ConnectionModel.find({
+    const connections = await ConnectionModel.find({
       requester_user_id: userId,
       status: 'pending',
+    }).lean();
+    const otherUserIds = connections.map(conn => conn.addressee_user_id);
+    const users = await UserModel.find({ _id: { $in: otherUserIds } }).lean();
+    const userMap = users.reduce((acc, user) => {
+      acc[user._id] = user;
+      return acc;
+    }, {});
+    return connections.map(conn => {
+      const user = userMap[conn.addressee_user_id] || {};
+      return {
+        ...conn,
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
+        photo: user.photo || '',
+      };
     });
   }
 

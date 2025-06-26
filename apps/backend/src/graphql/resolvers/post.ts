@@ -44,8 +44,9 @@ const resolvers = {
     },
     getSavedPosts: async (
       _: any,
+      args: any, 
       context: ApolloContext
-    ): Promise<SavedPost[]> => {
+    ): Promise<PostSummary[]> => {
       return context.dataSources.savedPost.getSavedPosts(
         context.currentUser.id
       );

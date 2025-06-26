@@ -28,11 +28,16 @@ const typeDefs = gql`
     status: String!
     created_at: Date!
     updated_at: Date!
-   }
-    
+  }
+
+  type ApplicationsByUserIdResponse {
+    post: PostSummary!
+    application: Application!
+  }
+
   extend type Query {
     loadApplicationsByPostId(postId: String!): [ApplicationsByPostIdResponse]!
-    getApplicationsByUser: [Application]!
+    getApplicationsByUser: [ApplicationsByUserIdResponse]!
   }
 
   extend type Mutation {

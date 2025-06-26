@@ -7,7 +7,11 @@ import {
   PostDetails,
 } from '../../types/generated';
 import { SavedPost } from '../../types/generated';
-import { Application, ApplicationsByPostIdResponse } from '../../types/generated';
+import {
+  Application,
+  ApplicationsByPostIdResponse,
+  ApplicationsByUserIdResponse,
+} from '../../types/generated';
 import {
   CreateAchievementInput,
   UpdateAchievementInput,
@@ -62,7 +66,7 @@ export interface IUserDataSource {
     oldPassword: string,
     newPassword: string
   ): Promise<boolean>; // Change a user's password
-  loadUserById(userId: string): Promise<User | null>; // Fetch a user by their ID
+  loadUserById(userId: string, current_user_id?: string): Promise<User | null>; // Fetch a user by their ID, with optional current user context
 }
 
 export interface IPostDataSource {
@@ -89,14 +93,16 @@ export interface IPostDataSource {
 }
 
 export interface ISavedPostDataSource {
-  getSavedPosts(userId: string): Promise<SavedPost[]>;
+  getSavedPosts(userId: string): Promise<PostSummary[]>;
   savePost(postId: string, userId: string): Promise<SavedPost>;
   unsavePost(postId: string, userId: string): Promise<boolean>;
 }
 
 export interface IApplicationDataSource {
-  loadApplicationsByPostId(postId: string): Promise<ApplicationsByPostIdResponse[]>;
-  getApplicationsByUser(userId: string): Promise<Application[]>;
+  loadApplicationsByPostId(
+    postId: string
+  ): Promise<ApplicationsByPostIdResponse[]>;
+  getApplicationsByUser(userId: string): Promise<ApplicationsByUserIdResponse[]>;
   applyToPost(
     postId: string,
     applicantId: string,
@@ -188,11 +194,12 @@ export interface IConnectionDataSource {
 }
 
 export interface IPeopleDataSource {
-  loadPeople(page: number, limit: number): Promise<Person[]>; // Load a list of people with limited fields
+  loadPeople(page: number, limit: number, current_user_id: string): Promise<Person[]>; // Load a list of people with limited fields
   loadPeopleByFilter(
     filter: PeopleFilterInput,
     page: number,
-    limit: number
+    limit: number,
+    current_user_id: string
   ): Promise<Person[]>; // Load people based on filters
   loadPersonById(id: string): Promise<Person>; // Load a single person by ID
 }

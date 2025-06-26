@@ -11,7 +11,7 @@ const resolvers = {
     ): Promise<User | null> => {
       const id = userId || context.currentUser?.id;
       if (!id) throw new Error('Unauthorized');
-      return context.dataSources.user.loadUserById(id);
+      return context.dataSources.user.loadUserById(id, context.currentUser.id);
     },
   },
 
