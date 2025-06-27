@@ -20,7 +20,7 @@ const typeDefs = gql`
     connections_count: Int
     links: [Link]
     is_online: Boolean
-    is_connection : String
+    is_connection: String
     last_seen: Date
     created_at: Date!
     updated_at: Date!

@@ -102,7 +102,9 @@ export interface IApplicationDataSource {
   loadApplicationsByPostId(
     postId: string
   ): Promise<ApplicationsByPostIdResponse[]>;
-  getApplicationsByUser(userId: string): Promise<ApplicationsByUserIdResponse[]>;
+  getApplicationsByUser(
+    userId: string
+  ): Promise<ApplicationsByUserIdResponse[]>;
   applyToPost(
     postId: string,
     applicantId: string,
@@ -194,7 +196,11 @@ export interface IConnectionDataSource {
 }
 
 export interface IPeopleDataSource {
-  loadPeople(page: number, limit: number, current_user_id: string): Promise<Person[]>; // Load a list of people with limited fields
+  loadPeople(
+    page: number,
+    limit: number,
+    current_user_id: string
+  ): Promise<Person[]>; // Load a list of people with limited fields
   loadPeopleByFilter(
     filter: PeopleFilterInput,
     page: number,

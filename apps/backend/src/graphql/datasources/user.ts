@@ -45,7 +45,10 @@ export default class UserDataSource implements IUserDataSource {
   }
 
   // Fetch a user by their ID
-  async loadUserById(userId: string, current_user_id?: string): Promise<User | null> {
+  async loadUserById(
+    userId: string,
+    current_user_id?: string
+  ): Promise<User | null> {
     const user = await UserModel.findById(userId);
     if (!user) return null;
     let is_connection = null;

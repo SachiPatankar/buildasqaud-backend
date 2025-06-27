@@ -81,25 +81,36 @@ export default class ChatDataSource implements IChatDataSource {
 
   // Get chat list for a user (only active chats)
   async getChatListForUser(userId: string): Promise<Chat[]> {
-    const chats = await ChatModel.find({ participant_ids: userId, is_active: true }).lean();
+    const chats = await ChatModel.find({
+      participant_ids: userId,
+      is_active: true,
+    }).lean();
     // Find the other participant for each chat
-    const otherUserIds = chats.map(chat => chat.participant_ids.find((id: string) => id !== userId)).filter(Boolean);
+    const otherUserIds = chats
+      .map((chat) => chat.participant_ids.find((id: string) => id !== userId))
+      .filter(Boolean);
     const users = await UserModel.find({ _id: { $in: otherUserIds } }).lean();
     const userMap = users.reduce((acc, user) => {
       acc[user._id] = user;
       return acc;
     }, {});
     // Fetch last message content for each chat
-    const lastMessageIds = chats.map(chat => chat.last_message_id).filter(Boolean);
-    const messages = await MessageModel.find({ _id: { $in: lastMessageIds } }).lean();
+    const lastMessageIds = chats
+      .map((chat) => chat.last_message_id)
+      .filter(Boolean);
+    const messages = await MessageModel.find({
+      _id: { $in: lastMessageIds },
+    }).lean();
     const messageMap = messages.reduce((acc, msg) => {
       acc[msg._id] = msg;
       return acc;
     }, {});
-    return chats.map(chat => {
+    return chats.map((chat) => {
       const otherId = chat.participant_ids.find((id: string) => id !== userId);
       const user = userMap[otherId] || {};
-      const lastMessage = chat.last_message_id ? messageMap[chat.last_message_id] : null;
+      const lastMessage = chat.last_message_id
+        ? messageMap[chat.last_message_id]
+        : null;
       return {
         ...chat,
         first_name: user.first_name || '',

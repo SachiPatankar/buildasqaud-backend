@@ -44,7 +44,7 @@ const resolvers = {
     },
     getSavedPosts: async (
       _: any,
-      args: any, 
+      args: any,
       context: ApolloContext
     ): Promise<PostSummary[]> => {
       return context.dataSources.savedPost.getSavedPosts(

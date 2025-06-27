@@ -5,7 +5,11 @@ import { Person, PeopleFilterInput } from '../../types/generated'; // Generated 
 import { ConnectionModel } from '@db';
 
 export default class PeopleDataSource implements IPeopleDataSource {
-  async loadPeople(page: number, limit: number, current_user_id: string): Promise<Person[]> {
+  async loadPeople(
+    page: number,
+    limit: number,
+    current_user_id: string
+  ): Promise<Person[]> {
     const users = await UserModel.find()
       .skip((page - 1) * limit)
       .limit(limit)
@@ -21,8 +25,14 @@ export default class PeopleDataSource implements IPeopleDataSource {
         if (current_user_id && user._id.toString() !== current_user_id) {
           const connection = await ConnectionModel.findOne({
             $or: [
-              { requester_user_id: current_user_id, addressee_user_id: user._id },
-              { requester_user_id: user._id, addressee_user_id: current_user_id },
+              {
+                requester_user_id: current_user_id,
+                addressee_user_id: user._id,
+              },
+              {
+                requester_user_id: user._id,
+                addressee_user_id: current_user_id,
+              },
             ],
           });
           is_connection = connection ? connection.status : null;
@@ -60,8 +70,14 @@ export default class PeopleDataSource implements IPeopleDataSource {
         if (current_user_id && user._id.toString() !== current_user_id) {
           const connection = await ConnectionModel.findOne({
             $or: [
-              { requester_user_id: current_user_id, addressee_user_id: user._id },
-              { requester_user_id: user._id, addressee_user_id: current_user_id },
+              {
+                requester_user_id: current_user_id,
+                addressee_user_id: user._id,
+              },
+              {
+                requester_user_id: user._id,
+                addressee_user_id: current_user_id,
+              },
             ],
           });
           is_connection = connection ? connection.status : null;

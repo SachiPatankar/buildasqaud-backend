@@ -12,7 +12,7 @@ const typeDefs = gql`
     title: String
     bio: String
     top_skills: [UserSkill]
-    is_connection : String
+    is_connection: String
   }
 
   input PeopleFilterInput {

@@ -6,13 +6,19 @@ import { SavedPost, PostSummary } from '../../types/generated';
 export default class SavedPostDataSource implements ISavedPostDataSource {
   async getSavedPosts(userId: string): Promise<PostSummary[]> {
     // Find all saved posts for the user
-    const savedPosts = await SavedPostModel.find({ user_id: userId }).lean().exec();
+    const savedPosts = await SavedPostModel.find({ user_id: userId })
+      .lean()
+      .exec();
     const postIds = savedPosts.map((sp) => sp.post_id);
 
     // Find all posts that are saved
-    const posts = await PostModel.find({ _id: { $in: postIds } }).lean().exec();
+    const posts = await PostModel.find({ _id: { $in: postIds } })
+      .lean()
+      .exec();
     const userIds = posts.map((post) => post.posted_by);
-    const users = await UserModel.find({ _id: { $in: userIds } }).lean().exec();
+    const users = await UserModel.find({ _id: { $in: userIds } })
+      .lean()
+      .exec();
     const userMap = users.reduce((acc, user) => {
       acc[user._id] = user;
       return acc;
@@ -22,7 +28,9 @@ export default class SavedPostDataSource implements ISavedPostDataSource {
     const appliedPosts = await ApplicationModel.find({
       applicant_id: userId,
       post_id: { $in: postIds },
-    }).lean().exec();
+    })
+      .lean()
+      .exec();
     const appliedPostStatusMap = new Map<string, string>();
     appliedPosts.forEach((ap) => {
       appliedPostStatusMap.set(ap.post_id.toString(), ap.status);

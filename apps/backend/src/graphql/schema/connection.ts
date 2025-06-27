@@ -22,16 +22,11 @@ const typeDefs = gql`
     loadConnectionsList(userId: String): [Connection]!
     loadPendingFriendRequests: [Connection]!
     loadSentFriendRequests: [Connection]!
-    checkConnectionStatus(
-      addresseeUserId: String!
-    ): String!
+    checkConnectionStatus(addresseeUserId: String!): String!
   }
 
   extend type Mutation {
-    sendFriendReq(
-      addresseeUserId: String!
-      message: String
-    ): Connection!
+    sendFriendReq(addresseeUserId: String!, message: String): Connection!
     acceptFriendReq(connectionId: String!): Connection!
     declineFriendReq(connectionId: String!): Boolean!
     blockUser(addresseeUserId: String!): Connection!

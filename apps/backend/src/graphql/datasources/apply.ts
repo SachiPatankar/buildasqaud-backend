@@ -1,5 +1,11 @@
 import { IApplicationDataSource } from './types';
-import { ApplicationModel, UserModel, UserSkillModel, PostModel, SavedPostModel } from '@db';
+import {
+  ApplicationModel,
+  UserModel,
+  UserSkillModel,
+  PostModel,
+  SavedPostModel,
+} from '@db';
 import {
   Application,
   ApplicationsByPostIdResponse,
@@ -86,15 +92,17 @@ export default class ApplicationDataSource implements IApplicationDataSource {
   }
 
   async getApplicationsByUser(userId: string): Promise<any[]> {
-    const applications = await ApplicationModel.find({ applicant_id: userId }).sort({
-      created_at: -1,
-    }).lean();
+    const applications = await ApplicationModel.find({ applicant_id: userId })
+      .sort({
+        created_at: -1,
+      })
+      .lean();
     if (applications.length === 0) return [];
 
     // Fetch all post IDs
-    const postIds = applications.map(app => app.post_id);
+    const postIds = applications.map((app) => app.post_id);
     const posts = await PostModel.find({ _id: { $in: postIds } }).lean();
-    const userIds = posts.map(post => post.posted_by);
+    const userIds = posts.map((post) => post.posted_by);
     const users = await UserModel.find({ _id: { $in: userIds } }).lean();
     const userMap = users.reduce((acc, user) => {
       acc[user._id.toString()] = user;
@@ -103,7 +111,9 @@ export default class ApplicationDataSource implements IApplicationDataSource {
 
     // Get the list of saved posts and applications for the current user
     const savedPosts = await SavedPostModel.find({ user_id: userId }).lean();
-    const appliedPosts = await ApplicationModel.find({ applicant_id: userId }).lean();
+    const appliedPosts = await ApplicationModel.find({
+      applicant_id: userId,
+    }).lean();
     const appliedPostStatusMap = new Map<string, string>();
     appliedPosts.forEach((ap) => {
       appliedPostStatusMap.set(ap.post_id.toString(), ap.status);
@@ -113,11 +123,16 @@ export default class ApplicationDataSource implements IApplicationDataSource {
     // Build PostSummary for each post
     const postMap = posts.reduce((acc, post) => {
       const user = userMap[post.posted_by.toString()];
-      acc[post._id.toString()] = buildPostSummary(post, user, savedPostIds, appliedPostStatusMap);
+      acc[post._id.toString()] = buildPostSummary(
+        post,
+        user,
+        savedPostIds,
+        appliedPostStatusMap
+      );
       return acc;
     }, {});
 
-    return applications.map(app => ({
+    return applications.map((app) => ({
       post: postMap[app.post_id],
       application: app,
     }));

@@ -61,14 +61,21 @@ export default class ConnectionDataSource implements IConnectionDataSource {
       $or: [{ requester_user_id: userId }, { addressee_user_id: userId }],
     }).lean();
     // Find the other user in each connection
-    const otherUserIds = connections.map(conn => conn.requester_user_id === userId ? conn.addressee_user_id : conn.requester_user_id);
+    const otherUserIds = connections.map((conn) =>
+      conn.requester_user_id === userId
+        ? conn.addressee_user_id
+        : conn.requester_user_id
+    );
     const users = await UserModel.find({ _id: { $in: otherUserIds } }).lean();
     const userMap = users.reduce((acc, user) => {
       acc[user._id] = user;
       return acc;
     }, {});
-    return connections.map(conn => {
-      const otherId = conn.requester_user_id === userId ? conn.addressee_user_id : conn.requester_user_id;
+    return connections.map((conn) => {
+      const otherId =
+        conn.requester_user_id === userId
+          ? conn.addressee_user_id
+          : conn.requester_user_id;
       const user = userMap[otherId] || {};
       return {
         ...conn,
@@ -87,14 +94,21 @@ export default class ConnectionDataSource implements IConnectionDataSource {
         { addressee_user_id: userId, status: 'pending' },
       ],
     }).lean();
-    const otherUserIds = connections.map(conn => conn.requester_user_id === userId ? conn.addressee_user_id : conn.requester_user_id);
+    const otherUserIds = connections.map((conn) =>
+      conn.requester_user_id === userId
+        ? conn.addressee_user_id
+        : conn.requester_user_id
+    );
     const users = await UserModel.find({ _id: { $in: otherUserIds } }).lean();
     const userMap = users.reduce((acc, user) => {
       acc[user._id] = user;
       return acc;
     }, {});
-    return connections.map(conn => {
-      const otherId = conn.requester_user_id === userId ? conn.addressee_user_id : conn.requester_user_id;
+    return connections.map((conn) => {
+      const otherId =
+        conn.requester_user_id === userId
+          ? conn.addressee_user_id
+          : conn.requester_user_id;
       const user = userMap[otherId] || {};
       return {
         ...conn,
@@ -111,13 +125,13 @@ export default class ConnectionDataSource implements IConnectionDataSource {
       requester_user_id: userId,
       status: 'pending',
     }).lean();
-    const otherUserIds = connections.map(conn => conn.addressee_user_id);
+    const otherUserIds = connections.map((conn) => conn.addressee_user_id);
     const users = await UserModel.find({ _id: { $in: otherUserIds } }).lean();
     const userMap = users.reduce((acc, user) => {
       acc[user._id] = user;
       return acc;
     }, {});
-    return connections.map(conn => {
+    return connections.map((conn) => {
       const user = userMap[conn.addressee_user_id] || {};
       return {
         ...conn,

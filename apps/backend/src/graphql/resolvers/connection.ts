@@ -5,25 +5,32 @@ const resolvers = {
   Query: {
     loadConnectionsList: async (
       _: any,
-      { userId}: { userId: string },
+      { userId }: { userId: string },
       context: ApolloContext
     ): Promise<Connection[]> => {
-      if (userId)return context.dataSources.connection.loadConnectionsList(userId);
-      return context.dataSources.connection.loadConnectionsList(context.currentUser.id);
+      if (userId)
+        return context.dataSources.connection.loadConnectionsList(userId);
+      return context.dataSources.connection.loadConnectionsList(
+        context.currentUser.id
+      );
     },
     loadPendingFriendRequests: async (
       _: any,
       __: any,
       context: ApolloContext
     ): Promise<Connection[]> => {
-      return context.dataSources.connection.loadPendingFriendRequests(context.currentUser.id);
+      return context.dataSources.connection.loadPendingFriendRequests(
+        context.currentUser.id
+      );
     },
     loadSentFriendRequests: async (
       _: any,
       __: any,
       context: ApolloContext
     ): Promise<Connection[]> => {
-      return context.dataSources.connection.loadSentFriendRequests(context.currentUser.id);
+      return context.dataSources.connection.loadSentFriendRequests(
+        context.currentUser.id
+      );
     },
     checkConnectionStatus: async (
       _: any,
@@ -40,7 +47,10 @@ const resolvers = {
   Mutation: {
     sendFriendReq: async (
       _: any,
-      { addresseeUserId, message }: { addresseeUserId: string; message: string },
+      {
+        addresseeUserId,
+        message,
+      }: { addresseeUserId: string; message: string },
       context: ApolloContext
     ): Promise<Connection> => {
       return context.dataSources.connection.sendFriendReq(

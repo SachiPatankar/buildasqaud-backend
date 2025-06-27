@@ -1,9 +1,5 @@
 import { ApolloContext } from '../types';
-import {
-  Message,
-  Chat,
-  UnreadChatCount,
-} from '../../types/generated'; // Generated types from codegen
+import { Message, Chat, UnreadChatCount } from '../../types/generated'; // Generated types from codegen
 
 const resolvers = {
   Query: {
@@ -24,7 +20,9 @@ const resolvers = {
       __: any,
       context: ApolloContext
     ): Promise<Chat[]> => {
-      return context.dataSources.chat.getChatListForUser(context.currentUser.id);
+      return context.dataSources.chat.getChatListForUser(
+        context.currentUser.id
+      );
     },
 
     getUnreadCountForChats: async (
@@ -32,7 +30,9 @@ const resolvers = {
       __: any,
       context: ApolloContext
     ): Promise<UnreadChatCount[]> => {
-      return context.dataSources.chat.getUnreadCountForChats(context.currentUser.id);
+      return context.dataSources.chat.getUnreadCountForChats(
+        context.currentUser.id
+      );
     },
   },
 
@@ -54,10 +54,7 @@ const resolvers = {
       { messageId, content }: { messageId: string; content: string },
       context: ApolloContext
     ): Promise<Message> => {
-      return context.dataSources.chat.editMessage(
-        messageId,
-        content
-      );
+      return context.dataSources.chat.editMessage(messageId, content);
     },
 
     deleteMessage: async (
