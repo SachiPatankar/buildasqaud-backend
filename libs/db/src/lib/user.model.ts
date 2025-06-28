@@ -24,6 +24,7 @@ export interface IUser extends Document {
   last_seen?: Date;
   created_at: Date;
   updated_at: Date;
+  refreshTokens: string[];
 }
 
 const LinkSchema = new Schema<ILink>(
@@ -106,6 +107,9 @@ const UserSchema = new Schema<IUser>(
       type: Date,
       default: Date.now,
     },
+    refreshTokens: [{
+      type: String,
+    }],
   },
   {
     timestamps: {

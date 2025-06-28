@@ -1,6 +1,6 @@
 import express from 'express';
 import { IUser } from '@db';
-import { Request, Response, RequestHandler } from 'express';
+import { Request, Response, RequestHandler, NextFunction } from 'express';
 
 declare module 'express' {
   interface Request {
@@ -22,10 +22,11 @@ export interface IAuthController {
   signupUser: (req: Request, res: Response) => Promise<Response>;
 
   googleLogin: RequestHandler;
-  googleCallback: RequestHandler;
+  googleCallback: (req: Request, res: Response, next: NextFunction) => void;
+
 
   githubLogin: RequestHandler;
-  githubCallback: RequestHandler;
+  githubCallback: (req: Request, res: Response, next: NextFunction) => void;
 
   forgotPassword: (req: Request, res: Response) => Promise<Response>;
 
@@ -34,4 +35,8 @@ export interface IAuthController {
   getUsers: (req: Request, res: Response) => Promise<Response>;
 
   deleteUser: (req: Request, res: Response) => Promise<Response>;
+
+  refreshToken: (req: Request, res: Response) => Promise<Response>;
+
+  logout: (req: Request, res: Response) => Promise<Response>;
 }

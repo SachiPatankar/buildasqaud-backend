@@ -8,17 +8,19 @@ import validator from 'validator';
 import { IAuthController } from './types';
 import passport from 'passport';
 import nodemailer from 'nodemailer';
+import crypto from 'crypto';
 
 const {
   JWT_SECRET,
   NODEMAILER_EMAIL,
   NODEMAILER_PASS,
-  GOOGLE_SUCCESS_REDIRECT,
-  GOOGLE_FAILURE_REDIRECT,
-  GITHUB_SUCCESS_REDIRECT,
-  GITHUB_FAILURE_REDIRECT,
+  OAUTH_SUCCESS_REDIRECT,
+  OAUTH_FAILURE_REDIRECT,
   RESET_PASSWORD_BASE_URL,
 } = process.env;
+
+const ACCESS_TOKEN_EXPIRES_IN = '15m';
+const REFRESH_TOKEN_EXPIRES_IN = '7d';
 
 export class AuthController implements IAuthController {
   private createToken(_id: string, email: string): string {
@@ -26,8 +28,33 @@ export class AuthController implements IAuthController {
       throw new Error('JWT_SECRET is not defined in environment variables');
     }
     return jwt.sign({ _id, email, sub: _id }, JWT_SECRET, {
-      expiresIn: '1d',
+      expiresIn: ACCESS_TOKEN_EXPIRES_IN,
     });
+  }
+
+  private createRefreshToken(_id: string, email: string): string {
+    if (!JWT_SECRET) {
+      throw new Error('JWT_SECRET is not defined in environment variables');
+    }
+    return jwt.sign({ _id, email, sub: _id, type: 'refresh' }, JWT_SECRET, {
+      expiresIn: REFRESH_TOKEN_EXPIRES_IN,
+    });
+  }
+
+  private async setRefreshToken(user: IUser, res: Response) {
+    const refreshToken = this.createRefreshToken(user._id, user.email);
+    // Store in DB
+    user.refreshTokens = user.refreshTokens || [];
+    user.refreshTokens.push(refreshToken);
+    await user.save();
+    // Set as httpOnly cookie
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+    return refreshToken;
   }
 
   loginUser = async (req: Request, res: Response): Promise<Response> => {
@@ -51,6 +78,7 @@ export class AuthController implements IAuthController {
       }
 
       const token = this.createToken(user._id, user.email);
+      await this.setRefreshToken(user, res);
       return res.status(200).json({ email, token });
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
@@ -95,6 +123,7 @@ export class AuthController implements IAuthController {
       });
 
       const token = this.createToken(user._id, user.email);
+      await this.setRefreshToken(user, res);
       return res.status(201).json({ email, token }); // 201 on resource creation
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
@@ -105,20 +134,56 @@ export class AuthController implements IAuthController {
     scope: ['profile', 'email'],
   });
 
-  googleCallback = passport.authenticate('google', {
-    successRedirect: GOOGLE_SUCCESS_REDIRECT,
-    failureRedirect: GOOGLE_FAILURE_REDIRECT,
-  });
-
   githubLogin = passport.authenticate('github', {
     scope: ['user:email'], // FIX (Point 7): correct GitHub scope
   });
 
-  githubCallback = passport.authenticate('github', {
-    successRedirect: GITHUB_SUCCESS_REDIRECT,
-    failureRedirect: GITHUB_FAILURE_REDIRECT,
-  });
-
+  googleCallback = (req: Request, res: Response, next: any) => {
+    passport.authenticate('google', async (err: any, user: IUser) => {
+      if (err) {
+        console.error('Google OAuth error:', err);
+        return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=oauth_error`);
+      }
+      
+      if (!user) {
+        console.error('No user returned from Google OAuth');
+        return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=no_user`);
+      }
+  
+      try {
+        const token = this.createToken(user._id, user.email);
+        await this.setRefreshToken(user, res);
+        res.redirect(`${OAUTH_SUCCESS_REDIRECT}#token=${token}`);
+      } catch (tokenError) {
+        console.error('Token creation error:', tokenError);
+        return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=token_error`);
+      }
+    })(req, res, next);
+  };
+  
+  githubCallback = (req: Request, res: Response, next: any) => {
+    passport.authenticate('github', async (err: any, user: IUser) => {
+      if (err) {
+        console.error('GitHub OAuth error:', err);
+        return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=oauth_error`);
+      }
+      
+      if (!user) {
+        console.error('No user returned from GitHub OAuth');
+        return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=no_user`);
+      }
+  
+      try {
+        const token = this.createToken(user._id, user.email);
+        await this.setRefreshToken(user, res);
+        res.redirect(`${OAUTH_SUCCESS_REDIRECT}#token=${token}`);
+      } catch (tokenError) {
+        console.error('Token creation error:', tokenError);
+        return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=token_error`);
+      }
+    })(req, res, next);
+  };
+  
   public forgotPassword = async (
     req: Request,
     res: Response
@@ -219,4 +284,47 @@ export class AuthController implements IAuthController {
       return res.status(500).json({ message: 'Server error', error });
     }
   }
+
+  refreshToken = async (req: Request, res: Response) => {
+    try {
+      const { refreshToken } = req.cookies;
+      if (!refreshToken) {
+        return res.status(401).json({ error: 'No refresh token provided' });
+      }
+      // Verify refresh token
+      let payload: any;
+      try {
+        payload = jwt.verify(refreshToken, JWT_SECRET!);
+      } catch (err) {
+        return res.status(401).json({ error: 'Invalid refresh token' });
+      }
+      // Find user and check if token is in DB
+      const user = await UserModel.findById(payload.sub);
+      if (!user || !user.refreshTokens?.includes(refreshToken)) {
+        return res.status(401).json({ error: 'Invalid refresh token' });
+      }
+      // Issue new access token
+      const token = this.createToken(user._id, user.email);
+      return res.status(200).json({ token });
+    } catch (error) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  };
+
+  logout = async (req: Request, res: Response) => {
+    try {
+      const { refreshToken } = req.cookies;
+      if (refreshToken) {
+        // Remove from DB
+        await UserModel.updateOne(
+          { refreshTokens: refreshToken },
+          { $pull: { refreshTokens: refreshToken } }
+        );
+      }
+      res.clearCookie('refreshToken');
+      return res.status(200).json({ message: 'Logged out' });
+    } catch (error) {
+      return res.status(500).json({ error: 'Server error' });
+    }
+  };
 }

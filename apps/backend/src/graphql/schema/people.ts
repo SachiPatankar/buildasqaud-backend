@@ -16,9 +16,6 @@ const typeDefs = gql`
   }
 
   input PeopleFilterInput {
-    first_name: String
-    last_name: String
-    location_id: String
     title: String
     skills: [String]
   }

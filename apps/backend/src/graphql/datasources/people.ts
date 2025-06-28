@@ -53,12 +53,26 @@ export default class PeopleDataSource implements IPeopleDataSource {
     limit: number,
     current_user_id: string
   ): Promise<Person[]> {
-    const query = UserModel.find(filter)
+    // Build query for UserModel
+    const userQuery: any = {};
+    if (filter.title) {
+      userQuery.title = { $regex: filter.title, $options: 'i' };
+    }
+
+    // Find users matching the title (if any)
+    let users = await UserModel.find(userQuery)
       .skip((page - 1) * limit)
       .limit(limit)
       .select('first_name last_name photo location_id title bio');
 
-    const users = await query;
+    // If skills filter is present, further filter users by their skills
+    if (filter.skills && filter.skills.length > 0) {
+      // Find user IDs who have at least one of the skills
+      const skillUsers = await UserSkillModel.find({
+        skill_name: { $in: filter.skills },
+      }).distinct('user_id');
+      users = users.filter((user: any) => skillUsers.includes(user._id.toString()));
+    }
 
     const peopleWithTopSkills = await Promise.all(
       users.map(async (user) => {

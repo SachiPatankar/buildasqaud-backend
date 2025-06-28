@@ -23,6 +23,20 @@ if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET || !GITHUB_CALLBACK_URL) {
 }
 
 export const setupPassport = () => {
+  // REQUIRED: Serialize/deserialize user for session management
+  passport.serializeUser((user: any, done) => {
+    done(null, user._id);
+  });
+
+  passport.deserializeUser(async (id: string, done) => {
+    try {
+      const user = await UserModel.findById(id);
+      done(null, user);
+    } catch (error) {
+      done(error, null);
+    }
+  });
+
   // --- Google Strategy ---
   passport.use(
     new GoogleStrategy(
@@ -76,7 +90,7 @@ export const setupPassport = () => {
         clientID: GITHUB_CLIENT_ID,
         clientSecret: GITHUB_CLIENT_SECRET,
         callbackURL: GITHUB_CALLBACK_URL,
-        scope: ['user:email'],
+        scope: ['user:email'], // Ensure email scope is requested
       },
       async (_accessToken, _refreshToken, profile: PassportProfile, done) => {
         try {
@@ -95,9 +109,7 @@ export const setupPassport = () => {
               user.photo = profile.photos?.[0]?.value;
               await user.save();
             } else {
-              const [first_name, ...rest] = (profile.displayName || '').split(
-                ' '
-              );
+              const [first_name, ...rest] = (profile.displayName || profile.username || '').split(' ');
               const last_name = rest.join(' ');
               user = new UserModel({
                 githubId: profile.id,
@@ -117,18 +129,4 @@ export const setupPassport = () => {
       }
     )
   );
-
-  // --- Session handling (once) ---
-  passport.serializeUser((user: any, done) => {
-    done(null, user._id);
-  });
-
-  passport.deserializeUser(async (id: string, done) => {
-    try {
-      const user = await UserModel.findById(id);
-      done(null, user);
-    } catch (err) {
-      done(err as Error, null);
-    }
-  });
 };

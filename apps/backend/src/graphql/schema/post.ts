@@ -90,10 +90,11 @@ const typeDefs = gql`
 
   input PostFilterInput {
     status: String
-    project_type: String
-    work_mode: String
-    project_phase: String
+    project_type: [String]
+    work_mode: [String]
+    desired_roles: [String]
     tech_stack: [String]
+    experience_level: [String]
   }
 
   extend type Mutation {

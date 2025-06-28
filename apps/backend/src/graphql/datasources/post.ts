@@ -165,8 +165,29 @@ export default class PostDataSource implements IPostDataSource {
     filter: PostFilterInput,
     current_user_id: string
   ): Promise<PostSummary[]> {
-    // Fetch the posts based on the filter and populate user fields
-    const posts = await PostModel.find(filter)
+    // Build MongoDB query from PostFilterInput
+    const query: any = {};
+    if (filter.status) {
+      query.status = filter.status;
+    }
+    if (filter.project_type && filter.project_type.length > 0) {
+      query.project_type = { $in: filter.project_type };
+    }
+    if (filter.work_mode && filter.work_mode.length > 0) {
+      query.work_mode = { $in: filter.work_mode };
+    }
+    if (filter.tech_stack && filter.tech_stack.length > 0) {
+      query.tech_stack = { $in: filter.tech_stack };
+    }
+    if (filter.experience_level && filter.experience_level.length > 0) {
+      query.experience_level = { $in: filter.experience_level };
+    }
+    if (filter.desired_roles && filter.desired_roles.length > 0) {
+      query['requirements.desired_roles'] = { $in: filter.desired_roles };
+    }
+
+    // Fetch the posts based on the constructed query and populate user fields
+    const posts = await PostModel.find(query)
       .sort({ created_at: -1 })
       .lean()
       .exec();

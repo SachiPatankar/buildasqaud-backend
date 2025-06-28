@@ -4,8 +4,9 @@ dotenv.config(); // FIX #1: load env vars before you use process.env
 import express from 'express';
 import { createServer } from 'http';
 import cors from 'cors';
-import session from 'express-session';
 import passport from 'passport';
+import cookieParser from 'cookie-parser';
+import session from 'express-session'; // ADD: session middleware
 
 import { connectMongoDB } from '@db';
 import routes from './routes';
@@ -35,12 +36,6 @@ const PORT = parseInt(process.env.PORT ?? '3000', 10);
 const CLIENT_ORIGIN = process.env.FRONTEND_URL!;
 const SESSION_SECRET = process.env.SESSION_SECRET!;
 
-// sanity-check
-if (!SESSION_SECRET) {
-  console.error('❌ SESSION_SECRET is required');
-  process.exit(1);
-}
-
 async function startServer() {
   const app = express();
 
@@ -52,6 +47,7 @@ async function startServer() {
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
     app.use(express.static('public'));
+    app.use(cookieParser());
 
     // 3) CORS with credentials
     app.use(
@@ -61,23 +57,25 @@ async function startServer() {
       })
     );
 
-    // 4) Session + Passport
-    app.use(
-      session({
-        secret: SESSION_SECRET, // FIX #2: needed for passport sessions
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-        },
-      })
-    );
+    // 4) Session middleware (REQUIRED for Passport)
+    app.use(session({
+      secret: SESSION_SECRET,
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        httpOnly: true,
+        sameSite: 'lax'
+      }
+    }));
+
+    // 5) Passport initialization
     setupPassport(); // FIX #3: setup passport strategies
     app.use(passport.initialize());
-    app.use(passport.session());
+    app.use(passport.session()); // ADD: enable passport session support
 
-    // 5) GraphQL
+    // 6) GraphQL
     const dataSources = {
       user: new UserDataSource(),
       s3: new S3DataSource(),
@@ -105,10 +103,10 @@ async function startServer() {
       })
     );
 
-    // 6) REST routes (including your /auth/google, /auth/github, etc)
+    // 7) REST routes (including your /auth/google, /auth/github, etc)
     app.use(routes);
 
-    // 7) HTTP + WebSocket
+    // 8) HTTP + WebSocket
     const httpServer = createServer(app);
     initSocket(httpServer);
 

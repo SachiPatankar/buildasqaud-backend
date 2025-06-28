@@ -447,9 +447,6 @@ export type MutationUpdateUserSkillArgs = {
 };
 
 export type PeopleFilterInput = {
-  first_name?: InputMaybe<Scalars['String']['input']>;
-  last_name?: InputMaybe<Scalars['String']['input']>;
-  location_id?: InputMaybe<Scalars['String']['input']>;
   skills?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
   title?: InputMaybe<Scalars['String']['input']>;
 };
@@ -513,11 +510,12 @@ export type PostDetails = {
 };
 
 export type PostFilterInput = {
-  project_phase?: InputMaybe<Scalars['String']['input']>;
-  project_type?: InputMaybe<Scalars['String']['input']>;
+  desired_roles?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+  experience_level?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
+  project_type?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
   status?: InputMaybe<Scalars['String']['input']>;
   tech_stack?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
-  work_mode?: InputMaybe<Scalars['String']['input']>;
+  work_mode?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
 };
 
 export type PostSummary = {

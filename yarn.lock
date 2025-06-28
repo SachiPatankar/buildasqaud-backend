@@ -1686,15 +1686,15 @@
     "@babel/helper-string-parser" "^7.25.9"
     "@babel/helper-validator-identifier" "^7.25.9"
 
-"@backend/backend-e2e@file:C:\\Users\\LENOVO\\Downloads\\BAS2\\backend2\\apps\\backend-e2e":
+"@backend/backend-e2e@file:C:\\Users\\Sachi\\BASQ\\backend2\\apps\\backend-e2e":
   version "0.0.1"
   resolved "file:apps/backend-e2e"
 
-"@backend/backend@file:C:\\Users\\LENOVO\\Downloads\\BAS2\\backend2\\apps\\backend":
+"@backend/backend@file:C:\\Users\\Sachi\\BASQ\\backend2\\apps\\backend":
   version "0.0.1"
   resolved "file:apps/backend"
 
-"@backend/db@file:C:\\Users\\LENOVO\\Downloads\\BAS2\\backend2\\libs\\db":
+"@backend/db@file:C:\\Users\\Sachi\\BASQ\\backend2\\libs\\db":
   version "0.0.1"
   resolved "file:libs/db"
 
@@ -4594,6 +4594,14 @@ convert-source-map@^2.0.0:
   version "2.0.0"
   resolved "https://registry.npmjs.org/convert-source-map/-/convert-source-map-2.0.0.tgz"
   integrity sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==
+
+cookie-parser@^1.4.7:
+  version "1.4.7"
+  resolved "https://registry.npmjs.org/cookie-parser/-/cookie-parser-1.4.7.tgz"
+  integrity sha512-nGUvgXnotP3BsjiLX2ypbQnWoGUPIIfHQNZkkC668ntrzGWEZVW70HDEB1qnNGMicPje6EttlIgzo51YSwNQGw==
+  dependencies:
+    cookie "0.7.2"
+    cookie-signature "1.0.6"
 
 cookie-signature@1.0.6:
   version "1.0.6"
