@@ -24,7 +24,6 @@ export interface IAuthController {
   googleLogin: RequestHandler;
   googleCallback: (req: Request, res: Response, next: NextFunction) => void;
 
-
   githubLogin: RequestHandler;
   githubCallback: (req: Request, res: Response, next: NextFunction) => void;
 

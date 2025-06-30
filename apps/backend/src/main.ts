@@ -58,17 +58,19 @@ async function startServer() {
     );
 
     // 4) Session middleware (REQUIRED for Passport)
-    app.use(session({
-      secret: SESSION_SECRET,
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        httpOnly: true,
-        sameSite: 'lax'
-      }
-    }));
+    app.use(
+      session({
+        secret: SESSION_SECRET,
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+          secure: process.env.NODE_ENV === 'production',
+          maxAge: 24 * 60 * 60 * 1000, // 24 hours
+          httpOnly: true,
+          sameSite: 'lax',
+        },
+      })
+    );
 
     // 5) Passport initialization
     setupPassport(); // FIX #3: setup passport strategies

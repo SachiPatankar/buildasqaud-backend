@@ -10,11 +10,15 @@ router.post('/signup', authController.signupUser);
 
 // Google OAuth
 router.get('/google', authController.googleLogin);
-router.get('/google/callback', (req, res, next) => authController.googleCallback(req, res, next));
+router.get('/google/callback', (req, res, next) =>
+  authController.googleCallback(req, res, next)
+);
 
 // Github OAuth
 router.get('/github', authController.githubLogin);
-router.get('/github/callback', (req, res, next) => authController.githubCallback(req, res, next));
+router.get('/github/callback', (req, res, next) =>
+  authController.githubCallback(req, res, next)
+);
 
 //forgot-password
 router.post('/forgot-password', authController.forgotPassword);

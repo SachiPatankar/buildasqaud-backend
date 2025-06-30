@@ -15,6 +15,7 @@ export interface IEducation extends Document {
   description?: string;
   created_at: Date;
   updated_at: Date;
+  order: number;
 }
 
 const EducationSchema = new Schema<IEducation>(
@@ -66,6 +67,11 @@ const EducationSchema = new Schema<IEducation>(
     },
     location_id: {
       type: String,
+    },
+    order: {
+      type: Number,
+      default: 0,
+      required: true,
     },
   },
   {

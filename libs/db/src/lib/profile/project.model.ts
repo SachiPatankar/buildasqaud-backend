@@ -14,6 +14,7 @@ export interface IProject extends Document {
   is_current?: boolean;
   created_at: Date;
   updated_at: Date;
+  order: number;
 }
 
 const ProjectSchema = new Schema<IProject>(
@@ -60,6 +61,11 @@ const ProjectSchema = new Schema<IProject>(
     is_current: {
       type: Boolean,
       default: false,
+    },
+    order: {
+      type: Number,
+      default: 0,
+      required: true,
     },
   },
   {

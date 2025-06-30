@@ -19,6 +19,7 @@ export interface IExperience extends Document {
     | 'freelance';
   created_at: Date;
   updated_at: Date;
+  order: number;
 }
 
 const ExperienceSchema = new Schema<IExperience>(
@@ -65,6 +66,11 @@ const ExperienceSchema = new Schema<IExperience>(
     },
     location_id: {
       type: String,
+    },
+    order: {
+      type: Number,
+      default: 0,
+      required: true,
     },
   },
   {

@@ -144,12 +144,12 @@ export class AuthController implements IAuthController {
         console.error('Google OAuth error:', err);
         return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=oauth_error`);
       }
-      
+
       if (!user) {
         console.error('No user returned from Google OAuth');
         return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=no_user`);
       }
-  
+
       try {
         const token = this.createToken(user._id, user.email);
         await this.setRefreshToken(user, res);
@@ -160,19 +160,19 @@ export class AuthController implements IAuthController {
       }
     })(req, res, next);
   };
-  
+
   githubCallback = (req: Request, res: Response, next: any) => {
     passport.authenticate('github', async (err: any, user: IUser) => {
       if (err) {
         console.error('GitHub OAuth error:', err);
         return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=oauth_error`);
       }
-      
+
       if (!user) {
         console.error('No user returned from GitHub OAuth');
         return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=no_user`);
       }
-  
+
       try {
         const token = this.createToken(user._id, user.email);
         await this.setRefreshToken(user, res);
@@ -183,7 +183,7 @@ export class AuthController implements IAuthController {
       }
     })(req, res, next);
   };
-  
+
   public forgotPassword = async (
     req: Request,
     res: Response

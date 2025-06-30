@@ -107,9 +107,11 @@ const UserSchema = new Schema<IUser>(
       type: Date,
       default: Date.now,
     },
-    refreshTokens: [{
-      type: String,
-    }],
+    refreshTokens: [
+      {
+        type: String,
+      },
+    ],
   },
   {
     timestamps: {

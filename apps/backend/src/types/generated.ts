@@ -33,6 +33,7 @@ export type Achievement = {
   _id: Scalars['String']['output'];
   created_at: Scalars['Date']['output'];
   description?: Maybe<Scalars['String']['output']>;
+  order?: Maybe<Scalars['Int']['output']>;
   title: Scalars['String']['output'];
   updated_at: Scalars['Date']['output'];
   user_id: Scalars['String']['output'];
@@ -106,6 +107,7 @@ export type Connection = {
 
 export type CreateAchievementInput = {
   description?: InputMaybe<Scalars['String']['input']>;
+  order?: InputMaybe<Scalars['Int']['input']>;
   title: Scalars['String']['input'];
 };
 
@@ -118,6 +120,7 @@ export type CreateEducationInput = {
   institution_name: Scalars['String']['input'];
   is_current: Scalars['Boolean']['input'];
   location_id?: InputMaybe<Scalars['String']['input']>;
+  order?: InputMaybe<Scalars['Int']['input']>;
   start_date: Scalars['Date']['input'];
 };
 
@@ -128,6 +131,7 @@ export type CreateExperienceInput = {
   end_date: Scalars['Date']['input'];
   is_current: Scalars['Boolean']['input'];
   location_id?: InputMaybe<Scalars['String']['input']>;
+  order?: InputMaybe<Scalars['Int']['input']>;
   position: Scalars['String']['input'];
   start_date: Scalars['Date']['input'];
 };
@@ -149,6 +153,7 @@ export type CreateProjectInput = {
   end_date?: InputMaybe<Scalars['Date']['input']>;
   github_url?: InputMaybe<Scalars['String']['input']>;
   is_current?: InputMaybe<Scalars['Boolean']['input']>;
+  order?: InputMaybe<Scalars['Int']['input']>;
   project_url?: InputMaybe<Scalars['String']['input']>;
   start_date?: InputMaybe<Scalars['Date']['input']>;
   technologies?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
@@ -165,6 +170,7 @@ export type CreateUserInput = {
 };
 
 export type CreateUserSkillInput = {
+  order?: InputMaybe<Scalars['Int']['input']>;
   proficiency_level: Scalars['String']['input'];
   skill_name: Scalars['String']['input'];
   years_experience?: InputMaybe<Scalars['Int']['input']>;
@@ -182,6 +188,7 @@ export type Education = {
   institution_name: Scalars['String']['output'];
   is_current: Scalars['Boolean']['output'];
   location_id?: Maybe<Scalars['String']['output']>;
+  order?: Maybe<Scalars['Int']['output']>;
   start_date: Scalars['Date']['output'];
   updated_at: Scalars['Date']['output'];
   user_id: Scalars['String']['output'];
@@ -197,6 +204,7 @@ export type Experience = {
   end_date: Scalars['Date']['output'];
   is_current: Scalars['Boolean']['output'];
   location_id?: Maybe<Scalars['String']['output']>;
+  order?: Maybe<Scalars['Int']['output']>;
   position: Scalars['String']['output'];
   start_date: Scalars['Date']['output'];
   updated_at: Scalars['Date']['output'];
@@ -554,6 +562,7 @@ export type Project = {
   end_date?: Maybe<Scalars['Date']['output']>;
   github_url?: Maybe<Scalars['String']['output']>;
   is_current?: Maybe<Scalars['Boolean']['output']>;
+  order?: Maybe<Scalars['Int']['output']>;
   project_url?: Maybe<Scalars['String']['output']>;
   start_date?: Maybe<Scalars['Date']['output']>;
   technologies?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
@@ -709,6 +718,7 @@ export type UnreadChatCount = {
 
 export type UpdateAchievementInput = {
   description?: InputMaybe<Scalars['String']['input']>;
+  order?: InputMaybe<Scalars['Int']['input']>;
   title?: InputMaybe<Scalars['String']['input']>;
 };
 
@@ -721,6 +731,7 @@ export type UpdateEducationInput = {
   institution_name?: InputMaybe<Scalars['String']['input']>;
   is_current?: InputMaybe<Scalars['Boolean']['input']>;
   location_id?: InputMaybe<Scalars['String']['input']>;
+  order?: InputMaybe<Scalars['Int']['input']>;
   start_date?: InputMaybe<Scalars['Date']['input']>;
 };
 
@@ -731,6 +742,7 @@ export type UpdateExperienceInput = {
   end_date?: InputMaybe<Scalars['Date']['input']>;
   is_current?: InputMaybe<Scalars['Boolean']['input']>;
   location_id?: InputMaybe<Scalars['String']['input']>;
+  order?: InputMaybe<Scalars['Int']['input']>;
   position?: InputMaybe<Scalars['String']['input']>;
   start_date?: InputMaybe<Scalars['Date']['input']>;
 };
@@ -753,6 +765,7 @@ export type UpdateProjectInput = {
   end_date?: InputMaybe<Scalars['Date']['input']>;
   github_url?: InputMaybe<Scalars['String']['input']>;
   is_current?: InputMaybe<Scalars['Boolean']['input']>;
+  order?: InputMaybe<Scalars['Int']['input']>;
   project_url?: InputMaybe<Scalars['String']['input']>;
   start_date?: InputMaybe<Scalars['Date']['input']>;
   technologies?: InputMaybe<Array<InputMaybe<Scalars['String']['input']>>>;
@@ -770,6 +783,7 @@ export type UpdateUserInput = {
 };
 
 export type UpdateUserSkillInput = {
+  order?: InputMaybe<Scalars['Int']['input']>;
   proficiency_level?: InputMaybe<Scalars['String']['input']>;
   skill_name?: InputMaybe<Scalars['String']['input']>;
   years_experience?: InputMaybe<Scalars['Int']['input']>;
@@ -798,6 +812,7 @@ export type UserSkill = {
   __typename?: 'UserSkill';
   _id: Scalars['String']['output'];
   created_at: Scalars['Date']['output'];
+  order?: Maybe<Scalars['Int']['output']>;
   proficiency_level: Scalars['String']['output'];
   skill_name: Scalars['String']['output'];
   updated_at: Scalars['Date']['output'];

@@ -8,6 +8,7 @@ export interface IAchievement extends Document {
   user_id: string;
   created_at: Date;
   updated_at: Date;
+  order: number;
 }
 
 const AchievementSchema = new Schema<IAchievement>(
@@ -20,6 +21,7 @@ const AchievementSchema = new Schema<IAchievement>(
     title: { type: String, required: true },
     description: { type: String },
     user_id: { type: String, required: true },
+    order: { type: Number, default: 0, required: true },
   },
   {
     timestamps: {

@@ -71,7 +71,9 @@ export default class PeopleDataSource implements IPeopleDataSource {
       const skillUsers = await UserSkillModel.find({
         skill_name: { $in: filter.skills },
       }).distinct('user_id');
-      users = users.filter((user: any) => skillUsers.includes(user._id.toString()));
+      users = users.filter((user: any) =>
+        skillUsers.includes(user._id.toString())
+      );
     }
 
     const peopleWithTopSkills = await Promise.all(

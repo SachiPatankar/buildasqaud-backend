@@ -109,7 +109,11 @@ export const setupPassport = () => {
               user.photo = profile.photos?.[0]?.value;
               await user.save();
             } else {
-              const [first_name, ...rest] = (profile.displayName || profile.username || '').split(' ');
+              const [first_name, ...rest] = (
+                profile.displayName ||
+                profile.username ||
+                ''
+              ).split(' ');
               const last_name = rest.join(' ');
               user = new UserModel({
                 githubId: profile.id,

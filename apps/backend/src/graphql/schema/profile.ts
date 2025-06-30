@@ -8,6 +8,7 @@ const typeDefs = gql`
     title: String!
     description: String
     user_id: String!
+    order: Int
     created_at: Date!
     updated_at: Date!
   }
@@ -15,11 +16,13 @@ const typeDefs = gql`
   input CreateAchievementInput {
     title: String!
     description: String
+    order: Int
   }
 
   input UpdateAchievementInput {
     title: String
     description: String
+    order: Int
   }
 
   extend type Query {
@@ -50,6 +53,7 @@ const typeDefs = gql`
     is_current: Boolean!
     grade: String
     description: String
+    order: Int
     created_at: Date!
     updated_at: Date!
   }
@@ -64,6 +68,7 @@ const typeDefs = gql`
     grade: String
     description: String
     location_id: String
+    order: Int
   }
 
   input UpdateEducationInput {
@@ -76,6 +81,7 @@ const typeDefs = gql`
     grade: String
     description: String
     location_id: String
+    order: Int
   }
 
   extend type Query {
@@ -102,6 +108,7 @@ const typeDefs = gql`
     description: String
     location_id: String
     employment_type: String
+    order: Int
     created_at: Date!
     updated_at: Date!
   }
@@ -115,6 +122,7 @@ const typeDefs = gql`
     description: String
     location_id: String
     employment_type: String
+    order: Int
   }
 
   input UpdateExperienceInput {
@@ -126,6 +134,7 @@ const typeDefs = gql`
     description: String
     location_id: String
     employment_type: String
+    order: Int
   }
 
   extend type Query {
@@ -152,6 +161,7 @@ const typeDefs = gql`
     start_date: Date
     end_date: Date
     is_current: Boolean
+    order: Int
     created_at: Date!
     updated_at: Date!
   }
@@ -165,6 +175,7 @@ const typeDefs = gql`
     start_date: Date
     end_date: Date
     is_current: Boolean
+    order: Int
   }
 
   input UpdateProjectInput {
@@ -176,6 +187,7 @@ const typeDefs = gql`
     start_date: Date
     end_date: Date
     is_current: Boolean
+    order: Int
   }
 
   extend type Query {
@@ -194,6 +206,7 @@ const typeDefs = gql`
     skill_name: String!
     proficiency_level: String!
     years_experience: Int
+    order: Int
     created_at: Date!
     updated_at: Date!
   }
@@ -202,12 +215,14 @@ const typeDefs = gql`
     skill_name: String!
     proficiency_level: String!
     years_experience: Int
+    order: Int
   }
 
   input UpdateUserSkillInput {
     skill_name: String
     proficiency_level: String
     years_experience: Int
+    order: Int
   }
 
   extend type Query {

@@ -8,6 +8,7 @@ export interface IUserSkill extends Document {
   proficiency_level: 'beginner' | 'intermediate' | 'advanced' | 'expert';
   years_experience?: number;
   is_top: Boolean;
+  order: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -40,6 +41,11 @@ const UserSkillSchema = new Schema<IUserSkill>(
     is_top: {
       type: Boolean,
       default: false,
+    },
+    order: {
+      type: Number,
+      default: 0,
+      required: true,
     },
   },
   {

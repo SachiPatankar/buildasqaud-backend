@@ -23,9 +23,15 @@ import {
 export default class ProfileDataSource implements IProfileDataSource {
   // ACHIEVEMENT DATA SOURCE METHODS
   async createAchievement(userId: string, input: CreateAchievementInput) {
+    let order = input.order;
+    if (order === undefined || order === null) {
+      const last = await AchievementModel.findOne({ user_id: userId }).sort({ order: -1 });
+      order = last ? last.order + 1 : 0;
+    }
     const newAchievement = new AchievementModel({
       ...input,
       user_id: userId,
+      order,
     });
     return newAchievement.save();
   }
@@ -50,9 +56,15 @@ export default class ProfileDataSource implements IProfileDataSource {
 
   // EDUCATION DATA SOURCE METHODS
   async createEducation(userId: string, input: CreateEducationInput) {
+    let order = input.order;
+    if (order === undefined || order === null) {
+      const last = await EducationModel.findOne({ user_id: userId }).sort({ order: -1 });
+      order = last ? last.order + 1 : 0;
+    }
     const newEducation = new EducationModel({
       ...input,
       user_id: userId,
+      order,
     });
     return newEducation.save();
   }
@@ -72,9 +84,15 @@ export default class ProfileDataSource implements IProfileDataSource {
 
   // EXPERIENCE DATA SOURCE METHODS
   async createExperience(userId: string, input: CreateExperienceInput) {
+    let order = input.order;
+    if (order === undefined || order === null) {
+      const last = await ExperienceModel.findOne({ user_id: userId }).sort({ order: -1 });
+      order = last ? last.order + 1 : 0;
+    }
     const newExperience = new ExperienceModel({
       ...input,
       user_id: userId,
+      order,
     });
     return newExperience.save();
   }
@@ -96,9 +114,15 @@ export default class ProfileDataSource implements IProfileDataSource {
 
   // PROJECT DATA SOURCE METHODS
   async createProject(userId: string, input: CreateProjectInput) {
+    let order = input.order;
+    if (order === undefined || order === null) {
+      const last = await ProjectModel.findOne({ user_id: userId }).sort({ order: -1 });
+      order = last ? last.order + 1 : 0;
+    }
     const newProject = new ProjectModel({
       ...input,
       user_id: userId,
+      order,
     });
     return newProject.save();
   }
@@ -118,9 +142,15 @@ export default class ProfileDataSource implements IProfileDataSource {
 
   // USER SKILLS DATA SOURCE METHODS
   async createUserSkill(userId: string, input: CreateUserSkillInput) {
+    let order = input.order;
+    if (order === undefined || order === null) {
+      const last = await UserSkillModel.findOne({ user_id: userId }).sort({ order: -1 });
+      order = last ? last.order + 1 : 0;
+    }
     const newUserSkill = new UserSkillModel({
       ...input,
       user_id: userId,
+      order,
     });
     return newUserSkill.save();
   }
