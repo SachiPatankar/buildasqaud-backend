@@ -77,13 +77,22 @@ export default class ApplicationDataSource implements IApplicationDataSource {
       const connections = await ConnectionModel.find({
         $or: applicantIds.map((applicantId) => ({
           $or: [
-            { requester_user_id: current_user_id, addressee_user_id: applicantId },
-            { requester_user_id: applicantId, addressee_user_id: current_user_id },
+            {
+              requester_user_id: current_user_id,
+              addressee_user_id: applicantId,
+            },
+            {
+              requester_user_id: applicantId,
+              addressee_user_id: current_user_id,
+            },
           ],
         })),
       }).lean();
       connections.forEach((conn) => {
-        const otherId = conn.requester_user_id === current_user_id ? conn.addressee_user_id : conn.requester_user_id;
+        const otherId =
+          conn.requester_user_id === current_user_id
+            ? conn.addressee_user_id
+            : conn.requester_user_id;
         connectionsMap[otherId] = conn.status;
       });
     }

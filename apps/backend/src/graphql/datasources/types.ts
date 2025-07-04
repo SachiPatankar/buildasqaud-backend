@@ -217,8 +217,16 @@ export interface IChatDataSource {
     senderId: string,
     content: string
   ): Promise<Message>;
-  editMessage(messageId: string, content: string, userId: string): Promise<Message>;
-  deleteMessage(messageId: string, userId: string, forAll?: boolean): Promise<boolean>;
+  editMessage(
+    messageId: string,
+    content: string,
+    userId: string
+  ): Promise<Message>;
+  deleteMessage(
+    messageId: string,
+    userId: string,
+    forAll?: boolean
+  ): Promise<boolean>;
   getMessagesForChat(
     chatId: string,
     page: number,

@@ -29,20 +29,31 @@ export default class ConnectionDataSource implements IConnectionDataSource {
 
     // Check if chat already exists
     let chat = await ChatModel.findOne({
-      participant_ids: { $all: [connection.requester_user_id, connection.addressee_user_id] }
+      participant_ids: {
+        $all: [connection.requester_user_id, connection.addressee_user_id],
+      },
     });
     if (!chat) {
       chat = await ChatModel.create({
-        participant_ids: [connection.requester_user_id, connection.addressee_user_id],
-        is_active: false
+        participant_ids: [
+          connection.requester_user_id,
+          connection.addressee_user_id,
+        ],
+        is_active: false,
       });
     }
     connection.chat_id = chat._id;
     await connection.save();
 
     // Update connections_count for both users
-    await UserModel.updateOne({ _id: connection.requester_user_id }, { $inc: { connections_count: 1 } });
-    await UserModel.updateOne({ _id: connection.addressee_user_id }, { $inc: { connections_count: 1 } });
+    await UserModel.updateOne(
+      { _id: connection.requester_user_id },
+      { $inc: { connections_count: 1 } }
+    );
+    await UserModel.updateOne(
+      { _id: connection.addressee_user_id },
+      { $inc: { connections_count: 1 } }
+    );
 
     return connection;
   }
@@ -74,8 +85,14 @@ export default class ConnectionDataSource implements IConnectionDataSource {
     const connection = await ConnectionModel.findByIdAndDelete(connectionId);
     if (connection) {
       // Decrement connections_count for both users
-      await UserModel.updateOne({ _id: connection.requester_user_id }, { $inc: { connections_count: -1 } });
-      await UserModel.updateOne({ _id: connection.addressee_user_id }, { $inc: { connections_count: -1 } });
+      await UserModel.updateOne(
+        { _id: connection.requester_user_id },
+        { $inc: { connections_count: -1 } }
+      );
+      await UserModel.updateOne(
+        { _id: connection.addressee_user_id },
+        { $inc: { connections_count: -1 } }
+      );
     }
     return connection ? true : false;
   }
@@ -85,33 +102,30 @@ export default class ConnectionDataSource implements IConnectionDataSource {
     const connections = await ConnectionModel.aggregate([
       {
         $match: {
-          $or: [
-            { requester_user_id: userId },
-            { addressee_user_id: userId }
-          ],
-          status: 'accepted'
-        }
+          $or: [{ requester_user_id: userId }, { addressee_user_id: userId }],
+          status: 'accepted',
+        },
       },
       {
         $addFields: {
           other_user_id: {
             $cond: [
-              { $eq: ["$requester_user_id", userId] },
-              "$addressee_user_id",
-              "$requester_user_id"
-            ]
-          }
-        }
+              { $eq: ['$requester_user_id', userId] },
+              '$addressee_user_id',
+              '$requester_user_id',
+            ],
+          },
+        },
       },
       {
         $lookup: {
-          from: "usermodels",
-          localField: "other_user_id",
-          foreignField: "_id",
-          as: "other_user"
-        }
+          from: 'usermodels',
+          localField: 'other_user_id',
+          foreignField: '_id',
+          as: 'other_user',
+        },
       },
-      { $unwind: "$other_user" },
+      { $unwind: '$other_user' },
       {
         $project: {
           _id: 1,
@@ -122,11 +136,11 @@ export default class ConnectionDataSource implements IConnectionDataSource {
           updated_at: 1,
           other_user_id: 1,
           chat_id: 1,
-          first_name: "$other_user.first_name",
-          last_name: "$other_user.last_name",
-          photo: "$other_user.photo"
-        }
-      }
+          first_name: '$other_user.first_name',
+          last_name: '$other_user.last_name',
+          photo: '$other_user.photo',
+        },
+      },
     ]);
     return connections;
   }
@@ -170,23 +184,23 @@ export default class ConnectionDataSource implements IConnectionDataSource {
       {
         $match: {
           requester_user_id: userId,
-          status: "pending"
-        }
+          status: 'pending',
+        },
       },
       {
         $addFields: {
-          other_user_id: "$addressee_user_id"
-        }
+          other_user_id: '$addressee_user_id',
+        },
       },
       {
         $lookup: {
-          from: "usermodels",
-          localField: "other_user_id",
-          foreignField: "_id",
-          as: "other_user"
-        }
+          from: 'usermodels',
+          localField: 'other_user_id',
+          foreignField: '_id',
+          as: 'other_user',
+        },
       },
-      { $unwind: "$other_user" },
+      { $unwind: '$other_user' },
       {
         $project: {
           _id: 1,
@@ -196,11 +210,11 @@ export default class ConnectionDataSource implements IConnectionDataSource {
           created_at: 1,
           updated_at: 1,
           other_user_id: 1,
-          first_name: "$other_user.first_name",
-          last_name: "$other_user.last_name",
-          photo: "$other_user.photo"
-        }
-      }
+          first_name: '$other_user.first_name',
+          last_name: '$other_user.last_name',
+          photo: '$other_user.photo',
+        },
+      },
     ]);
     return connections;
   }
@@ -227,8 +241,8 @@ export default class ConnectionDataSource implements IConnectionDataSource {
 
   async getUnreadCountForChats(userId: string) {
     return MessageModel.aggregate([
-      { $match: { is_deleted: false, "read_by.user_id": { $ne: userId } } },
-      { $group: { _id: "$chat_id", unread_count: { $sum: 1 } } }
+      { $match: { is_deleted: false, 'read_by.user_id': { $ne: userId } } },
+      { $group: { _id: '$chat_id', unread_count: { $sum: 1 } } },
     ]);
   }
 
@@ -236,7 +250,9 @@ export default class ConnectionDataSource implements IConnectionDataSource {
     if (forAll) {
       await MessageModel.findByIdAndUpdate(messageId, { is_deleted: true });
     } else {
-      await MessageModel.findByIdAndUpdate(messageId, { $addToSet: { deleted_for: userId } });
+      await MessageModel.findByIdAndUpdate(messageId, {
+        $addToSet: { deleted_for: userId },
+      });
     }
   }
 }

@@ -32,5 +32,4 @@ router.get('/me', requireAuth, authController.me);
 
 router.post('/refresh-token', authController.getAccessTokenViaRefreshToken);
 
-
 export default router;

@@ -19,7 +19,10 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
 
   const token = authHeader.slice(7); // remove "Bearer "
   try {
-    const payload = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET!) as JwtPayload;
+    const payload = jwt.verify(
+      token,
+      process.env.ACCESS_TOKEN_SECRET!
+    ) as JwtPayload;
 
     // attach the user info into req.user for downstream handlers
     req.user = { _id: payload.sub, email: payload.email };

@@ -38,6 +38,4 @@ export interface IAuthController {
   logout: (req: Request, res: Response) => Promise<Response>;
 
   me: (req: Request, res: Response) => Promise<Response>;
-
-
 }

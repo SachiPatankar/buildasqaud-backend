@@ -10,7 +10,6 @@ import { IAuthController } from './types';
 import passport from 'passport';
 import nodemailer from 'nodemailer';
 
-
 const {
   NODEMAILER_EMAIL,
   NODEMAILER_PASS,
@@ -23,22 +22,25 @@ const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET as string;
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET as string;
 
 export class AuthController implements IAuthController {
-  
   private createAccessToken(_id: string, email: string): string {
     if (!ACCESS_TOKEN_SECRET) {
-      throw new Error('ACCESS_TOKEN_SECRET is not defined in environment variables');
+      throw new Error(
+        'ACCESS_TOKEN_SECRET is not defined in environment variables'
+      );
     }
     return jwt.sign({ _id, email, sub: _id }, ACCESS_TOKEN_SECRET, {
-      expiresIn: "1d",
+      expiresIn: '1d',
     });
   }
 
   private createRefreshToken(_id: string): string {
     if (!REFRESH_TOKEN_SECRET) {
-      throw new Error('REFRESH_TOKEN_SECRET is not defined in environment variables');
+      throw new Error(
+        'REFRESH_TOKEN_SECRET is not defined in environment variables'
+      );
     }
     return jwt.sign({ _id, type: 'refresh' }, REFRESH_TOKEN_SECRET, {
-      expiresIn: "30d",
+      expiresIn: '30d',
     });
   }
 
@@ -53,7 +55,9 @@ export class AuthController implements IAuthController {
       try {
         payload = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
       } catch (err) {
-        return res.status(401).json({ error: 'Invalid or expired refresh token' });
+        return res
+          .status(401)
+          .json({ error: 'Invalid or expired refresh token' });
       }
 
       const user = await UserModel.findById(payload._id);
@@ -106,23 +110,23 @@ export class AuthController implements IAuthController {
 
       // Exclude sensitive fields from user object in response
       const safeUser = await UserModel.findById(user._id).select(
-        "-password -refreshToken -googleId -githubId"
+        '-password -refreshToken -googleId -githubId'
       );
 
       const options = {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: process.env.NODE_ENV === 'production',
       };
 
       return res
         .status(200)
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", refreshToken, options)
+        .cookie('accessToken', accessToken, options)
+        .cookie('refreshToken', refreshToken, options)
         .json({
           user: safeUser,
           accessToken,
           refreshToken,
-          message: "User logged in successfully"
+          message: 'User logged in successfully',
         });
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
@@ -174,23 +178,23 @@ export class AuthController implements IAuthController {
 
       // Exclude sensitive fields from user object in response
       const safeUser = await UserModel.findById(user._id).select(
-        "-password -refreshToken -googleId -githubId"
+        '-password -refreshToken -googleId -githubId'
       );
 
       const options = {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: process.env.NODE_ENV === 'production',
       };
 
       return res
         .status(200)
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", refreshToken, options)
+        .cookie('accessToken', accessToken, options)
+        .cookie('refreshToken', refreshToken, options)
         .json({
           user: safeUser,
           accessToken,
           refreshToken,
-          message: "User logged in successfully"
+          message: 'User logged in successfully',
         });
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
@@ -205,92 +209,222 @@ export class AuthController implements IAuthController {
     scope: ['user:email'], // FIX (Point 7): correct GitHub scope
   });
 
+  // googleCallback = (req: Request, res: Response, next: any) => {
+  //   passport.authenticate(
+  //     'google',
+  //     { session: false },
+  //     async (err: any, user: IUser) => {
+  //       if (err || !user) {
+  //         console.error('Google OAuth error:', err || 'No user returned');
+  //         return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=oauth_failed`);
+  //       }
+
+  //       try {
+  //         const accessToken = this.createAccessToken(user._id, user.email);
+  //         const refreshToken = this.createRefreshToken(user._id);
+
+  //         // Save refreshToken to user document for session management
+  //         user.refreshToken = refreshToken;
+  //         await user.save({ validateBeforeSave: false });
+  //         const options = {
+  //           httpOnly: true,
+  //           secure: process.env.NODE_ENV === 'production',
+  //         };
+
+  //         const safeUser = await UserModel.findById(user._id).select(
+  //           '-password -refreshToken -googleId -githubId'
+  //         );
+          
+  //         res
+  //           .cookie('accessToken', accessToken, options)
+  //           .cookie('refreshToken', refreshToken, options)
+  //           .json({
+  //             user: safeUser,
+  //             accessToken,
+  //             refreshToken,
+  //             message: 'User logged in successfully',
+  //           });
+
+  //         return res.redirect(OAUTH_SUCCESS_REDIRECT);
+  //       } catch (tokenError) {
+  //         console.error('Google token creation error:', tokenError);
+  //         return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=token_error`);
+  //       }
+  //     }
+  //   )(req, res, next);
+  // };
+
+  // githubCallback = (req: Request, res: Response, next: any) => {
+  //   passport.authenticate(
+  //     'github',
+  //     { session: false },
+  //     async (err: any, user: IUser) => {
+  //       if (err || !user) {
+  //         console.error('GitHub OAuth error:', err || 'No user returned');
+  //         return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=oauth_failed`);
+  //       }
+
+  //       try {
+  //         const accessToken = this.createAccessToken(user._id, user.email);
+  //         const refreshToken = this.createRefreshToken(user._id);
+
+  //         // Save refreshToken to user document for session management
+  //         user.refreshToken = refreshToken;
+  //         await user.save({ validateBeforeSave: false });
+  //         const options = {
+  //           httpOnly: true,
+  //           secure: process.env.NODE_ENV === 'production',
+  //         };
+
+  //         const safeUser = await UserModel.findById(user._id).select(
+  //           '-password -refreshToken -googleId -githubId'
+  //         );
+
+  //         res
+  //           .cookie('accessToken', accessToken, options)
+  //           .cookie('refreshToken', refreshToken, options);
+  //           .json({
+  //             user: safeUser,
+  //             accessToken,
+  //             refreshToken,
+  //             message: 'User logged in successfully',
+  //           });
+  //         return res.redirect(OAUTH_SUCCESS_REDIRECT);
+  //       } catch (tokenError) {
+  //         console.error('Google token creation error:', tokenError);
+  //         return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=token_error`);
+  //       }
+  //     }
+  //   )(req, res, next);
+  // };
+
   googleCallback = (req: Request, res: Response, next: any) => {
-    passport.authenticate('google', { session: false }, async (err: any, user: IUser) => {
-      if (err || !user) {
-        console.error('Google OAuth error:', err || 'No user returned');
-        return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=oauth_failed`);
-      }
+    passport.authenticate(
+      'google',
+      { session: false },
+      async (err: any, user: IUser) => {
+        if (err || !user) {
+          console.error('Google OAuth error:', err || 'No user returned');
+          return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=oauth_failed`);
+        }
   
-      try {
-        const accessToken = this.createAccessToken(user._id, user.email);
-        const refreshToken = this.createRefreshToken(user._id);
+        try {
+          const accessToken = this.createAccessToken(user._id, user.email);
+          const refreshToken = this.createRefreshToken(user._id);
   
-        // Save refreshToken to user document for session management
-        user.refreshToken = refreshToken;
-        await user.save({ validateBeforeSave: false });
-        const options = {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-        };
-
-        res
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", refreshToken, options)
-        return res.redirect(OAUTH_SUCCESS_REDIRECT);
-      } catch (tokenError) {
-        console.error('Google token creation error:', tokenError);
-        return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=token_error`);
+          // Save refreshToken to user document for session management
+          user.refreshToken = refreshToken;
+          await user.save({ validateBeforeSave: false });
+          
+          const options = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+          };
+  
+          const safeUser = await UserModel.findById(user._id).select(
+            '-password -refreshToken -googleId -githubId'
+          );
+  
+          // Set cookies
+          res
+            .cookie('accessToken', accessToken, options)
+            .cookie('refreshToken', refreshToken, options);
+  
+          // Encode user data and tokens in URL parameters
+          const params = new URLSearchParams({
+            accessToken,
+            user: JSON.stringify(safeUser),
+            success: 'true'
+          });
+  
+          return res.redirect(`${OAUTH_SUCCESS_REDIRECT}?${params.toString()}`);
+        } catch (tokenError) {
+          console.error('Google token creation error:', tokenError);
+          return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=token_error`);
+        }
       }
-    })(req, res, next);
+    )(req, res, next);
   };
-
+  
   githubCallback = (req: Request, res: Response, next: any) => {
-    passport.authenticate('github', { session: false }, async (err: any, user: IUser) => {
-      if (err || !user) {
-        console.error('GitHub OAuth error:', err || 'No user returned');
-        return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=oauth_failed`);
-      }
+    passport.authenticate(
+      'github',
+      { session: false },
+      async (err: any, user: IUser) => {
+        if (err || !user) {
+          console.error('GitHub OAuth error:', err || 'No user returned');
+          return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=oauth_failed`);
+        }
   
-      try {
-        const accessToken = this.createAccessToken(user._id, user.email);
-        const refreshToken = this.createRefreshToken(user._id);
+        try {
+          const accessToken = this.createAccessToken(user._id, user.email);
+          const refreshToken = this.createRefreshToken(user._id);
   
-        // Save refreshToken to user document for session management
-        user.refreshToken = refreshToken;
-        await user.save({ validateBeforeSave: false });
-        const options = {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-        };
-
-        res
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", refreshToken, options)
-        return res.redirect(OAUTH_SUCCESS_REDIRECT);
-      } catch (tokenError) {
-        console.error('Google token creation error:', tokenError);
-        return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=token_error`);
+          // Save refreshToken to user document for session management
+          user.refreshToken = refreshToken;
+          await user.save({ validateBeforeSave: false });
+          
+          const options = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+          };
+  
+          const safeUser = await UserModel.findById(user._id).select(
+            '-password -refreshToken -googleId -githubId'
+          );
+  
+          // Set cookies
+          res
+            .cookie('accessToken', accessToken, options)
+            .cookie('refreshToken', refreshToken, options);
+  
+          // Encode user data and tokens in URL parameters
+          const params = new URLSearchParams({
+            accessToken,
+            user: JSON.stringify(safeUser),
+            success: 'true'
+          });
+  
+          return res.redirect(`${OAUTH_SUCCESS_REDIRECT}?${params.toString()}`);
+        } catch (tokenError) {
+          console.error('GitHub token creation error:', tokenError);
+          return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=token_error`);
+        }
       }
-    })(req, res, next);
+    )(req, res, next);
   };
-  
 
-  public forgotPassword = async (req: Request, res: Response): Promise<Response> => {
+  public forgotPassword = async (
+    req: Request,
+    res: Response
+  ): Promise<Response> => {
     try {
       const { email } = req.body;
-  
+
       if (!email || !validator.isEmail(email)) {
-        return res.status(400).json({ status: 'Failed', message: 'Invalid email format' });
+        return res
+          .status(400)
+          .json({ status: 'Failed', message: 'Invalid email format' });
       }
-  
+
       const user = await UserModel.findOne({ email });
-  
+
       // Prevent email enumeration
       if (!user) {
         return res.status(200).json({
           status: 'Success',
-          message: 'If that email is registered you will receive reset instructions',
+          message:
+            'If that email is registered you will receive reset instructions',
         });
       }
-  
+
       // Create a time-limited reset token
       const token = jwt.sign(
         { _id: user._id, sub: user._id },
         ACCESS_TOKEN_SECRET!,
         { expiresIn: '15m' }
       );
-  
+
       const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
@@ -298,21 +432,22 @@ export class AuthController implements IAuthController {
           pass: NODEMAILER_PASS,
         },
       });
-  
+
       const resetUrl = `${RESET_PASSWORD_BASE_URL}/${user._id}/${token}`;
-  
+
       const mailOptions = {
         from: `"Your App Name" <${NODEMAILER_EMAIL}>`,
         to: user.email,
         subject: 'Reset your Password',
         text: `Click the link to reset your password: ${resetUrl}`,
       };
-  
+
       await transporter.sendMail(mailOptions);
-  
+
       return res.status(200).json({
         status: 'Success',
-        message: 'If that email is registered you will receive reset instructions',
+        message:
+          'If that email is registered you will receive reset instructions',
       });
     } catch (error) {
       console.error('Error in forgotPassword:', error);
@@ -322,41 +457,54 @@ export class AuthController implements IAuthController {
       });
     }
   };
-  
 
-  public resetPassword = async (req: Request, res: Response): Promise<Response> => {
+  public resetPassword = async (
+    req: Request,
+    res: Response
+  ): Promise<Response> => {
     try {
       const { id, token } = req.params;
       const { password } = req.body;
-  
+
       if (!validator.isStrongPassword(password)) {
         return res.status(400).json({ error: 'Password is not strong enough' });
       }
-  
+
       let decoded: any;
       try {
         decoded = jwt.verify(token, ACCESS_TOKEN_SECRET!);
       } catch (err) {
-        return res.status(400).json({ status: 'Failed', message: 'Invalid or expired token' });
+        return res
+          .status(400)
+          .json({ status: 'Failed', message: 'Invalid or expired token' });
       }
-  
+
       // Ensure token belongs to intended user
       if (typeof decoded !== 'object' || decoded.sub !== id) {
-        return res.status(400).json({ status: 'Failed', message: 'Invalid token or user mismatch' });
+        return res
+          .status(400)
+          .json({
+            status: 'Failed',
+            message: 'Invalid token or user mismatch',
+          });
       }
-  
+
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
-  
+
       await UserModel.findByIdAndUpdate(id, { password: hashedPassword });
-  
-      return res.status(200).json({ status: 'Success', message: 'Password updated successfully' });
+
+      return res
+        .status(200)
+        .json({ status: 'Success', message: 'Password updated successfully' });
     } catch (error) {
       console.error('Error in resetPassword:', error);
-      return res.status(500).json({ status: 'Failed', message: 'Server error' });
+      return res
+        .status(500)
+        .json({ status: 'Failed', message: 'Server error' });
     }
   };
-  
+
   // public async getUsers(req: Request, res: Response): Promise<Response> {
   //   // FIX (Point 5): exclude password hashes
   //   const users = await UserModel.find({}, '-password');
@@ -381,14 +529,14 @@ export class AuthController implements IAuthController {
   logout = async (req: Request, res: Response): Promise<Response> => {
     try {
       const { refreshToken } = req.cookies;
-  
+
       if (refreshToken) {
         await UserModel.updateOne(
           { refreshTokens: refreshToken },
           { $set: { refreshTokens: '' } }
         );
       }
-     
+
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
       return res.status(200).json({ message: 'Logged out successfully' });
@@ -397,7 +545,7 @@ export class AuthController implements IAuthController {
       return res.status(500).json({ error: 'Server error' });
     }
   };
-  
+
   me = async (req: Request, res: Response): Promise<Response> => {
     try {
       // req.user is usually set by authentication middleware (e.g., passport or custom JWT middleware)
@@ -405,7 +553,9 @@ export class AuthController implements IAuthController {
       if (!userId) {
         return res.status(401).json({ error: 'Not authenticated' });
       }
-      const user = await UserModel.findById(userId).select('-password -refreshToken -googleId -githubId');
+      const user = await UserModel.findById(userId).select(
+        '-password -refreshToken -googleId -githubId'
+      );
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }

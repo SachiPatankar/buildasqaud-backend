@@ -6,35 +6,43 @@ import { Message, Chat } from '../../types/generated'; // Generated types from c
 export default class ChatDataSource implements IChatDataSource {
   // Send a message and emit via socket
   async sendMessage(
-  chatId: string,
-  senderId: string,
-  content: string
-): Promise<Message> {
-  // Validate chat and participant
-  const chat = await ChatModel.findById(chatId);
-  if (!chat || !chat.participant_ids.includes(senderId)) {
-    throw new Error('Unauthorized or chat not found');
+    chatId: string,
+    senderId: string,
+    content: string
+  ): Promise<Message> {
+    // Validate chat and participant
+    const chat = await ChatModel.findById(chatId);
+    if (!chat || !chat.participant_ids.includes(senderId)) {
+      throw new Error('Unauthorized or chat not found');
+    }
+    const newMessage = new MessageModel({
+      chat_id: chatId,
+      sender_id: senderId,
+      content: content,
+      is_deleted: false,
+      read_by: [],
+    });
+    await newMessage.save();
+    await ChatModel.findOneAndUpdate(
+      { _id: chatId },
+      {
+        last_message_id: newMessage._id,
+        last_message_at: new Date(),
+        is_active: true,
+      }
+    );
+    const io = getIO();
+    // Use io.to() instead of socket.to() to include ALL users in the room
+    io.to(chatId).emit('receiveMessage', newMessage);
+    return newMessage;
   }
-  const newMessage = new MessageModel({
-    chat_id: chatId,
-    sender_id: senderId,
-    content: content,
-    is_deleted: false,
-    read_by: [],
-  });
-  await newMessage.save();
-  await ChatModel.findOneAndUpdate(
-    { _id: chatId },
-    { last_message_id: newMessage._id, last_message_at: new Date(), is_active:true }
-  );
-  const io = getIO();
-  // Use io.to() instead of socket.to() to include ALL users in the room
-  io.to(chatId).emit('receiveMessage', newMessage);
-  return newMessage;
-}
 
   // Edit an existing message
-  async editMessage(messageId: string, content: string, userId: string): Promise<Message> {
+  async editMessage(
+    messageId: string,
+    content: string,
+    userId: string
+  ): Promise<Message> {
     const message = await MessageModel.findById(messageId);
     if (!message) throw new Error('Message not found');
     // Validate user is sender
@@ -48,12 +56,17 @@ export default class ChatDataSource implements IChatDataSource {
   }
 
   // Delete a message
-  async deleteMessage(messageId: string, userId: string, forAll = false): Promise<boolean> {
+  async deleteMessage(
+    messageId: string,
+    userId: string,
+    forAll = false
+  ): Promise<boolean> {
     const message = await MessageModel.findById(messageId);
     if (!message) throw new Error('Message not found');
     // Validate user is participant
     const chat = await ChatModel.findById(message.chat_id);
-    if (!chat || !chat.participant_ids.includes(userId)) throw new Error('Unauthorized');
+    if (!chat || !chat.participant_ids.includes(userId))
+      throw new Error('Unauthorized');
     if (forAll) {
       message.is_deleted = true;
     } else {
@@ -94,9 +107,9 @@ export default class ChatDataSource implements IChatDataSource {
             $arrayElemAt: [
               {
                 $filter: {
-                  input: "$participant_ids",
-                  as: "id",
-                  cond: { $ne: ["$$id", userId] },
+                  input: '$participant_ids',
+                  as: 'id',
+                  cond: { $ne: ['$$id', userId] },
                 },
               },
               0,
@@ -106,55 +119,57 @@ export default class ChatDataSource implements IChatDataSource {
       },
       {
         $lookup: {
-          from: "usermodels",
-          localField: "other_user_id",
-          foreignField: "_id",
-          as: "other_user",
+          from: 'usermodels',
+          localField: 'other_user_id',
+          foreignField: '_id',
+          as: 'other_user',
         },
       },
-      { $unwind: "$other_user" },
+      { $unwind: '$other_user' },
       {
         $lookup: {
-          from: "messagemodels",
-          localField: "last_message_id",
-          foreignField: "_id",
-          as: "last_message",
+          from: 'messagemodels',
+          localField: 'last_message_id',
+          foreignField: '_id',
+          as: 'last_message',
         },
       },
-      { $unwind: { path: "$last_message", preserveNullAndEmptyArrays: true } },
+      { $unwind: { path: '$last_message', preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
-          from: "messagemodels",
-          let: { chatId: "$_id" },
+          from: 'messagemodels',
+          let: { chatId: '$_id' },
           pipeline: [
-            { $match: {
-              $expr: {
-                $and: [
-                  { $eq: ["$chat_id", "$$chatId"] },
-                  { $eq: ["$is_deleted", false] },
-                  { $not: [{ $in: [userId, "$read_by.user_id"] }] }
-                ]
-              }
-            } }
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$chat_id', '$$chatId'] },
+                    { $eq: ['$is_deleted', false] },
+                    { $not: [{ $in: [userId, '$read_by.user_id'] }] },
+                  ],
+                },
+              },
+            },
           ],
-          as: "unread_messages"
-        }
+          as: 'unread_messages',
+        },
       },
       {
         $addFields: {
-          unread_count: { $size: "$unread_messages" }
-        }
+          unread_count: { $size: '$unread_messages' },
+        },
       },
       {
         $project: {
           _id: 1,
           other_user_id: 1,
           participant_ids: 1,
-          first_name: "$other_user.first_name",
-          last_name: "$other_user.last_name",
-          photo: "$other_user.photo",
+          first_name: '$other_user.first_name',
+          last_name: '$other_user.last_name',
+          photo: '$other_user.photo',
           last_message_id: 1,
-          last_message_content: "$last_message.content",
+          last_message_content: '$last_message.content',
           last_message_at: 1,
           unread_count: 1,
           is_active: 1,
@@ -168,12 +183,14 @@ export default class ChatDataSource implements IChatDataSource {
   }
 
   // Get unread message count for each chat for a user
-  async getUnreadCountForChats(userId: string): Promise<{ chat_id: string; unread_count: number }[]> {
+  async getUnreadCountForChats(
+    userId: string
+  ): Promise<{ chat_id: string; unread_count: number }[]> {
     // Use aggregation for efficiency
     return MessageModel.aggregate([
       { $match: { is_deleted: false, 'read_by.user_id': { $ne: userId } } },
       { $group: { _id: '$chat_id', unread_count: { $sum: 1 } } },
-      { $project: { chat_id: '$_id', unread_count: 1, _id: 0 } }
+      { $project: { chat_id: '$_id', unread_count: 1, _id: 0 } },
     ]);
   }
 }

@@ -107,11 +107,9 @@ const UserSchema = new Schema<IUser>(
       type: Date,
       default: Date.now,
     },
-    refreshToken: 
-    {
+    refreshToken: {
       type: String,
     },
-    
   },
   {
     timestamps: {
@@ -119,13 +117,10 @@ const UserSchema = new Schema<IUser>(
       updatedAt: 'updated_at',
     },
   }
-
 );
 
 UserSchema.index({ email: 1 }, { unique: true });
 UserSchema.index({ googleId: 1 }, { sparse: true });
 UserSchema.index({ githubId: 1 }, { sparse: true });
-
-
 
 export const UserModel = mongoose.model<IUser>('UserModel', UserSchema);
