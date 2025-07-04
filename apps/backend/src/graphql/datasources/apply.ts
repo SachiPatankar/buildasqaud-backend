@@ -5,6 +5,7 @@ import {
   UserSkillModel,
   PostModel,
   SavedPostModel,
+  ConnectionModel,
 } from '@db';
 import {
   Application,
@@ -37,7 +38,8 @@ function buildPostSummary(post, user, savedPostIds, appliedPostStatusMap) {
 
 export default class ApplicationDataSource implements IApplicationDataSource {
   async loadApplicationsByPostId(
-    postId: string
+    postId: string,
+    current_user_id?: string
   ): Promise<ApplicationsByPostIdResponse[]> {
     // Fetch all applications for the post
     const applications = await ApplicationModel.find({ post_id: postId })
@@ -69,9 +71,30 @@ export default class ApplicationDataSource implements IApplicationDataSource {
         skillsMap[skill.user_id].push(skill);
     });
 
+    // Batch fetch connections if current_user_id is provided
+    const connectionsMap: Record<string, string | null> = {};
+    if (current_user_id) {
+      const connections = await ConnectionModel.find({
+        $or: applicantIds.map((applicantId) => ({
+          $or: [
+            { requester_user_id: current_user_id, addressee_user_id: applicantId },
+            { requester_user_id: applicantId, addressee_user_id: current_user_id },
+          ],
+        })),
+      }).lean();
+      connections.forEach((conn) => {
+        const otherId = conn.requester_user_id === current_user_id ? conn.addressee_user_id : conn.requester_user_id;
+        connectionsMap[otherId] = conn.status;
+      });
+    }
+
     // Build the response
     return applications.map((app) => {
       const user = userMap[app.applicant_id] || {};
+      let is_connection = null;
+      if (current_user_id && app.applicant_id !== current_user_id) {
+        is_connection = connectionsMap[app.applicant_id] || null;
+      }
       return {
         _id: app._id,
         post_id: app.post_id,
@@ -83,6 +106,7 @@ export default class ApplicationDataSource implements IApplicationDataSource {
         title: user.title || '',
         bio: user.bio || '',
         top_skills: skillsMap[app.applicant_id] || [],
+        is_connection,
         message: app.message,
         status: app.status,
         created_at: app.created_at,

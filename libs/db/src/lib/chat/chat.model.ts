@@ -34,7 +34,7 @@ const ChatSchema = new Schema<IChat>(
     },
     is_active: {
       type: Boolean,
-      default: true,
+      default: false,
     },
   },
   {

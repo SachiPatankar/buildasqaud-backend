@@ -12,7 +12,7 @@ const resolvers = {
       { postId }: { postId: string },
       context: ApolloContext
     ): Promise<ApplicationsByPostIdResponse[]> => {
-      return context.dataSources.application.loadApplicationsByPostId(postId);
+      return context.dataSources.application.loadApplicationsByPostId(postId, context.currentUser?.id);
     },
     getApplicationsByUser: async (
       _: any,

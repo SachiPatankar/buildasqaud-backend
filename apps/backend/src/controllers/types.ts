@@ -31,11 +31,13 @@ export interface IAuthController {
 
   resetPassword: (req: Request, res: Response) => Promise<Response>;
 
-  getUsers: (req: Request, res: Response) => Promise<Response>;
+  // getUsers: (req: Request, res: Response) => Promise<Response>;
 
-  deleteUser: (req: Request, res: Response) => Promise<Response>;
-
-  refreshToken: (req: Request, res: Response) => Promise<Response>;
+  // deleteUser: (req: Request, res: Response) => Promise<Response>;
 
   logout: (req: Request, res: Response) => Promise<Response>;
+
+  me: (req: Request, res: Response) => Promise<Response>;
+
+
 }

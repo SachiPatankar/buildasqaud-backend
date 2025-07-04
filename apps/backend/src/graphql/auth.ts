@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 import { UserModel } from '@db';
 import { Request } from 'express';
 
-const JWT_SECRET = process.env.JWT_SECRET;
+const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
 
 export const getCurrentUserFromReq = async (
   req: Request
@@ -13,7 +13,7 @@ export const getCurrentUserFromReq = async (
   if (!token) return null;
 
   try {
-    const decoded: any = jwt.verify(token, JWT_SECRET!);
+    const decoded: any = jwt.verify(token, ACCESS_TOKEN_SECRET!);
     const userId = decoded.sub;
     const user = await UserModel.findById(userId);
     if (!user) {

@@ -1,5 +1,6 @@
 import express from 'express';
 import { AuthController } from '../../controllers/auth.controller';
+import { requireAuth } from '../../middleware/auth';
 
 const router = express.Router();
 
@@ -25,10 +26,11 @@ router.post('/forgot-password', authController.forgotPassword);
 //reset-password
 router.post('/reset-password/:id/:token', authController.resetPassword);
 
-router.get('/getUsers', authController.getUsers);
-router.post('/deleteUser', authController.deleteUser);
-
-router.post('/refresh-token', authController.refreshToken);
 router.post('/logout', authController.logout);
+
+router.get('/me', requireAuth, authController.me);
+
+router.post('/refresh-token', authController.getAccessTokenViaRefreshToken);
+
 
 export default router;

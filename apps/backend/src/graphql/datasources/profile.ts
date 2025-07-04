@@ -25,7 +25,9 @@ export default class ProfileDataSource implements IProfileDataSource {
   async createAchievement(userId: string, input: CreateAchievementInput) {
     let order = input.order;
     if (order === undefined || order === null) {
-      const last = await AchievementModel.findOne({ user_id: userId }).sort({ order: -1 });
+      const last = await AchievementModel.findOne({ user_id: userId }).sort({
+        order: -1,
+      });
       order = last ? last.order + 1 : 0;
     }
     const newAchievement = new AchievementModel({
@@ -58,7 +60,9 @@ export default class ProfileDataSource implements IProfileDataSource {
   async createEducation(userId: string, input: CreateEducationInput) {
     let order = input.order;
     if (order === undefined || order === null) {
-      const last = await EducationModel.findOne({ user_id: userId }).sort({ order: -1 });
+      const last = await EducationModel.findOne({ user_id: userId }).sort({
+        order: -1,
+      });
       order = last ? last.order + 1 : 0;
     }
     const newEducation = new EducationModel({
@@ -86,7 +90,9 @@ export default class ProfileDataSource implements IProfileDataSource {
   async createExperience(userId: string, input: CreateExperienceInput) {
     let order = input.order;
     if (order === undefined || order === null) {
-      const last = await ExperienceModel.findOne({ user_id: userId }).sort({ order: -1 });
+      const last = await ExperienceModel.findOne({ user_id: userId }).sort({
+        order: -1,
+      });
       order = last ? last.order + 1 : 0;
     }
     const newExperience = new ExperienceModel({
@@ -116,7 +122,9 @@ export default class ProfileDataSource implements IProfileDataSource {
   async createProject(userId: string, input: CreateProjectInput) {
     let order = input.order;
     if (order === undefined || order === null) {
-      const last = await ProjectModel.findOne({ user_id: userId }).sort({ order: -1 });
+      const last = await ProjectModel.findOne({ user_id: userId }).sort({
+        order: -1,
+      });
       order = last ? last.order + 1 : 0;
     }
     const newProject = new ProjectModel({
@@ -144,7 +152,9 @@ export default class ProfileDataSource implements IProfileDataSource {
   async createUserSkill(userId: string, input: CreateUserSkillInput) {
     let order = input.order;
     if (order === undefined || order === null) {
-      const last = await UserSkillModel.findOne({ user_id: userId }).sort({ order: -1 });
+      const last = await UserSkillModel.findOne({ user_id: userId }).sort({
+        order: -1,
+      });
       order = last ? last.order + 1 : 0;
     }
     const newUserSkill = new UserSkillModel({

@@ -100,7 +100,8 @@ export interface ISavedPostDataSource {
 
 export interface IApplicationDataSource {
   loadApplicationsByPostId(
-    postId: string
+    postId: string,
+    current_user_id?: string
   ): Promise<ApplicationsByPostIdResponse[]>;
   getApplicationsByUser(
     userId: string
@@ -216,8 +217,8 @@ export interface IChatDataSource {
     senderId: string,
     content: string
   ): Promise<Message>;
-  editMessage(messageId: string, content: string): Promise<Message>;
-  deleteMessage(messageId: string): Promise<boolean>;
+  editMessage(messageId: string, content: string, userId: string): Promise<Message>;
+  deleteMessage(messageId: string, userId: string, forAll?: boolean): Promise<boolean>;
   getMessagesForChat(
     chatId: string,
     page: number,

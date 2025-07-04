@@ -18,11 +18,6 @@ export function initSocket(server: HTTPServer): IOServer {
   io.on('connection', (socket: IOSocket) => {
     console.log(`🔌 Socket connected: ${socket.id}`);
 
-    // Handle message events
-    socket.on('sendMessage', (chatId: string, message: any) => {
-      socket.to(chatId).emit('receiveMessage', message); // Emit to chat room
-    });
-
     // Handle user joining chat room
     socket.on('joinChat', (chatId: string) => {
       socket.join(chatId);
@@ -46,7 +41,7 @@ export function initSocket(server: HTTPServer): IOServer {
 
 /**
  * Returns the initialized Socket.IO server.
- * Throws if initSocket() hasn’t been called.
+ * Throws if initSocket() hasn't been called.
  */
 export function getIO(): IOServer {
   if (!io) {

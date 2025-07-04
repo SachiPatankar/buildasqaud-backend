@@ -13,6 +13,7 @@ const typeDefs = gql`
     is_deleted: Boolean
     deleted_for: [String]
     reply_to_message_id: String
+    reply_to_message_content: String
     created_at: Date!
     updated_at: Date!
   }
@@ -25,20 +26,22 @@ const typeDefs = gql`
   type Chat {
     _id: String!
     participant_ids: [String!]!
-    last_message_id: String
-    last_message_content: String
-    last_message_at: Date
-    is_active: Boolean
-    created_at: Date!
-    updated_at: Date!
+    other_user_id: String!
     first_name: String
     last_name: String
     photo: String
+    last_message_id: String
+    last_message_content: String
+    last_message_at: Date
+    unread_count: Int
+    is_active: Boolean
+    created_at: Date!
+    updated_at: Date!
   }
 
   extend type Query {
     getMessagesForChat(chatId: String!, page: Int, limit: Int): [Message]!
-    getChatListForUser: [Chat]!
+    getChatListForUser(page: Int, limit: Int): [Chat]!
     getUnreadCountForChats: [UnreadChatCount]!
   }
 

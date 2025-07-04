@@ -54,7 +54,7 @@ const resolvers = {
       { messageId, content }: { messageId: string; content: string },
       context: ApolloContext
     ): Promise<Message> => {
-      return context.dataSources.chat.editMessage(messageId, content);
+      return context.dataSources.chat.editMessage(messageId, content, context.currentUser.id);
     },
 
     deleteMessage: async (
@@ -62,7 +62,7 @@ const resolvers = {
       { messageId }: { messageId: string },
       context: ApolloContext
     ): Promise<boolean> => {
-      return context.dataSources.chat.deleteMessage(messageId);
+      return context.dataSources.chat.deleteMessage(messageId, context.currentUser.id);
     },
   },
 };

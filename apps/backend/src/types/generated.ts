@@ -57,6 +57,7 @@ export type ApplicationsByPostIdResponse = {
   bio?: Maybe<Scalars['String']['output']>;
   created_at: Scalars['Date']['output'];
   first_name: Scalars['String']['output'];
+  is_connection?: Maybe<Scalars['String']['output']>;
   last_name?: Maybe<Scalars['String']['output']>;
   location_id?: Maybe<Scalars['String']['output']>;
   message?: Maybe<Scalars['String']['output']>;
@@ -84,8 +85,10 @@ export type Chat = {
   last_message_content?: Maybe<Scalars['String']['output']>;
   last_message_id?: Maybe<Scalars['String']['output']>;
   last_name?: Maybe<Scalars['String']['output']>;
+  other_user_id: Scalars['String']['output'];
   participant_ids: Array<Scalars['String']['output']>;
   photo?: Maybe<Scalars['String']['output']>;
+  unread_count?: Maybe<Scalars['Int']['output']>;
   updated_at: Scalars['Date']['output'];
 };
 
@@ -232,6 +235,7 @@ export type Message = {
   edited_at?: Maybe<Scalars['Date']['output']>;
   is_deleted?: Maybe<Scalars['Boolean']['output']>;
   read_by?: Maybe<Array<Maybe<ReadStatus>>>;
+  reply_to_message_content?: Maybe<Scalars['String']['output']>;
   reply_to_message_id?: Maybe<Scalars['String']['output']>;
   sender_id: Scalars['String']['output'];
   updated_at: Scalars['Date']['output'];
@@ -606,6 +610,11 @@ export type QueryCheckConnectionStatusArgs = {
 
 export type QueryGetAchievementsByUserArgs = {
   userId?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type QueryGetChatListForUserArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type QueryGetEducationByUserArgs = {

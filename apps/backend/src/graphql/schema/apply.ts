@@ -24,6 +24,7 @@ const typeDefs = gql`
     title: String
     bio: String
     top_skills: [UserSkill]
+    is_connection: String
     message: String
     status: String!
     created_at: Date!

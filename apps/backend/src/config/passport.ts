@@ -3,7 +3,7 @@
 import passport, { Profile as PassportProfile } from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth2';
 import { Strategy as GitHubStrategy } from 'passport-github2';
-import { UserModel, IUser } from '@db';
+import { UserModel } from '@db';
 
 const {
   GOOGLE_CLIENT_ID,
@@ -23,6 +23,7 @@ if (!GITHUB_CLIENT_ID || !GITHUB_CLIENT_SECRET || !GITHUB_CALLBACK_URL) {
 }
 
 export const setupPassport = () => {
+  try{
   // REQUIRED: Serialize/deserialize user for session management
   passport.serializeUser((user: any, done) => {
     done(null, user._id);
@@ -45,7 +46,7 @@ export const setupPassport = () => {
         clientSecret: GOOGLE_CLIENT_SECRET,
         callbackURL: GOOGLE_CALLBACK_URL,
       },
-      async (_accessToken, _refreshToken, profile: PassportProfile, done) => {
+      async (_, __, profile: PassportProfile, done) => {
         try {
           const email = profile.emails?.[0]?.value;
           if (!email) {
@@ -58,9 +59,7 @@ export const setupPassport = () => {
             user = await UserModel.findOne({ email });
 
             if (user) {
-              // link existing account
               user.googleId = profile.id;
-              user.photo = profile.photos?.[0]?.value;
               await user.save();
             } else {
               // create new
@@ -90,9 +89,8 @@ export const setupPassport = () => {
         clientID: GITHUB_CLIENT_ID,
         clientSecret: GITHUB_CLIENT_SECRET,
         callbackURL: GITHUB_CALLBACK_URL,
-        scope: ['user:email'], // Ensure email scope is requested
       },
-      async (_accessToken, _refreshToken, profile: PassportProfile, done) => {
+      async (_, __, profile: PassportProfile, done) => {
         try {
           const email = profile.emails?.[0]?.value;
           if (!email) {
@@ -106,7 +104,6 @@ export const setupPassport = () => {
 
             if (user) {
               user.githubId = profile.id;
-              user.photo = profile.photos?.[0]?.value;
               await user.save();
             } else {
               const [first_name, ...rest] = (
@@ -133,4 +130,7 @@ export const setupPassport = () => {
       }
     )
   );
+} catch (error) {
+  console.error("PASSPORT ERROR: ", error);
+}
 };
