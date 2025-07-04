@@ -234,7 +234,7 @@ export class AuthController implements IAuthController {
   //         const safeUser = await UserModel.findById(user._id).select(
   //           '-password -refreshToken -googleId -githubId'
   //         );
-          
+
   //         res
   //           .cookie('accessToken', accessToken, options)
   //           .cookie('refreshToken', refreshToken, options)
@@ -307,36 +307,36 @@ export class AuthController implements IAuthController {
           console.error('Google OAuth error:', err || 'No user returned');
           return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=oauth_failed`);
         }
-  
+
         try {
           const accessToken = this.createAccessToken(user._id, user.email);
           const refreshToken = this.createRefreshToken(user._id);
-  
+
           // Save refreshToken to user document for session management
           user.refreshToken = refreshToken;
           await user.save({ validateBeforeSave: false });
-          
+
           const options = {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
           };
-  
+
           const safeUser = await UserModel.findById(user._id).select(
             '-password -refreshToken -googleId -githubId'
           );
-  
+
           // Set cookies
           res
             .cookie('accessToken', accessToken, options)
             .cookie('refreshToken', refreshToken, options);
-  
+
           // Encode user data and tokens in URL parameters
           const params = new URLSearchParams({
             accessToken,
             user: JSON.stringify(safeUser),
-            success: 'true'
+            success: 'true',
           });
-  
+
           return res.redirect(`${OAUTH_SUCCESS_REDIRECT}?${params.toString()}`);
         } catch (tokenError) {
           console.error('Google token creation error:', tokenError);
@@ -345,7 +345,7 @@ export class AuthController implements IAuthController {
       }
     )(req, res, next);
   };
-  
+
   githubCallback = (req: Request, res: Response, next: any) => {
     passport.authenticate(
       'github',
@@ -355,36 +355,36 @@ export class AuthController implements IAuthController {
           console.error('GitHub OAuth error:', err || 'No user returned');
           return res.redirect(`${OAUTH_FAILURE_REDIRECT}?error=oauth_failed`);
         }
-  
+
         try {
           const accessToken = this.createAccessToken(user._id, user.email);
           const refreshToken = this.createRefreshToken(user._id);
-  
+
           // Save refreshToken to user document for session management
           user.refreshToken = refreshToken;
           await user.save({ validateBeforeSave: false });
-          
+
           const options = {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
           };
-  
+
           const safeUser = await UserModel.findById(user._id).select(
             '-password -refreshToken -googleId -githubId'
           );
-  
+
           // Set cookies
           res
             .cookie('accessToken', accessToken, options)
             .cookie('refreshToken', refreshToken, options);
-  
+
           // Encode user data and tokens in URL parameters
           const params = new URLSearchParams({
             accessToken,
             user: JSON.stringify(safeUser),
-            success: 'true'
+            success: 'true',
           });
-  
+
           return res.redirect(`${OAUTH_SUCCESS_REDIRECT}?${params.toString()}`);
         } catch (tokenError) {
           console.error('GitHub token creation error:', tokenError);
@@ -481,12 +481,10 @@ export class AuthController implements IAuthController {
 
       // Ensure token belongs to intended user
       if (typeof decoded !== 'object' || decoded.sub !== id) {
-        return res
-          .status(400)
-          .json({
-            status: 'Failed',
-            message: 'Invalid token or user mismatch',
-          });
+        return res.status(400).json({
+          status: 'Failed',
+          message: 'Invalid token or user mismatch',
+        });
       }
 
       const salt = await bcrypt.genSalt(10);
