@@ -25,6 +25,16 @@ const resolvers = {
       );
     },
 
+    getChatIdsForUser: async (
+      _: any,
+      __: any,
+      context: ApolloContext
+    ): Promise<string[]> => {
+      return context.dataSources.chat.getChatIdsForUser(
+        context.currentUser.id
+      );
+    },
+
     getUnreadCountForChats: async (
       _: any,
       __: any,

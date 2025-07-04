@@ -233,6 +233,7 @@ export interface IChatDataSource {
     limit: number
   ): Promise<Message[]>;
   getChatListForUser(userId: string): Promise<Chat[]>;
+  getChatIdsForUser(userId: string): Promise<string[]>;
   getUnreadCountForChats(
     userId: string
   ): Promise<{ chat_id: string; unread_count: number }[]>;

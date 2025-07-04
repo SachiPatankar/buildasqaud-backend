@@ -193,4 +193,13 @@ export default class ChatDataSource implements IChatDataSource {
       { $project: { chat_id: '$_id', unread_count: 1, _id: 0 } },
     ]);
   }
+
+  // Get all active chat IDs for a user
+  async getChatIdsForUser(userId: string): Promise<string[]> {
+    const chats = await ChatModel.find({
+      is_active: true,
+      participant_ids: userId,
+    }, { _id: 1 });
+    return chats.map((chat: any) => String(chat._id));
+  }
 }

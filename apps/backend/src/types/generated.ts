@@ -581,6 +581,7 @@ export type Query = {
   checkConnectionStatus: Scalars['String']['output'];
   getAchievementsByUser: Array<Maybe<Achievement>>;
   getApplicationsByUser: Array<Maybe<ApplicationsByUserIdResponse>>;
+  getChatIdsForUser?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
   getChatListForUser: Array<Maybe<Chat>>;
   getEducationByUser: Array<Maybe<Education>>;
   getExperienceByUser: Array<Maybe<Experience>>;
