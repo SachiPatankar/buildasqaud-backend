@@ -7,7 +7,7 @@ export interface IExperience extends Document {
   company_name: string;
   position: string;
   start_date: Date;
-  end_date: Date;
+  end_date?: Date;
   is_current: boolean;
   description?: string;
   location_id?: string;
@@ -48,7 +48,6 @@ const ExperienceSchema = new Schema<IExperience>(
     },
     end_date: {
       type: Date,
-      required: true,
     },
     is_current: {
       type: Boolean,

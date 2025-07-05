@@ -73,10 +73,10 @@ const resolvers = {
   Mutation: {
     createAchievement: async (
       _: any,
-      { userId, input }: { userId: string; input: CreateAchievementInput },
+      { input }: { input: CreateAchievementInput },
       context: ApolloContext
     ): Promise<Achievement> => {
-      return context.dataSources.profile.createAchievement(userId, input);
+      return context.dataSources.profile.createAchievement(context.currentUser.id, input);
     },
     updateAchievement: async (
       _: any,
@@ -101,10 +101,10 @@ const resolvers = {
 
     createEducation: async (
       _: any,
-      { userId, input }: { userId: string; input: CreateEducationInput },
+      { input }: {  input: CreateEducationInput },
       context: ApolloContext
     ): Promise<Education> => {
-      return context.dataSources.profile.createEducation(userId, input);
+      return context.dataSources.profile.createEducation(context.currentUser.id, input);
     },
     updateEducation: async (
       _: any,
@@ -126,10 +126,10 @@ const resolvers = {
 
     createExperience: async (
       _: any,
-      { userId, input }: { userId: string; input: CreateExperienceInput },
+      {  input }: { input: CreateExperienceInput },
       context: ApolloContext
     ): Promise<Experience> => {
-      return context.dataSources.profile.createExperience(userId, input);
+      return context.dataSources.profile.createExperience(context.currentUser.id, input);
     },
     updateExperience: async (
       _: any,
@@ -151,10 +151,10 @@ const resolvers = {
 
     createProject: async (
       _: any,
-      { userId, input }: { userId: string; input: CreateProjectInput },
+      {input }: {  input: CreateProjectInput },
       context: ApolloContext
     ): Promise<Project> => {
-      return context.dataSources.profile.createProject(userId, input);
+      return context.dataSources.profile.createProject(context.currentUser.id, input);
     },
     updateProject: async (
       _: any,
@@ -173,10 +173,10 @@ const resolvers = {
 
     createUserSkill: async (
       _: any,
-      { userId, input }: { userId: string; input: CreateUserSkillInput },
+      { input }: { input: CreateUserSkillInput },
       context: ApolloContext
     ): Promise<UserSkill> => {
-      return context.dataSources.profile.createUserSkill(userId, input);
+      return context.dataSources.profile.createUserSkill(context.currentUser.id, input);
     },
     updateUserSkill: async (
       _: any,

@@ -42,7 +42,7 @@ const typeDefs = gql`
   extend type Query {
     getMessagesForChat(chatId: String!, page: Int, limit: Int): [Message]!
     getChatListForUser(page: Int, limit: Int): [Chat]!
-    getChatIdsForUser:[String]
+    getChatIdsForUser: [String]
     getUnreadCountForChats: [UnreadChatCount]!
   }
 

@@ -117,7 +117,7 @@ export type CreateAchievementInput = {
 export type CreateEducationInput = {
   degree: Scalars['String']['input'];
   description?: InputMaybe<Scalars['String']['input']>;
-  end_date: Scalars['Date']['input'];
+  end_date?: InputMaybe<Scalars['Date']['input']>;
   field_of_study: Scalars['String']['input'];
   grade?: InputMaybe<Scalars['String']['input']>;
   institution_name: Scalars['String']['input'];
@@ -131,7 +131,7 @@ export type CreateExperienceInput = {
   company_name: Scalars['String']['input'];
   description?: InputMaybe<Scalars['String']['input']>;
   employment_type?: InputMaybe<Scalars['String']['input']>;
-  end_date: Scalars['Date']['input'];
+  end_date?: InputMaybe<Scalars['Date']['input']>;
   is_current: Scalars['Boolean']['input'];
   location_id?: InputMaybe<Scalars['String']['input']>;
   order?: InputMaybe<Scalars['Int']['input']>;
@@ -185,7 +185,7 @@ export type Education = {
   created_at: Scalars['Date']['output'];
   degree: Scalars['String']['output'];
   description?: Maybe<Scalars['String']['output']>;
-  end_date: Scalars['Date']['output'];
+  end_date?: Maybe<Scalars['Date']['output']>;
   field_of_study: Scalars['String']['output'];
   grade?: Maybe<Scalars['String']['output']>;
   institution_name: Scalars['String']['output'];
@@ -204,7 +204,7 @@ export type Experience = {
   created_at: Scalars['Date']['output'];
   description?: Maybe<Scalars['String']['output']>;
   employment_type?: Maybe<Scalars['String']['output']>;
-  end_date: Scalars['Date']['output'];
+  end_date?: Maybe<Scalars['Date']['output']>;
   is_current: Scalars['Boolean']['output'];
   location_id?: Maybe<Scalars['String']['output']>;
   order?: Maybe<Scalars['Int']['output']>;
@@ -313,17 +313,14 @@ export type MutationClosePostArgs = {
 
 export type MutationCreateAchievementArgs = {
   input: CreateAchievementInput;
-  userId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type MutationCreateEducationArgs = {
   input: CreateEducationInput;
-  userId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type MutationCreateExperienceArgs = {
   input: CreateExperienceInput;
-  userId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type MutationCreatePostArgs = {
@@ -332,7 +329,6 @@ export type MutationCreatePostArgs = {
 
 export type MutationCreateProjectArgs = {
   input: CreateProjectInput;
-  userId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type MutationCreateUserArgs = {
@@ -341,7 +337,6 @@ export type MutationCreateUserArgs = {
 
 export type MutationCreateUserSkillArgs = {
   input: CreateUserSkillInput;
-  userId?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type MutationDeclineFriendReqArgs = {

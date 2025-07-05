@@ -1,7 +1,7 @@
 import { Server as IOServer, Socket as IOSocket } from 'socket.io';
 import { Server as HTTPServer } from 'http';
 import { parse as parseCookie } from 'cookie';
-import { verify } from 'jsonwebtoken'; 
+import { verify } from 'jsonwebtoken';
 
 const ACCESS_TOKEN_SECRET = process.env['ACCESS_TOKEN_SECRET']!;
 
@@ -56,7 +56,9 @@ export function initSocket(server: HTTPServer): IOServer {
 
 export function getIO(): IOServer {
   if (!io) {
-    throw new Error('Socket.io not initialized. Call initSocket(server) first.');
+    throw new Error(
+      'Socket.io not initialized. Call initSocket(server) first.'
+    );
   }
   return io;
 }

@@ -9,7 +9,7 @@ export interface IEducation extends Document {
   degree: string;
   field_of_study: string;
   start_date: Date;
-  end_date: Date;
+  end_date?: Date;
   is_current: boolean;
   grade?: string;
   description?: string;
@@ -49,7 +49,6 @@ const EducationSchema = new Schema<IEducation>(
     },
     end_date: {
       type: Date,
-      required: true,
     },
     is_current: {
       type: Boolean,

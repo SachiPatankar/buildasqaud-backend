@@ -30,9 +30,7 @@ const resolvers = {
       __: any,
       context: ApolloContext
     ): Promise<string[]> => {
-      return context.dataSources.chat.getChatIdsForUser(
-        context.currentUser.id
-      );
+      return context.dataSources.chat.getChatIdsForUser(context.currentUser.id);
     },
 
     getUnreadCountForChats: async (
