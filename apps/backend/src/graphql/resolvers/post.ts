@@ -34,7 +34,11 @@ const resolvers = {
     },
     loadPostByFilter: async (
       _: any,
-      { filter, page = 1, limit = 10 }: { filter: PostFilterInput, page?: number, limit?: number },
+      {
+        filter,
+        page = 1,
+        limit = 10,
+      }: { filter: PostFilterInput; page?: number; limit?: number },
       context: ApolloContext
     ): Promise<PostSummary[]> => {
       return context.dataSources.post.loadPostByFilter(

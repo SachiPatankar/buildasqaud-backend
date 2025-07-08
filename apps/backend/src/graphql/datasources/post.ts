@@ -12,7 +12,6 @@ import {
 } from '../../types/generated';
 
 export default class PostDataSource implements IPostDataSource {
-
   async loadPosts(
     page: number,
     limit: number,
