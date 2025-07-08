@@ -1,5 +1,5 @@
 import { IUserDataSource } from './types';
-import { UserModel, ConnectionModel } from '@db'; // Assuming UserModel and ConnectionModel are in @db
+import { UserModel, ConnectionModel, ChatModel } from '@db'; // Assuming UserModel, ConnectionModel, and ChatModel are in @db
 import { User, CreateUserInput, UpdateUserInput } from '../../types/generated'; // Generated types from codegen
 
 export default class UserDataSource implements IUserDataSource {
@@ -52,6 +52,7 @@ export default class UserDataSource implements IUserDataSource {
     const user = await UserModel.findById(userId);
     if (!user) return null;
     let is_connection = null;
+    let chat_id = null;
     if (current_user_id && userId !== current_user_id) {
       const connection = await ConnectionModel.findOne({
         $or: [
@@ -60,10 +61,17 @@ export default class UserDataSource implements IUserDataSource {
         ],
       });
       is_connection = connection ? connection.status : null;
+      if (is_connection === 'accepted') {
+        const chat = await ChatModel.findOne({
+          participant_ids: { $all: [current_user_id, userId] },
+        });
+        chat_id = chat ? chat._id : null;
+      }
     }
     return {
       ...user.toObject(),
       is_connection,
+      chat_id,
     };
   }
 }

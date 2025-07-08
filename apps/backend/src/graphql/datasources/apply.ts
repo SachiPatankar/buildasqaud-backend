@@ -176,13 +176,28 @@ export default class ApplicationDataSource implements IApplicationDataSource {
     applicantId: string,
     message: string
   ): Promise<Application> {
-    const newApplication = new ApplicationModel({
+    // Check if an application already exists for this user and post
+    const application = await ApplicationModel.findOne({
       post_id: postId,
       applicant_id: applicantId,
-      message,
-      status: 'pending', // New applications start with 'pending' status
     });
-    return newApplication.save();
+
+    if (application) {
+      // Update the message and reset status to 'pending'
+      application.message = message;
+      application.status = 'pending';
+      await application.save();
+      return application;
+    } else {
+      // Create a new application
+      const newApplication = new ApplicationModel({
+        post_id: postId,
+        applicant_id: applicantId,
+        message,
+        status: 'pending',
+      });
+      return newApplication.save();
+    }
   }
 
   async cancelApplyToPost(applicationId: string): Promise<boolean> {

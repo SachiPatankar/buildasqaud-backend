@@ -1,6 +1,7 @@
 // graphql/datasources/post.ts
 import { IPostDataSource } from './types';
 import { ApplicationModel, PostModel, SavedPostModel, UserModel } from '@db';
+import { ConnectionModel, ChatModel } from '@db';
 import {
   CreatePostInput,
   UpdatePostInput,
@@ -11,20 +12,6 @@ import {
 } from '../../types/generated';
 
 export default class PostDataSource implements IPostDataSource {
-  // async loadPosts(page: number, limit: number): Promise<Post[]> {
-  //   return PostModel.find()
-  //     .skip((page - 1) * limit)
-  //     .limit(limit)
-  //     .sort({ created_at: -1 });
-  // }
-
-  // async loadPostById(postId: string): Promise<Post | null> {
-  //   return PostModel.findById(postId);
-  // }
-
-  // async loadPostByFilter(filter: PostFilterInput): Promise<Post[]> {
-  //   return PostModel.find(filter).sort({ created_at: -1 });
-  // }
 
   async loadPosts(
     page: number,
@@ -135,6 +122,25 @@ export default class PostDataSource implements IPostDataSource {
     const isSaved = savedPost !== null;
     const isApplied = appliedPost?.status;
 
+    // Add is_connection and chat_id for the post creator
+    let is_connection = null;
+    let chat_id = null;
+    if (current_user_id && user._id.toString() !== current_user_id) {
+      const connection = await ConnectionModel.findOne({
+        $or: [
+          { requester_user_id: current_user_id, addressee_user_id: user._id },
+          { requester_user_id: user._id, addressee_user_id: current_user_id },
+        ],
+      });
+      is_connection = connection ? connection.status : null;
+      if (is_connection === 'accepted') {
+        const chat = await ChatModel.findOne({
+          participant_ids: { $all: [current_user_id, user._id.toString()] },
+        });
+        chat_id = chat ? chat._id : null;
+      }
+    }
+
     // Return the detailed post with additional information
     return {
       _id: post._id,
@@ -158,11 +164,15 @@ export default class PostDataSource implements IPostDataSource {
       is_applied: isApplied,
       created_at: post.created_at,
       updated_at: post.updated_at,
+      is_connection,
+      chat_id,
     };
   }
 
   async loadPostByFilter(
     filter: PostFilterInput,
+    page: number,
+    limit: number,
     current_user_id: string
   ): Promise<PostSummary[]> {
     // Build MongoDB query from PostFilterInput
@@ -189,6 +199,8 @@ export default class PostDataSource implements IPostDataSource {
     // Fetch the posts based on the constructed query and populate user fields
     const posts = await PostModel.find(query)
       .sort({ created_at: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
       .lean()
       .exec();
 
@@ -207,7 +219,6 @@ export default class PostDataSource implements IPostDataSource {
       .exec();
     const appliedPosts = await ApplicationModel.find({
       applicant_id: current_user_id,
-      status: 'accepted',
     })
       .lean()
       .exec();

@@ -81,6 +81,8 @@ export interface IPostDataSource {
   ): Promise<PostDetails | null>;
   loadPostByFilter(
     filter: PostFilterInput,
+    page: number,
+    limit: number,
     current_user_id: string
   ): Promise<PostSummary[]>;
   loadPostsByUserId(userId: string): Promise<PostSummary[]>;

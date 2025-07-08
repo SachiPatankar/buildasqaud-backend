@@ -30,9 +30,7 @@ const typeDefs = gql`
   }
 
   extend type Mutation {
-    createAchievement(
-      input: CreateAchievementInput!
-    ): Achievement!
+    createAchievement(input: CreateAchievementInput!): Achievement!
     updateAchievement(
       achievementId: String!
       input: UpdateAchievementInput!

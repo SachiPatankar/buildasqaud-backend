@@ -462,6 +462,7 @@ export type Person = {
   __typename?: 'Person';
   _id: Scalars['String']['output'];
   bio?: Maybe<Scalars['String']['output']>;
+  chat_id?: Maybe<Scalars['String']['output']>;
   first_name: Scalars['String']['output'];
   is_connection?: Maybe<Scalars['String']['output']>;
   last_name?: Maybe<Scalars['String']['output']>;
@@ -495,11 +496,13 @@ export type PostDetails = {
   __typename?: 'PostDetails';
   _id: Scalars['String']['output'];
   applications_count: Scalars['Int']['output'];
+  chat_id?: Maybe<Scalars['String']['output']>;
   created_at: Scalars['Date']['output'];
   description?: Maybe<Scalars['String']['output']>;
   experience_level?: Maybe<Scalars['String']['output']>;
   first_name: Scalars['String']['output'];
   is_applied?: Maybe<Scalars['String']['output']>;
+  is_connection?: Maybe<Scalars['String']['output']>;
   is_saved: Scalars['Boolean']['output'];
   last_name?: Maybe<Scalars['String']['output']>;
   location_id?: Maybe<Scalars['String']['output']>;
@@ -665,6 +668,8 @@ export type QueryLoadPersonByIdArgs = {
 
 export type QueryLoadPostByFilterArgs = {
   filter: PostFilterInput;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type QueryLoadPostByIdArgs = {
@@ -798,6 +803,7 @@ export type User = {
   __typename?: 'User';
   _id: Scalars['String']['output'];
   bio?: Maybe<Scalars['String']['output']>;
+  chat_id?: Maybe<Scalars['String']['output']>;
   connections_count?: Maybe<Scalars['Int']['output']>;
   created_at: Scalars['Date']['output'];
   email: Scalars['String']['output'];

@@ -88,25 +88,9 @@ const PostSchema = new Schema<IPost>(
     ],
     project_phase: {
       type: String,
-      enum: [
-        'idea',
-        'planning',
-        'development',
-        'testing',
-        'deployment',
-        'maintenance',
-      ],
     },
     project_type: {
       type: String,
-      enum: [
-        'academic',
-        'startup',
-        'hackathon',
-        'open_source',
-        'personal',
-        'freelance',
-      ],
     },
     work_mode: {
       type: String,
@@ -114,7 +98,7 @@ const PostSchema = new Schema<IPost>(
     },
     experience_level: {
       type: String,
-      enum: ['beginner', 'intermediate', 'advanced', 'not_specified'],
+      enum: ['beginner', 'intermediate', 'advanced', 'any'],
     },
     location_id: {
       type: String,

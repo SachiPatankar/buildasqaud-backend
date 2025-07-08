@@ -69,6 +69,8 @@ const typeDefs = gql`
     project_type: String
     is_saved: Boolean!
     is_applied: String
+    is_connection :String
+    chat_id : String
     created_at: Date!
     updated_at: Date!
   }
@@ -83,7 +85,7 @@ const typeDefs = gql`
   extend type Query {
     loadPosts(page: Int, limit: Int): [PostSummary]!
     loadPostById(postId: String!): PostDetails
-    loadPostByFilter(filter: PostFilterInput!): [PostSummary]!
+    loadPostByFilter(filter: PostFilterInput!, page: Int, limit: Int): [PostSummary]!
     loadPostsByUserId(userId: String): [PostSummary]!
     getSavedPosts: [PostSummary]
   }

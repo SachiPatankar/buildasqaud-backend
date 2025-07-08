@@ -21,6 +21,7 @@ const typeDefs = gql`
     links: [Link]
     is_online: Boolean
     is_connection: String
+    chat_id: String
     last_seen: Date
     created_at: Date!
     updated_at: Date!
