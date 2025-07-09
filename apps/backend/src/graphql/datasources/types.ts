@@ -92,6 +92,11 @@ export interface IPostDataSource {
   incrementPostView(postId: string): Promise<Post>;
   closePost(postId: string): Promise<Post>;
   openPost(postId: string): Promise<Post>;
+  loadByRecommendation(
+    page: number,
+    limit: number,
+    current_user_id: string
+  ): Promise<PostSummary[]>;
 }
 
 export interface ISavedPostDataSource {

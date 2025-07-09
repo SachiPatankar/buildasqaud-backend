@@ -47,6 +47,7 @@ const typeDefs = gql`
     is_applied: String
     created_at: Date!
     updated_at: Date!
+    requirements: Requirement
   }
 
   type PostDetails {
@@ -87,6 +88,10 @@ const typeDefs = gql`
     loadPostById(postId: String!): PostDetails
     loadPostByFilter(
       filter: PostFilterInput!
+      page: Int
+      limit: Int
+    ): [PostSummary]!
+    loadByRecommendation(
       page: Int
       limit: Int
     ): [PostSummary]!

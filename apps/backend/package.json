@@ -10,7 +10,7 @@
         "outputs": [
           "{options.outputPath}"
         ],
-        "defaultConfiguration": "production",
+        "defaultConfiguration": "development",
         "options": {
           "platform": "node",
           "outputPath": "apps/backend/dist",
@@ -51,7 +51,7 @@
       },
       "serve": {
         "executor": "@nx/js:node",
-        "defaultConfiguration": "production",
+        "defaultConfiguration": "development",
         "options": {
           "buildTarget": "",
           "runBuildTargetDependencies": false
@@ -59,9 +59,6 @@
         "configurations": {
           "development": {
             "buildTarget": "backend:build:development"
-          },
-          "production": {
-            "buildTarget": "backend:build:production"
           }
         }
       }

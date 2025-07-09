@@ -542,6 +542,7 @@ export type PostSummary = {
   location_id?: Maybe<Scalars['String']['output']>;
   photo?: Maybe<Scalars['String']['output']>;
   posted_by: Scalars['String']['output'];
+  requirements?: Maybe<Requirement>;
   status: Scalars['String']['output'];
   tech_stack?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
   title: Scalars['String']['output'];
@@ -590,6 +591,7 @@ export type Query = {
   getSkillsByUser: Array<Maybe<UserSkill>>;
   getUnreadCountForChats: Array<Maybe<UnreadChatCount>>;
   loadApplicationsByPostId: Array<Maybe<ApplicationsByPostIdResponse>>;
+  loadByRecommendation: Array<Maybe<PostSummary>>;
   loadConnectionsList: Array<Maybe<Connection>>;
   loadPendingFriendRequests: Array<Maybe<Connection>>;
   loadPeople: Array<Maybe<Person>>;
@@ -645,6 +647,11 @@ export type QueryGetSkillsByUserArgs = {
 
 export type QueryLoadApplicationsByPostIdArgs = {
   postId: Scalars['String']['input'];
+};
+
+export type QueryLoadByRecommendationArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type QueryLoadConnectionsListArgs = {

@@ -32,7 +32,7 @@ import ChatDataSource from './graphql/datasources/chat';
 import { initSocket } from '@socket';
 
 const HOST = process.env.HOST ?? 'localhost';
-const NODE_ENV = parseInt(process.env.NODE_ENV ?? '3000', 10);
+const PORT = parseInt(process.env.PORT ?? '3000', 10);
 const CLIENT_ORIGIN = process.env.FRONTEND_URL!;
 const SESSION_SECRET = process.env.SESSION_SECRET!;
 
@@ -112,8 +112,8 @@ async function startServer() {
     const httpServer = createServer(app);
     initSocket(httpServer);
 
-    httpServer.listen(NODE_ENV, () => {
-      console.log(`🚀 Server listening on http://${HOST}:${NODE_ENV}`);
+    httpServer.listen(PORT, () => {
+      console.log(`🚀 Server listening on http://${HOST}:${PORT}`);
     });
   } catch (err) {
     console.error('❌ Failed to start server:', err);

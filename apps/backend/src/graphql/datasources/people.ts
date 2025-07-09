@@ -75,9 +75,12 @@ export default class PeopleDataSource implements IPeopleDataSource {
 
     // If skills filter is present, further filter users by their skills
     if (filter.skills && filter.skills.length > 0) {
-      // Find user IDs who have at least one of the skills
+      // Find user IDs who have at least one of the skills (relaxed matching)
+      const skillRegexes = filter.skills.map(skill => ({
+        skill_name: { $regex: skill, $options: 'i' }
+      }));
       const skillUsers = await UserSkillModel.find({
-        skill_name: { $in: filter.skills },
+        $or: skillRegexes,
       }).distinct('user_id');
       users = users.filter((user: any) =>
         skillUsers.includes(user._id.toString())
