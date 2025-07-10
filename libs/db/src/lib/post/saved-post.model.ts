@@ -37,8 +37,6 @@ const SavedPostSchema = new Schema<ISavedPost>(
 );
 
 // ensure a user can’t save the same post twice
-SavedPostSchema.index({ user_id: 1, post_id: 1 }, { unique: true });
-
 export const SavedPostModel = mongoose.model<ISavedPost>(
   'SavedPostModel',
   SavedPostSchema

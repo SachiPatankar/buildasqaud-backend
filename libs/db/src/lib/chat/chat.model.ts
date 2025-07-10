@@ -45,7 +45,5 @@ const ChatSchema = new Schema<IChat>(
   }
 );
 
-ChatSchema.index({ participant_ids: 1 }, { unique: true });
-ChatSchema.index({ participant_ids: 1, is_active: 1, last_message_at: -1 });
 
 export const ChatModel = mongoose.model<IChat>('ChatModel', ChatSchema);

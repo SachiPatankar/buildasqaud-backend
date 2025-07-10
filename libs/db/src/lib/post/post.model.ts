@@ -127,9 +127,5 @@ const PostSchema = new Schema<IPost>(
   }
 );
 
-// Indexes for efficient querying and filtering
-PostSchema.index({ posted_by: 1 });
-PostSchema.index({ status: 1 });
-PostSchema.index({ created_at: -1 });
 
 export const PostModel = mongoose.model<IPost>('PostModel', PostSchema);
