@@ -36,13 +36,20 @@ export default class ChatDataSource implements IChatDataSource {
     io.to(chatId).emit('receiveMessage', newMessage);
 
     // Emit unread chat count to each recipient's user-{userId} room
-    const recipientIds = chat.participant_ids.filter((id: string) => id !== senderId);
+    const recipientIds = chat.participant_ids.filter(
+      (id: string) => id !== senderId
+    );
     for (const recipientId of recipientIds) {
       // Get total unread count for this recipient
       const unreadCounts = await this.getUnreadCountForChats(recipientId);
       // Sum all unread counts for this user
-      const totalUnread = unreadCounts.reduce((sum, c) => sum + (c.unread_count || 0), 0);
-      io.to(`user-${recipientId}`).emit('unreadChatCount', { count: totalUnread });
+      const totalUnread = unreadCounts.reduce(
+        (sum, c) => sum + (c.unread_count || 0),
+        0
+      );
+      io.to(`user-${recipientId}`).emit('unreadChatCount', {
+        count: totalUnread,
+      });
     }
     return newMessage;
   }
@@ -231,7 +238,10 @@ export default class ChatDataSource implements IChatDataSource {
     // Emit updated unread count to the user's notification room
     const io = getIO();
     const unreadCounts = await this.getUnreadCountForChats(userId);
-    const totalUnread = unreadCounts.reduce((sum, c) => sum + (c.unread_count || 0), 0);
+    const totalUnread = unreadCounts.reduce(
+      (sum, c) => sum + (c.unread_count || 0),
+      0
+    );
     io.to(`user-${userId}`).emit('unreadChatCount', { count: totalUnread });
     return true;
   }

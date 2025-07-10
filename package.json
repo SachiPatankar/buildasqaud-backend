@@ -4,8 +4,11 @@
   "license": "MIT",
   "scripts": {
     "start": "nx serve backend",
+    "start:prod": "nx serve backend --configuration=production",
     "build": "nx build backend",
+    "build:prod": "nx build backend --configuration=production",
     "serve": "nx serve backend",
+    "serve:prod": "nx serve backend --configuration=production",
     "lint": "nx lint backend",
     "test": "nx test backend",
     "prepare": "husky",
