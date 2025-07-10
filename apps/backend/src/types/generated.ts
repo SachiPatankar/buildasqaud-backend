@@ -269,6 +269,7 @@ export type Mutation = {
   deleteUserSkill: Scalars['Boolean']['output'];
   editMessage: Message;
   incrementPostView: Post;
+  markMessagesAsRead: Scalars['Boolean']['output'];
   openPost: Post;
   removeConnection: Scalars['Boolean']['output'];
   savePost: SavedPost;
@@ -386,6 +387,10 @@ export type MutationEditMessageArgs = {
 
 export type MutationIncrementPostViewArgs = {
   postId: Scalars['String']['input'];
+};
+
+export type MutationMarkMessagesAsReadArgs = {
+  chatId: Scalars['String']['input'];
 };
 
 export type MutationOpenPostArgs = {

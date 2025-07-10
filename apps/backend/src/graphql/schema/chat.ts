@@ -50,6 +50,7 @@ const typeDefs = gql`
     sendMessage(chatId: String!, content: String!): Message!
     editMessage(messageId: String!, content: String!): Message!
     deleteMessage(messageId: String!): Boolean!
+    markMessagesAsRead(chatId: String!): Boolean!
   }
 
   type UnreadChatCount {

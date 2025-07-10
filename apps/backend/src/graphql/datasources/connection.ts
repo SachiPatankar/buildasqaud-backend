@@ -1,6 +1,7 @@
 import { IConnectionDataSource } from './types';
 import { ConnectionModel, UserModel, ChatModel, MessageModel } from '@db'; // Assuming the models are in @db
 import { Connection } from '../../types/generated'; // Import generated types for Connection
+import { getIO } from '@socket'; // Import the socket helper
 
 export default class ConnectionDataSource implements IConnectionDataSource {
   // Send a friend request
@@ -15,7 +16,23 @@ export default class ConnectionDataSource implements IConnectionDataSource {
       status: 'pending',
       message,
     });
-    return newConnection.save();
+    const savedConnection = await newConnection.save();
+
+    // Emit notification to addressee's notification room
+    try {
+      const io = getIO();
+      io.to(`user-${addresseeUserId}`).emit('notification', {
+        type: 'friendRequest',
+        connectionId: savedConnection._id,
+        fromUserId: requesterUserId,
+        message,
+        createdAt: savedConnection.created_at,
+      });
+    } catch (err) {
+      console.error('Failed to emit notification:', err);
+    }
+
+    return savedConnection;
   }
 
   // Accept a friend request
@@ -148,27 +165,17 @@ export default class ConnectionDataSource implements IConnectionDataSource {
   // Load pending friend requests for a user
   async loadPendingFriendRequests(userId: string): Promise<Connection[]> {
     const connections = await ConnectionModel.find({
-      $or: [
-        { requester_user_id: userId, status: 'pending' },
-        { addressee_user_id: userId, status: 'pending' },
-      ],
+      addressee_user_id: userId,
+      status: 'pending',
     }).lean();
-    const otherUserIds = connections.map((conn) =>
-      conn.requester_user_id === userId
-        ? conn.addressee_user_id
-        : conn.requester_user_id
-    );
+    const otherUserIds = connections.map((conn) => conn.requester_user_id);
     const users = await UserModel.find({ _id: { $in: otherUserIds } }).lean();
     const userMap = users.reduce((acc, user) => {
       acc[user._id] = user;
       return acc;
     }, {});
     return connections.map((conn) => {
-      const otherId =
-        conn.requester_user_id === userId
-          ? conn.addressee_user_id
-          : conn.requester_user_id;
-      const user = userMap[otherId] || {};
+      const user = userMap[conn.requester_user_id] || {};
       return {
         ...conn,
         first_name: user.first_name || '',

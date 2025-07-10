@@ -34,6 +34,16 @@ export default class ChatDataSource implements IChatDataSource {
     const io = getIO();
     // Use io.to() instead of socket.to() to include ALL users in the room
     io.to(chatId).emit('receiveMessage', newMessage);
+
+    // Emit unread chat count to each recipient's user-{userId} room
+    const recipientIds = chat.participant_ids.filter((id: string) => id !== senderId);
+    for (const recipientId of recipientIds) {
+      // Get total unread count for this recipient
+      const unreadCounts = await this.getUnreadCountForChats(recipientId);
+      // Sum all unread counts for this user
+      const totalUnread = unreadCounts.reduce((sum, c) => sum + (c.unread_count || 0), 0);
+      io.to(`user-${recipientId}`).emit('unreadChatCount', { count: totalUnread });
+    }
     return newMessage;
   }
 
@@ -204,5 +214,25 @@ export default class ChatDataSource implements IChatDataSource {
       { _id: 1 }
     );
     return chats.map((chat: any) => String(chat._id));
+  }
+
+  // Mark all messages in a chat as read by a user
+  async markMessagesAsRead(chatId: string, userId: string): Promise<boolean> {
+    const messages = await MessageModel.find({
+      chat_id: chatId,
+      is_deleted: false,
+      'read_by.user_id': { $ne: userId },
+    });
+    const now = new Date();
+    for (const message of messages) {
+      message.read_by.push({ user_id: userId, read_at: now });
+      await message.save();
+    }
+    // Emit updated unread count to the user's notification room
+    const io = getIO();
+    const unreadCounts = await this.getUnreadCountForChats(userId);
+    const totalUnread = unreadCounts.reduce((sum, c) => sum + (c.unread_count || 0), 0);
+    io.to(`user-${userId}`).emit('unreadChatCount', { count: totalUnread });
+    return true;
   }
 }

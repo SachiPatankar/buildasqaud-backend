@@ -76,7 +76,6 @@ const ProjectSchema = new Schema<IProject>(
   }
 );
 
-
 export const ProjectModel = mongoose.model<IProject>(
   'ProjectModel',
   ProjectSchema

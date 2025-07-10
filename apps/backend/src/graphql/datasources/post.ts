@@ -401,7 +401,11 @@ export default class PostDataSource implements IPostDataSource {
     const userTechStack = Array.from(new Set([...skillNames, ...techs]));
 
     // Fallback: If user profile is incomplete, use loadPosts
-    if (skillNames.length === 0 && roles.length === 0 && userTechStack.length === 0) {
+    if (
+      skillNames.length === 0 &&
+      roles.length === 0 &&
+      userTechStack.length === 0
+    ) {
       return this.loadPosts(page, limit, current_user_id);
     }
 

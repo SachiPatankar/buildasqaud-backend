@@ -60,7 +60,6 @@ ConnectionSchema.index(
   { unique: true }
 );
 
-
 export const ConnectionModel = mongoose.model<IConnection>(
   'ConnectionModel',
   ConnectionSchema

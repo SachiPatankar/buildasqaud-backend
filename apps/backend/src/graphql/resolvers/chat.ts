@@ -79,6 +79,17 @@ const resolvers = {
         context.currentUser.id
       );
     },
+
+    markMessagesAsRead: async (
+      _: any,
+      { chatId }: { chatId: string },
+      context: ApolloContext
+    ): Promise<boolean> => {
+      return context.dataSources.chat.markMessagesAsRead(
+        chatId,
+        context.currentUser.id
+      );
+    },
   },
 };
 

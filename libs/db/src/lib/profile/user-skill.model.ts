@@ -56,7 +56,6 @@ const UserSkillSchema = new Schema<IUserSkill>(
   }
 );
 
-
 export const UserSkillModel = mongoose.model<IUserSkill>(
   'UserSkillModel',
   UserSkillSchema

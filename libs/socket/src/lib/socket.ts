@@ -36,6 +36,13 @@ export function initSocket(server: HTTPServer): IOServer {
   io.on('connection', (socket: IOSocket) => {
     console.log(`🔌 Socket connected: ${socket.id}`);
 
+    // Join user-specific notification room
+    const userId = (socket as any).user.id || (socket as any).user._id;
+    if (userId) {
+      socket.join(`user-${userId}`);
+      console.log(`User ${userId} joined room user-${userId}`);
+    }
+
     socket.on('joinChat', (chatId: string) => {
       socket.join(chatId);
       console.log(`↪️ ${socket.id} joined ${chatId}`);
