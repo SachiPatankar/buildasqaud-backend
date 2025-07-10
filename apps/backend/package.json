@@ -59,9 +59,6 @@
         "configurations": {
           "development": {
             "buildTarget": "backend:build:development"
-          },
-          "production": {
-            "buildTarget": "backend:build:production"
           }
         }
       }
