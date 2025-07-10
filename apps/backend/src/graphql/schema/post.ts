@@ -91,10 +91,7 @@ const typeDefs = gql`
       page: Int
       limit: Int
     ): [PostSummary]!
-    loadByRecommendation(
-      page: Int
-      limit: Int
-    ): [PostSummary]!
+    loadByRecommendation(page: Int, limit: Int): [PostSummary]!
     loadPostsByUserId(userId: String): [PostSummary]!
     getSavedPosts: [PostSummary]
   }

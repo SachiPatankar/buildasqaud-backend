@@ -189,9 +189,9 @@ export default class PostDataSource implements IPostDataSource {
     if (filter.project_type && filter.project_type.length > 0) {
       query.project_type = {
         $elemMatch: {
-          $regex: filter.project_type.join("|"),
-          $options: "i"
-        }
+          $regex: filter.project_type.join('|'),
+          $options: 'i',
+        },
       };
     }
     // Strict matching for work_mode (enum)
@@ -202,9 +202,9 @@ export default class PostDataSource implements IPostDataSource {
     if (filter.tech_stack && filter.tech_stack.length > 0) {
       query.tech_stack = {
         $elemMatch: {
-          $regex: filter.tech_stack.join("|"),
-          $options: "i"
-        }
+          $regex: filter.tech_stack.join('|'),
+          $options: 'i',
+        },
       };
     }
     // Strict matching for experience_level (enum)
@@ -215,9 +215,9 @@ export default class PostDataSource implements IPostDataSource {
     if (filter.desired_roles && filter.desired_roles.length > 0) {
       query['requirements.desired_roles'] = {
         $elemMatch: {
-          $regex: filter.desired_roles.join("|"),
-          $options: "i"
-        }
+          $regex: filter.desired_roles.join('|'),
+          $options: 'i',
+        },
       };
     }
 
@@ -394,9 +394,9 @@ export default class PostDataSource implements IPostDataSource {
       ExperienceModel.find({ user_id: current_user_id }).lean().exec(),
       ProjectModel.find({ user_id: current_user_id }).lean().exec(),
     ]);
-    const skillNames = skills.map(s => s.skill_name);
-    const roles = experiences.map(e => e.position);
-    const techs = projects.flatMap(p => p.technologies || []);
+    const skillNames = skills.map((s) => s.skill_name);
+    const roles = experiences.map((e) => e.position);
+    const techs = projects.flatMap((p) => p.technologies || []);
     // Optionally dedupe
     const userTechStack = Array.from(new Set([...skillNames, ...techs]));
 
@@ -406,7 +406,7 @@ export default class PostDataSource implements IPostDataSource {
         { 'requirements.desired_skills': { $in: skillNames } },
         { 'requirements.desired_roles': { $in: roles } },
         { tech_stack: { $in: userTechStack } },
-      ]
+      ],
     };
 
     // 3. Fetch posts
@@ -415,16 +415,28 @@ export default class PostDataSource implements IPostDataSource {
     // 4. Score posts by matches
     function fuzzyIncludes(arr: string[], value: string): boolean {
       return arr.some(
-        item => item.toLowerCase().includes(value.toLowerCase()) ||
-                value.toLowerCase().includes(item.toLowerCase())
+        (item) =>
+          item.toLowerCase().includes(value.toLowerCase()) ||
+          value.toLowerCase().includes(item.toLowerCase())
       );
     }
 
     function scorePost(post) {
       let matchScore = 0;
-      if (post.requirements?.desired_skills?.some(skill => fuzzyIncludes(skillNames, skill))) matchScore++;
-      if (post.requirements?.desired_roles?.some(role => fuzzyIncludes(roles, role))) matchScore++;
-      if (post.tech_stack?.some(tech => fuzzyIncludes(userTechStack, tech))) matchScore++;
+      if (
+        post.requirements?.desired_skills?.some((skill) =>
+          fuzzyIncludes(skillNames, skill)
+        )
+      )
+        matchScore++;
+      if (
+        post.requirements?.desired_roles?.some((role) =>
+          fuzzyIncludes(roles, role)
+        )
+      )
+        matchScore++;
+      if (post.tech_stack?.some((tech) => fuzzyIncludes(userTechStack, tech)))
+        matchScore++;
 
       // Recency score: 1 for newest, 0 for oldest (within a window)
       const now = Date.now();
@@ -439,7 +451,8 @@ export default class PostDataSource implements IPostDataSource {
       // Combine scores
       return matchScore * matchWeight + recencyScore * recencyWeight;
     }
-    const scoredPosts = posts.map(post => ({ post, score: scorePost(post) }))
+    const scoredPosts = posts
+      .map((post) => ({ post, score: scorePost(post) }))
       .sort((a, b) => b.score - a.score);
 
     // 5. Pagination
@@ -447,15 +460,28 @@ export default class PostDataSource implements IPostDataSource {
     const paginatedPosts = paginated.map(({ post }) => post);
 
     // 6. Populate user fields and saved/applied status (reuse logic from loadPosts)
-    const userIds = paginatedPosts.map(post => post.posted_by);
-    const users = await UserModel.find({ _id: { $in: userIds } }).lean().exec();
-    const userMap = users.reduce((acc, user) => { acc[user._id] = user; return acc; }, {});
-    const savedPosts = await SavedPostModel.find({ user_id: current_user_id }).lean().exec();
-    const appliedPosts = await ApplicationModel.find({ applicant_id: current_user_id }).lean().exec();
-    const savedPostIds = new Set(savedPosts.map(sp => sp.post_id));
-    const appliedPostStatusMap = new Map(appliedPosts.map(ap => [ap.post_id.toString(), ap.status]));
+    const userIds = paginatedPosts.map((post) => post.posted_by);
+    const users = await UserModel.find({ _id: { $in: userIds } })
+      .lean()
+      .exec();
+    const userMap = users.reduce((acc, user) => {
+      acc[user._id] = user;
+      return acc;
+    }, {});
+    const savedPosts = await SavedPostModel.find({ user_id: current_user_id })
+      .lean()
+      .exec();
+    const appliedPosts = await ApplicationModel.find({
+      applicant_id: current_user_id,
+    })
+      .lean()
+      .exec();
+    const savedPostIds = new Set(savedPosts.map((sp) => sp.post_id));
+    const appliedPostStatusMap = new Map(
+      appliedPosts.map((ap) => [ap.post_id.toString(), ap.status])
+    );
 
-    return paginatedPosts.map(post => {
+    return paginatedPosts.map((post) => {
       const user = userMap[post.posted_by];
       return {
         _id: post._id,

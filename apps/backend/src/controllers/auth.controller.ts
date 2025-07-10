@@ -436,7 +436,7 @@ export class AuthController implements IAuthController {
       const resetUrl = `${RESET_PASSWORD_BASE_URL}/${user._id}/${token}`;
 
       const mailOptions = {
-        from: `"Your App Name" <${NODEMAILER_EMAIL}>`,
+        from: `"BuildASquad Support" <${NODEMAILER_EMAIL}>`,
         to: user.email,
         subject: 'Reset your Password',
         text: `Click the link to reset your password: ${resetUrl}`,
