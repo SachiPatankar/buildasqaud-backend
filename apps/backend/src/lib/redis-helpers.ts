@@ -10,7 +10,11 @@ export async function incrementTotalCount(userId: string) {
 }
 
 // Reset unread count for a chat and recalculate total for a user
-export async function resetChatCount(userId: string, chatId: string, newCount = 0) {
+export async function resetChatCount(
+  userId: string,
+  chatId: string,
+  newCount = 0
+) {
   await redis.hset(`user:${userId}:chats`, chatId, newCount);
   // Recalculate total
   const counts = await getChatCounts(userId);
@@ -19,10 +23,14 @@ export async function resetChatCount(userId: string, chatId: string, newCount = 
 }
 
 // Get all chat unread counts for a user
-export async function getChatCounts(userId: string): Promise<Record<string, number>> {
+export async function getChatCounts(
+  userId: string
+): Promise<Record<string, number>> {
   const data = await redis.hgetall(`user:${userId}:chats`);
   // Convert string values to numbers
-  return Object.fromEntries(Object.entries(data).map(([k, v]) => [k, Number(v)]));
+  return Object.fromEntries(
+    Object.entries(data).map(([k, v]) => [k, Number(v)])
+  );
 }
 
 // Get total unread count for a user
@@ -40,4 +48,4 @@ export async function setTotalCount(userId: string, count: number) {
 export async function expireUserKeys(userId: string, seconds: number) {
   await redis.expire(`user:${userId}:chats`, seconds);
   await redis.expire(`user:${userId}:total`, seconds);
-} 
+}

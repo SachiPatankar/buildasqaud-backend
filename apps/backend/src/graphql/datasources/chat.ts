@@ -8,7 +8,7 @@ import {
   resetChatCount,
   getChatCounts,
   getTotalCount,
-  setTotalCount
+  setTotalCount,
 } from '../../lib/redis-helpers';
 
 export default class ChatDataSource implements IChatDataSource {
@@ -218,7 +218,10 @@ export default class ChatDataSource implements IChatDataSource {
     const redisCounts = await getChatCounts(userId);
     if (Object.keys(redisCounts).length > 0) {
       // Redis has data, return it
-      return Object.entries(redisCounts).map(([chat_id, unread_count]) => ({ chat_id, unread_count }));
+      return Object.entries(redisCounts).map(([chat_id, unread_count]) => ({
+        chat_id,
+        unread_count,
+      }));
     }
     // 2. Fallback: calculate from MongoDB
     // Find all chats for user
@@ -226,13 +229,21 @@ export default class ChatDataSource implements IChatDataSource {
     const chatIds = chats.map((c: any) => c._id.toString());
     // Aggregate unread counts per chat
     const unreadAgg = await MessageModel.aggregate([
-      { $match: { is_deleted: false, chat_id: { $in: chatIds }, 'read_by.user_id': { $ne: userId } } },
+      {
+        $match: {
+          is_deleted: false,
+          chat_id: { $in: chatIds },
+          'read_by.user_id': { $ne: userId },
+        },
+      },
       { $group: { _id: '$chat_id', unread_count: { $sum: 1 } } },
     ]);
     // Build result and update Redis
     const countsObj: Record<string, number> = {};
     for (const chatId of chatIds) {
-      const found = unreadAgg.find((c: any) => String(c._id) === String(chatId));
+      const found = unreadAgg.find(
+        (c: any) => String(c._id) === String(chatId)
+      );
       const count = found ? found.unread_count : 0;
       countsObj[chatId] = count;
       // Store in Redis
@@ -242,7 +253,10 @@ export default class ChatDataSource implements IChatDataSource {
     const total = Object.values(countsObj).reduce((sum, c) => sum + c, 0);
     await setTotalCount(userId, total);
     // Return as array
-    return Object.entries(countsObj).map(([chat_id, unread_count]) => ({ chat_id, unread_count }));
+    return Object.entries(countsObj).map(([chat_id, unread_count]) => ({
+      chat_id,
+      unread_count,
+    }));
   }
 
   // Get all active chat IDs for a user
