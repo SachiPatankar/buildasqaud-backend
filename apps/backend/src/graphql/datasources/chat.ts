@@ -2,6 +2,14 @@ import { IChatDataSource } from './types';
 import { MessageModel, ChatModel, UserModel } from '@db'; // Assuming you have these models
 import { getIO } from '@socket'; // Import the socket helper
 import { Message, Chat } from '../../types/generated'; // Generated types from codegen
+import {
+  incrementChatCount,
+  incrementTotalCount,
+  resetChatCount,
+  getChatCounts,
+  getTotalCount,
+  setTotalCount
+} from '../../lib/redis-helpers';
 
 export default class ChatDataSource implements IChatDataSource {
   // Send a message and emit via socket
@@ -15,12 +23,13 @@ export default class ChatDataSource implements IChatDataSource {
     if (!chat || !chat.participant_ids.includes(senderId)) {
       throw new Error('Unauthorized or chat not found');
     }
+    // Save message with sender in read_by
     const newMessage = new MessageModel({
       chat_id: chatId,
       sender_id: senderId,
       content: content,
       is_deleted: false,
-      read_by: [],
+      read_by: [{ user_id: senderId, read_at: new Date() }],
     });
     await newMessage.save();
     await ChatModel.findOneAndUpdate(
@@ -32,23 +41,25 @@ export default class ChatDataSource implements IChatDataSource {
       }
     );
     const io = getIO();
-    // Use io.to() instead of socket.to() to include ALL users in the room
+    // Emit to chat room
     io.to(chatId).emit('receiveMessage', newMessage);
 
-    // Emit unread chat count to each recipient's user-{userId} room
+    // Unread logic for recipients
     const recipientIds = chat.participant_ids.filter(
       (id: string) => id !== senderId
     );
     for (const recipientId of recipientIds) {
-      // Get total unread count for this recipient
-      const unreadCounts = await this.getUnreadCountForChats(recipientId);
-      // Sum all unread counts for this user
-      const totalUnread = unreadCounts.reduce(
-        (sum, c) => sum + (c.unread_count || 0),
-        0
-      );
-      io.to(`user-${recipientId}`).emit('unreadChatCount', {
-        count: totalUnread,
+      await incrementChatCount(recipientId, chatId);
+      await incrementTotalCount(recipientId);
+      // Emit per-chat and total unread updates
+      const chatCount = (await getChatCounts(recipientId))[chatId] || 0;
+      const totalCount = await getTotalCount(recipientId);
+      io.to(`user-${recipientId}`).emit('chatUnreadUpdate', {
+        chatId,
+        count: chatCount,
+      });
+      io.to(`user-${recipientId}`).emit('totalUnreadUpdate', {
+        count: totalCount,
       });
     }
     return newMessage;
@@ -203,12 +214,35 @@ export default class ChatDataSource implements IChatDataSource {
   async getUnreadCountForChats(
     userId: string
   ): Promise<{ chat_id: string; unread_count: number }[]> {
-    // Use aggregation for efficiency
-    return MessageModel.aggregate([
-      { $match: { is_deleted: false, 'read_by.user_id': { $ne: userId } } },
+    // 1. Try Redis first
+    const redisCounts = await getChatCounts(userId);
+    if (Object.keys(redisCounts).length > 0) {
+      // Redis has data, return it
+      return Object.entries(redisCounts).map(([chat_id, unread_count]) => ({ chat_id, unread_count }));
+    }
+    // 2. Fallback: calculate from MongoDB
+    // Find all chats for user
+    const chats = await ChatModel.find({ participant_ids: userId }, { _id: 1 });
+    const chatIds = chats.map((c: any) => c._id.toString());
+    // Aggregate unread counts per chat
+    const unreadAgg = await MessageModel.aggregate([
+      { $match: { is_deleted: false, chat_id: { $in: chatIds }, 'read_by.user_id': { $ne: userId } } },
       { $group: { _id: '$chat_id', unread_count: { $sum: 1 } } },
-      { $project: { chat_id: '$_id', unread_count: 1, _id: 0 } },
     ]);
+    // Build result and update Redis
+    const countsObj: Record<string, number> = {};
+    for (const chatId of chatIds) {
+      const found = unreadAgg.find((c: any) => String(c._id) === String(chatId));
+      const count = found ? found.unread_count : 0;
+      countsObj[chatId] = count;
+      // Store in Redis
+      await resetChatCount(userId, chatId, count);
+    }
+    // Store total in Redis
+    const total = Object.values(countsObj).reduce((sum, c) => sum + c, 0);
+    await setTotalCount(userId, total);
+    // Return as array
+    return Object.entries(countsObj).map(([chat_id, unread_count]) => ({ chat_id, unread_count }));
   }
 
   // Get all active chat IDs for a user
@@ -225,24 +259,26 @@ export default class ChatDataSource implements IChatDataSource {
 
   // Mark all messages in a chat as read by a user
   async markMessagesAsRead(chatId: string, userId: string): Promise<boolean> {
-    const messages = await MessageModel.find({
-      chat_id: chatId,
-      is_deleted: false,
-      'read_by.user_id': { $ne: userId },
-    });
+    // Bulk update: mark all unread messages as read for this user
     const now = new Date();
-    for (const message of messages) {
-      message.read_by.push({ user_id: userId, read_at: now });
-      await message.save();
-    }
-    // Emit updated unread count to the user's notification room
-    const io = getIO();
-    const unreadCounts = await this.getUnreadCountForChats(userId);
-    const totalUnread = unreadCounts.reduce(
-      (sum, c) => sum + (c.unread_count || 0),
-      0
+    await MessageModel.updateMany(
+      {
+        chat_id: chatId,
+        is_deleted: false,
+        'read_by.user_id': { $ne: userId },
+      },
+      { $push: { read_by: { user_id: userId, read_at: now } } }
     );
-    io.to(`user-${userId}`).emit('unreadChatCount', { count: totalUnread });
+    await resetChatCount(userId, chatId, 0);
+    const io = getIO();
+    const totalUnread = await getTotalCount(userId);
+    io.to(`user-${userId}`).emit('chatUnreadUpdate', {
+      chatId,
+      count: 0,
+    });
+    io.to(`user-${userId}`).emit('totalUnreadUpdate', {
+      count: totalUnread,
+    });
     return true;
   }
 }
