@@ -16,9 +16,9 @@ export default class ConnectionDataSource implements IConnectionDataSource {
       status: 'pending',
       message,
     });
-    
+
     const savedConnection = await newConnection.save();
-  
+
     // Emit notification to addressee
     safeEmitToUser(addresseeUserId, 'notification', {
       type: 'friendRequest',
@@ -27,7 +27,7 @@ export default class ConnectionDataSource implements IConnectionDataSource {
       message,
       createdAt: savedConnection.created_at,
     });
-  
+
     return savedConnection;
   }
 
@@ -84,7 +84,7 @@ export default class ConnectionDataSource implements IConnectionDataSource {
       { new: true }
     );
     if (!connection) throw new Error('Connection not found');
-  
+
     // Check if chat already exists
     let chat = await ChatModel.findOne({
       participant_ids: {
@@ -102,7 +102,7 @@ export default class ConnectionDataSource implements IConnectionDataSource {
     }
     connection.chat_id = chat._id;
     await connection.save();
-  
+
     // Update connections_count for both users
     await UserModel.updateOne(
       { _id: connection.requester_user_id },
@@ -112,23 +112,27 @@ export default class ConnectionDataSource implements IConnectionDataSource {
       { _id: connection.addressee_user_id },
       { $inc: { connections_count: 1 } }
     );
-  
+
     // Decrement friend request count for addressee
     safeEmitToUser(connection.addressee_user_id, 'friendRequestDecrement', {});
-  
+
     return connection;
   }
-  
+
   // Decline a friend request
   async declineFriendReq(connectionId: string): Promise<boolean> {
     const connection = await ConnectionModel.findByIdAndDelete(connectionId);
-    
+
     if (connection) {
       // Decrement friend request count for addressee
-      safeEmitToUser(connection.addressee_user_id, 'friendRequestDecrement', {});
+      safeEmitToUser(
+        connection.addressee_user_id,
+        'friendRequestDecrement',
+        {}
+      );
       return true;
     }
-    
+
     return false;
   }
 

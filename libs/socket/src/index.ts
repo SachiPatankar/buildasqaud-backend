@@ -1,2 +1,2 @@
 export * from './lib/socket';
-export * from './lib/socket-helpers'
+export * from './lib/socket-helpers';
