@@ -126,7 +126,7 @@ export default class ChatDataSource implements IChatDataSource {
     return MessageModel.find({ chat_id: chatId })
       .skip((page - 1) * limit)
       .limit(limit)
-      .sort({ created_at: 1 });
+      .sort({ created_at: -1 });
   }
 
   // Get chat list for a user (only active chats)

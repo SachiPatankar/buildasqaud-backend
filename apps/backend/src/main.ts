@@ -116,8 +116,8 @@ async function startServer() {
     socketEvents.on('userConnected', async ({ userId, socket }) => {
       try {
         const counts = await dataSources.chat.getInitialCounts(userId);
-        socket.emit('initialCounts', counts)
-        console.log("initialCounts", counts);
+        socket.emit('initialCounts', counts);
+        console.log('initialCounts', counts);
       } catch (err) {
         console.error('Failed to emit initialCounts:', err);
       }

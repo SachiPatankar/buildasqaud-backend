@@ -245,9 +245,7 @@ export interface IChatDataSource {
     userId: string
   ): Promise<{ chat_id: string; unread_count: number }[]>;
   markMessagesAsRead(chatId: string, userId: string): Promise<boolean>;
-  getInitialCounts(
-    userId: string
-  ): Promise<{
+  getInitialCounts(userId: string): Promise<{
     totalUnread: number;
     chatCounts: Record<string, number>;
     friendRequestCount: number;
