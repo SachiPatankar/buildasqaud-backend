@@ -42,6 +42,13 @@ const resolvers = {
         context.currentUser.id
       );
     },
+    getInitialCounts: async (
+      _: any,
+      __: any,
+      context: ApolloContext
+    ) => {
+      return context.dataSources.chat.getInitialCounts(context.currentUser.id);
+    },
   },
 
   Mutation: {

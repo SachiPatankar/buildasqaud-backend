@@ -1,7 +1,7 @@
 import { IConnectionDataSource } from './types';
-import { ConnectionModel, UserModel, ChatModel, MessageModel } from '@db'; // Assuming the models are in @db
+import { ConnectionModel, UserModel, ChatModel } from '@db'; // Assuming the models are in @db
 import { Connection } from '../../types/generated'; // Import generated types for Connection
-import { getIO } from '@socket'; // Import the socket helper
+import { safeEmitToUser } from '@socket'; // Import the socket helper
 
 export default class ConnectionDataSource implements IConnectionDataSource {
   // Send a friend request
@@ -16,26 +16,67 @@ export default class ConnectionDataSource implements IConnectionDataSource {
       status: 'pending',
       message,
     });
+    
     const savedConnection = await newConnection.save();
-
-    // Emit notification to addressee's notification room
-    try {
-      const io = getIO();
-      io.to(`user-${addresseeUserId}`).emit('notification', {
-        type: 'friendRequest',
-        connectionId: savedConnection._id,
-        fromUserId: requesterUserId,
-        message,
-        createdAt: savedConnection.created_at,
-      });
-    } catch (err) {
-      console.error('Failed to emit notification:', err);
-    }
-
+  
+    // Emit notification to addressee
+    safeEmitToUser(addresseeUserId, 'notification', {
+      type: 'friendRequest',
+      connectionId: savedConnection._id,
+      fromUserId: requesterUserId,
+      message,
+      createdAt: savedConnection.created_at,
+    });
+  
     return savedConnection;
   }
 
   // Accept a friend request
+  // async acceptFriendReq(connectionId: string): Promise<Connection> {
+  //   const connection = await ConnectionModel.findByIdAndUpdate(
+  //     connectionId,
+  //     { status: 'accepted', responded_at: new Date() },
+  //     { new: true }
+  //   );
+  //   if (!connection) throw new Error('Connection not found');
+
+  //   // Check if chat already exists
+  //   let chat = await ChatModel.findOne({
+  //     participant_ids: {
+  //       $all: [connection.requester_user_id, connection.addressee_user_id],
+  //     },
+  //   });
+  //   if (!chat) {
+  //     chat = await ChatModel.create({
+  //       participant_ids: [
+  //         connection.requester_user_id,
+  //         connection.addressee_user_id,
+  //       ],
+  //       is_active: false,
+  //     });
+  //   }
+  //   connection.chat_id = chat._id;
+  //   await connection.save();
+
+  //   // Update connections_count for both users
+  //   await UserModel.updateOne(
+  //     { _id: connection.requester_user_id },
+  //     { $inc: { connections_count: 1 } }
+  //   );
+  //   await UserModel.updateOne(
+  //     { _id: connection.addressee_user_id },
+  //     { $inc: { connections_count: 1 } }
+  //   );
+
+  //   return connection;
+  // }
+
+  // // Decline a friend request
+  // async declineFriendReq(connectionId: string): Promise<boolean> {
+  //   const connection = await ConnectionModel.findByIdAndDelete(connectionId);
+  //   return connection ? true : false;
+  // }
+
   async acceptFriendReq(connectionId: string): Promise<Connection> {
     const connection = await ConnectionModel.findByIdAndUpdate(
       connectionId,
@@ -43,7 +84,7 @@ export default class ConnectionDataSource implements IConnectionDataSource {
       { new: true }
     );
     if (!connection) throw new Error('Connection not found');
-
+  
     // Check if chat already exists
     let chat = await ChatModel.findOne({
       participant_ids: {
@@ -61,7 +102,7 @@ export default class ConnectionDataSource implements IConnectionDataSource {
     }
     connection.chat_id = chat._id;
     await connection.save();
-
+  
     // Update connections_count for both users
     await UserModel.updateOne(
       { _id: connection.requester_user_id },
@@ -71,14 +112,24 @@ export default class ConnectionDataSource implements IConnectionDataSource {
       { _id: connection.addressee_user_id },
       { $inc: { connections_count: 1 } }
     );
-
+  
+    // Decrement friend request count for addressee
+    safeEmitToUser(connection.addressee_user_id, 'friendRequestDecrement', {});
+  
     return connection;
   }
-
+  
   // Decline a friend request
   async declineFriendReq(connectionId: string): Promise<boolean> {
     const connection = await ConnectionModel.findByIdAndDelete(connectionId);
-    return connection ? true : false;
+    
+    if (connection) {
+      // Decrement friend request count for addressee
+      safeEmitToUser(connection.addressee_user_id, 'friendRequestDecrement', {});
+      return true;
+    }
+    
+    return false;
   }
 
   // Block a user
@@ -244,22 +295,5 @@ export default class ConnectionDataSource implements IConnectionDataSource {
       ],
     });
     return connection ? connection.status : 'none';
-  }
-
-  async getUnreadCountForChats(userId: string) {
-    return MessageModel.aggregate([
-      { $match: { is_deleted: false, 'read_by.user_id': { $ne: userId } } },
-      { $group: { _id: '$chat_id', unread_count: { $sum: 1 } } },
-    ]);
-  }
-
-  async deleteMessage(messageId: string, userId: string, forAll = false) {
-    if (forAll) {
-      await MessageModel.findByIdAndUpdate(messageId, { is_deleted: true });
-    } else {
-      await MessageModel.findByIdAndUpdate(messageId, {
-        $addToSet: { deleted_for: userId },
-      });
-    }
   }
 }

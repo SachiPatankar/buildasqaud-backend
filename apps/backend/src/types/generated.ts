@@ -26,6 +26,7 @@ export type Scalars = {
   Int: { input: number; output: number };
   Float: { input: number; output: number };
   Date: { input: any; output: any };
+  JSON: { input: any; output: any };
 };
 
 export type Achievement = {
@@ -212,6 +213,13 @@ export type Experience = {
   start_date: Scalars['Date']['output'];
   updated_at: Scalars['Date']['output'];
   user_id: Scalars['String']['output'];
+};
+
+export type InitialCountsResult = {
+  __typename?: 'InitialCountsResult';
+  chatCounts: Scalars['JSON']['output'];
+  friendRequestCount: Scalars['Int']['output'];
+  totalUnread: Scalars['Int']['output'];
 };
 
 export type Link = {
@@ -589,6 +597,7 @@ export type Query = {
   getChatListForUser: Array<Maybe<Chat>>;
   getEducationByUser: Array<Maybe<Education>>;
   getExperienceByUser: Array<Maybe<Experience>>;
+  getInitialCounts: InitialCountsResult;
   getMessagesForChat: Array<Maybe<Message>>;
   getPresignedUrl: PresignedUrlResult;
   getProjectsByUser: Array<Maybe<Project>>;
