@@ -44,18 +44,28 @@ const typeDefs = gql`
     getChatListForUser(page: Int, limit: Int): [Chat]!
     getChatIdsForUser: [String]
     getUnreadCountForChats: [UnreadChatCount]!
+    getInitialCounts: InitialCountsResult!
   }
 
   extend type Mutation {
     sendMessage(chatId: String!, content: String!): Message!
     editMessage(messageId: String!, content: String!): Message!
     deleteMessage(messageId: String!): Boolean!
+    markMessagesAsRead(chatId: String!): Boolean!
   }
 
   type UnreadChatCount {
     chat_id: String!
     unread_count: Int!
   }
+
+  type InitialCountsResult {
+    totalUnread: Int!
+    chatCounts: JSON!
+    friendRequestCount: Int!
+  }
+
+  scalar JSON
 `;
 
 export default typeDefs;

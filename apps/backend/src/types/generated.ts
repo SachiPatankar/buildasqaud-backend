@@ -26,6 +26,7 @@ export type Scalars = {
   Int: { input: number; output: number };
   Float: { input: number; output: number };
   Date: { input: any; output: any };
+  JSON: { input: any; output: any };
 };
 
 export type Achievement = {
@@ -214,6 +215,13 @@ export type Experience = {
   user_id: Scalars['String']['output'];
 };
 
+export type InitialCountsResult = {
+  __typename?: 'InitialCountsResult';
+  chatCounts: Scalars['JSON']['output'];
+  friendRequestCount: Scalars['Int']['output'];
+  totalUnread: Scalars['Int']['output'];
+};
+
 export type Link = {
   __typename?: 'Link';
   name: Scalars['String']['output'];
@@ -269,6 +277,7 @@ export type Mutation = {
   deleteUserSkill: Scalars['Boolean']['output'];
   editMessage: Message;
   incrementPostView: Post;
+  markMessagesAsRead: Scalars['Boolean']['output'];
   openPost: Post;
   removeConnection: Scalars['Boolean']['output'];
   savePost: SavedPost;
@@ -388,6 +397,10 @@ export type MutationIncrementPostViewArgs = {
   postId: Scalars['String']['input'];
 };
 
+export type MutationMarkMessagesAsReadArgs = {
+  chatId: Scalars['String']['input'];
+};
+
 export type MutationOpenPostArgs = {
   postId: Scalars['String']['input'];
 };
@@ -462,6 +475,7 @@ export type Person = {
   __typename?: 'Person';
   _id: Scalars['String']['output'];
   bio?: Maybe<Scalars['String']['output']>;
+  chat_id?: Maybe<Scalars['String']['output']>;
   first_name: Scalars['String']['output'];
   is_connection?: Maybe<Scalars['String']['output']>;
   last_name?: Maybe<Scalars['String']['output']>;
@@ -495,11 +509,13 @@ export type PostDetails = {
   __typename?: 'PostDetails';
   _id: Scalars['String']['output'];
   applications_count: Scalars['Int']['output'];
+  chat_id?: Maybe<Scalars['String']['output']>;
   created_at: Scalars['Date']['output'];
   description?: Maybe<Scalars['String']['output']>;
   experience_level?: Maybe<Scalars['String']['output']>;
   first_name: Scalars['String']['output'];
   is_applied?: Maybe<Scalars['String']['output']>;
+  is_connection?: Maybe<Scalars['String']['output']>;
   is_saved: Scalars['Boolean']['output'];
   last_name?: Maybe<Scalars['String']['output']>;
   location_id?: Maybe<Scalars['String']['output']>;
@@ -539,6 +555,7 @@ export type PostSummary = {
   location_id?: Maybe<Scalars['String']['output']>;
   photo?: Maybe<Scalars['String']['output']>;
   posted_by: Scalars['String']['output'];
+  requirements?: Maybe<Requirement>;
   status: Scalars['String']['output'];
   tech_stack?: Maybe<Array<Maybe<Scalars['String']['output']>>>;
   title: Scalars['String']['output'];
@@ -580,6 +597,7 @@ export type Query = {
   getChatListForUser: Array<Maybe<Chat>>;
   getEducationByUser: Array<Maybe<Education>>;
   getExperienceByUser: Array<Maybe<Experience>>;
+  getInitialCounts: InitialCountsResult;
   getMessagesForChat: Array<Maybe<Message>>;
   getPresignedUrl: PresignedUrlResult;
   getProjectsByUser: Array<Maybe<Project>>;
@@ -587,6 +605,7 @@ export type Query = {
   getSkillsByUser: Array<Maybe<UserSkill>>;
   getUnreadCountForChats: Array<Maybe<UnreadChatCount>>;
   loadApplicationsByPostId: Array<Maybe<ApplicationsByPostIdResponse>>;
+  loadByRecommendation: Array<Maybe<PostSummary>>;
   loadConnectionsList: Array<Maybe<Connection>>;
   loadPendingFriendRequests: Array<Maybe<Connection>>;
   loadPeople: Array<Maybe<Person>>;
@@ -644,6 +663,11 @@ export type QueryLoadApplicationsByPostIdArgs = {
   postId: Scalars['String']['input'];
 };
 
+export type QueryLoadByRecommendationArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+};
+
 export type QueryLoadConnectionsListArgs = {
   userId?: InputMaybe<Scalars['String']['input']>;
 };
@@ -665,6 +689,8 @@ export type QueryLoadPersonByIdArgs = {
 
 export type QueryLoadPostByFilterArgs = {
   filter: PostFilterInput;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type QueryLoadPostByIdArgs = {
@@ -798,6 +824,7 @@ export type User = {
   __typename?: 'User';
   _id: Scalars['String']['output'];
   bio?: Maybe<Scalars['String']['output']>;
+  chat_id?: Maybe<Scalars['String']['output']>;
   connections_count?: Maybe<Scalars['Int']['output']>;
   created_at: Scalars['Date']['output'];
   email: Scalars['String']['output'];

@@ -318,7 +318,9 @@ export class AuthController implements IAuthController {
 
           const options = {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: true,
+            sameSite: 'none' as const,
+            // domain: '.yourdomain.com', // Uncomment and set if using a custom domain for both frontend and backend
           };
 
           const safeUser = await UserModel.findById(user._id).select(
@@ -366,7 +368,9 @@ export class AuthController implements IAuthController {
 
           const options = {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: true,
+            sameSite: 'none' as const,
+            // domain: '.yourdomain.com', // Uncomment and set if using a custom domain for both frontend and backend
           };
 
           const safeUser = await UserModel.findById(user._id).select(
@@ -436,7 +440,7 @@ export class AuthController implements IAuthController {
       const resetUrl = `${RESET_PASSWORD_BASE_URL}/${user._id}/${token}`;
 
       const mailOptions = {
-        from: `"Your App Name" <${NODEMAILER_EMAIL}>`,
+        from: `"BuildASquad Support" <${NODEMAILER_EMAIL}>`,
         to: user.email,
         subject: 'Reset your Password',
         text: `Click the link to reset your password: ${resetUrl}`,

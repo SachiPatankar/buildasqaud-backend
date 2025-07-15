@@ -119,8 +119,4 @@ const UserSchema = new Schema<IUser>(
   }
 );
 
-UserSchema.index({ email: 1 }, { unique: true });
-UserSchema.index({ googleId: 1 }, { sparse: true });
-UserSchema.index({ githubId: 1 }, { sparse: true });
-
 export const UserModel = mongoose.model<IUser>('UserModel', UserSchema);

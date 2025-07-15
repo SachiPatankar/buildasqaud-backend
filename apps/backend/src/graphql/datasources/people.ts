@@ -2,7 +2,7 @@ import { IPeopleDataSource } from './types';
 import { UserModel } from '@db'; // Assuming the User model is in @db
 import { UserSkillModel } from '@db'; // Assuming the UserSkill model is in @db
 import { Person, PeopleFilterInput } from '../../types/generated'; // Generated types from codegen
-import { ConnectionModel } from '@db';
+import { ConnectionModel, ChatModel } from '@db';
 
 export default class PeopleDataSource implements IPeopleDataSource {
   async loadPeople(
@@ -22,6 +22,7 @@ export default class PeopleDataSource implements IPeopleDataSource {
           is_top: true,
         }).limit(4);
         let is_connection = null;
+        let chat_id = null;
         if (current_user_id && user._id.toString() !== current_user_id) {
           const connection = await ConnectionModel.findOne({
             $or: [
@@ -36,11 +37,18 @@ export default class PeopleDataSource implements IPeopleDataSource {
             ],
           });
           is_connection = connection ? connection.status : null;
+          if (is_connection === 'accepted') {
+            const chat = await ChatModel.findOne({
+              participant_ids: { $all: [current_user_id, user._id.toString()] },
+            });
+            chat_id = chat ? chat._id : null;
+          }
         }
         return {
           ...user.toObject(),
           top_skills: topSkills,
           is_connection,
+          chat_id,
         };
       })
     );
@@ -67,9 +75,12 @@ export default class PeopleDataSource implements IPeopleDataSource {
 
     // If skills filter is present, further filter users by their skills
     if (filter.skills && filter.skills.length > 0) {
-      // Find user IDs who have at least one of the skills
+      // Find user IDs who have at least one of the skills (relaxed matching)
+      const skillRegexes = filter.skills.map((skill) => ({
+        skill_name: { $regex: skill, $options: 'i' },
+      }));
       const skillUsers = await UserSkillModel.find({
-        skill_name: { $in: filter.skills },
+        $or: skillRegexes,
       }).distinct('user_id');
       users = users.filter((user: any) =>
         skillUsers.includes(user._id.toString())
@@ -83,6 +94,7 @@ export default class PeopleDataSource implements IPeopleDataSource {
           is_top: true,
         }).limit(4);
         let is_connection = null;
+        let chat_id = null;
         if (current_user_id && user._id.toString() !== current_user_id) {
           const connection = await ConnectionModel.findOne({
             $or: [
@@ -97,18 +109,25 @@ export default class PeopleDataSource implements IPeopleDataSource {
             ],
           });
           is_connection = connection ? connection.status : null;
+          if (is_connection === 'accepted') {
+            const chat = await ChatModel.findOne({
+              participant_ids: { $all: [current_user_id, user._id.toString()] },
+            });
+            chat_id = chat ? chat._id : null;
+          }
         }
         return {
           ...user.toObject(),
           top_skills: topSkills,
           is_connection,
+          chat_id,
         };
       })
     );
     return peopleWithTopSkills;
   }
 
-  async loadPersonById(id: string): Promise<Person> {
+  async loadPersonById(id: string, current_user_id?: string): Promise<Person> {
     const user = await UserModel.findById(id).select(
       'first_name last_name photo location_id title bio'
     );
@@ -119,9 +138,34 @@ export default class PeopleDataSource implements IPeopleDataSource {
       user_id: user._id,
       is_top: true,
     }).limit(4);
+    let is_connection = null;
+    let chat_id = null;
+    if (current_user_id && user._id.toString() !== current_user_id) {
+      const connection = await ConnectionModel.findOne({
+        $or: [
+          {
+            requester_user_id: current_user_id,
+            addressee_user_id: user._id,
+          },
+          {
+            requester_user_id: user._id,
+            addressee_user_id: current_user_id,
+          },
+        ],
+      });
+      is_connection = connection ? connection.status : null;
+      if (is_connection === 'accepted') {
+        const chat = await ChatModel.findOne({
+          participant_ids: { $all: [current_user_id, user._id.toString()] },
+        });
+        chat_id = chat ? chat._id : null;
+      }
+    }
     return {
       ...user.toObject(),
       top_skills: topSkills,
+      is_connection,
+      chat_id,
     };
   }
 }

@@ -1,6 +1,7 @@
 // graphql/datasources/post.ts
 import { IPostDataSource } from './types';
 import { ApplicationModel, PostModel, SavedPostModel, UserModel } from '@db';
+import { ConnectionModel, ChatModel } from '@db';
 import {
   CreatePostInput,
   UpdatePostInput,
@@ -10,22 +11,12 @@ import {
   PostDetails,
 } from '../../types/generated';
 
+// Only keep these imports for profile models:
+import { UserSkillModel } from '@db';
+import { ExperienceModel } from '@db';
+import { ProjectModel } from '@db';
+
 export default class PostDataSource implements IPostDataSource {
-  // async loadPosts(page: number, limit: number): Promise<Post[]> {
-  //   return PostModel.find()
-  //     .skip((page - 1) * limit)
-  //     .limit(limit)
-  //     .sort({ created_at: -1 });
-  // }
-
-  // async loadPostById(postId: string): Promise<Post | null> {
-  //   return PostModel.findById(postId);
-  // }
-
-  // async loadPostByFilter(filter: PostFilterInput): Promise<Post[]> {
-  //   return PostModel.find(filter).sort({ created_at: -1 });
-  // }
-
   async loadPosts(
     page: number,
     limit: number,
@@ -96,6 +87,7 @@ export default class PostDataSource implements IPostDataSource {
         is_applied: appliedPostStatusMap.get(post._id.toString()) ?? null,
         created_at: post.created_at,
         updated_at: post.updated_at,
+        requirements: post.requirements,
       };
     });
 
@@ -135,6 +127,25 @@ export default class PostDataSource implements IPostDataSource {
     const isSaved = savedPost !== null;
     const isApplied = appliedPost?.status;
 
+    // Add is_connection and chat_id for the post creator
+    let is_connection = null;
+    let chat_id = null;
+    if (current_user_id && user._id.toString() !== current_user_id) {
+      const connection = await ConnectionModel.findOne({
+        $or: [
+          { requester_user_id: current_user_id, addressee_user_id: user._id },
+          { requester_user_id: user._id, addressee_user_id: current_user_id },
+        ],
+      });
+      is_connection = connection ? connection.status : null;
+      if (is_connection === 'accepted') {
+        const chat = await ChatModel.findOne({
+          participant_ids: { $all: [current_user_id, user._id.toString()] },
+        });
+        chat_id = chat ? chat._id : null;
+      }
+    }
+
     // Return the detailed post with additional information
     return {
       _id: post._id,
@@ -158,11 +169,15 @@ export default class PostDataSource implements IPostDataSource {
       is_applied: isApplied,
       created_at: post.created_at,
       updated_at: post.updated_at,
+      is_connection,
+      chat_id,
     };
   }
 
   async loadPostByFilter(
     filter: PostFilterInput,
+    page: number,
+    limit: number,
     current_user_id: string
   ): Promise<PostSummary[]> {
     // Build MongoDB query from PostFilterInput
@@ -170,25 +185,47 @@ export default class PostDataSource implements IPostDataSource {
     if (filter.status) {
       query.status = filter.status;
     }
+    // Relaxed matching for project_type
     if (filter.project_type && filter.project_type.length > 0) {
-      query.project_type = { $in: filter.project_type };
+      query.project_type = {
+        $elemMatch: {
+          $regex: filter.project_type.join('|'),
+          $options: 'i',
+        },
+      };
     }
+    // Strict matching for work_mode (enum)
     if (filter.work_mode && filter.work_mode.length > 0) {
       query.work_mode = { $in: filter.work_mode };
     }
+    // Relaxed matching for tech_stack
     if (filter.tech_stack && filter.tech_stack.length > 0) {
-      query.tech_stack = { $in: filter.tech_stack };
+      query.tech_stack = {
+        $elemMatch: {
+          $regex: filter.tech_stack.join('|'),
+          $options: 'i',
+        },
+      };
     }
+    // Strict matching for experience_level (enum)
     if (filter.experience_level && filter.experience_level.length > 0) {
       query.experience_level = { $in: filter.experience_level };
     }
+    // Relaxed matching for desired_roles
     if (filter.desired_roles && filter.desired_roles.length > 0) {
-      query['requirements.desired_roles'] = { $in: filter.desired_roles };
+      query['requirements.desired_roles'] = {
+        $elemMatch: {
+          $regex: filter.desired_roles.join('|'),
+          $options: 'i',
+        },
+      };
     }
 
     // Fetch the posts based on the constructed query and populate user fields
     const posts = await PostModel.find(query)
       .sort({ created_at: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
       .lean()
       .exec();
 
@@ -207,7 +244,6 @@ export default class PostDataSource implements IPostDataSource {
       .exec();
     const appliedPosts = await ApplicationModel.find({
       applicant_id: current_user_id,
-      status: 'accepted',
     })
       .lean()
       .exec();
@@ -242,6 +278,7 @@ export default class PostDataSource implements IPostDataSource {
         is_applied: appliedPostStatusMap.get(post._id.toString()) ?? null,
         created_at: post.created_at,
         updated_at: post.updated_at,
+        requirements: post.requirements,
       };
     });
 
@@ -339,9 +376,143 @@ export default class PostDataSource implements IPostDataSource {
         is_applied: appliedPostStatusMap.get(post._id.toString()) ?? null,
         created_at: post.created_at,
         updated_at: post.updated_at,
+        requirements: post.requirements,
       };
     });
 
     return postSummaries;
+  }
+
+  async loadByRecommendation(
+    page: number,
+    limit: number,
+    current_user_id: string
+  ): Promise<PostSummary[]> {
+    // 1. Fetch user profile data
+    const [skills, experiences, projects] = await Promise.all([
+      UserSkillModel.find({ user_id: current_user_id }).lean().exec(),
+      ExperienceModel.find({ user_id: current_user_id }).lean().exec(),
+      ProjectModel.find({ user_id: current_user_id }).lean().exec(),
+    ]);
+    const skillNames = skills.map((s) => s.skill_name);
+    const roles = experiences.map((e) => e.position);
+    const techs = projects.flatMap((p) => p.technologies || []);
+    // Optionally dedupe
+    const userTechStack = Array.from(new Set([...skillNames, ...techs]));
+
+    // Fallback: If user profile is incomplete, use loadPosts
+    if (
+      skillNames.length === 0 &&
+      roles.length === 0 &&
+      userTechStack.length === 0
+    ) {
+      return this.loadPosts(page, limit, current_user_id);
+    }
+
+    // 2. Build filter for posts
+    const postQuery = {
+      $or: [
+        { 'requirements.desired_skills': { $in: skillNames } },
+        { 'requirements.desired_roles': { $in: roles } },
+        { tech_stack: { $in: userTechStack } },
+      ],
+    };
+
+    // 3. Fetch posts
+    const posts = await PostModel.find(postQuery).lean().exec();
+
+    // 4. Score posts by matches
+    function fuzzyIncludes(arr: string[], value: string): boolean {
+      return arr.some(
+        (item) =>
+          item.toLowerCase().includes(value.toLowerCase()) ||
+          value.toLowerCase().includes(item.toLowerCase())
+      );
+    }
+
+    function scorePost(post) {
+      let matchScore = 0;
+      if (
+        post.requirements?.desired_skills?.some((skill) =>
+          fuzzyIncludes(skillNames, skill)
+        )
+      )
+        matchScore++;
+      if (
+        post.requirements?.desired_roles?.some((role) =>
+          fuzzyIncludes(roles, role)
+        )
+      )
+        matchScore++;
+      if (post.tech_stack?.some((tech) => fuzzyIncludes(userTechStack, tech)))
+        matchScore++;
+
+      // Recency score: 1 for newest, 0 for oldest (within a window)
+      const now = Date.now();
+      const postTime = new Date(post.created_at).getTime();
+      const maxAge = 1000 * 60 * 60 * 24 * 30; // 30 days in ms
+      const recencyScore = Math.max(0, 1 - (now - postTime) / maxAge);
+
+      // Weights
+      const matchWeight = 0.7;
+      const recencyWeight = 0.3;
+
+      // Combine scores
+      return matchScore * matchWeight + recencyScore * recencyWeight;
+    }
+    const scoredPosts = posts
+      .map((post) => ({ post, score: scorePost(post) }))
+      .sort((a, b) => b.score - a.score);
+
+    // 5. Pagination
+    const paginated = scoredPosts.slice((page - 1) * limit, page * limit);
+    const paginatedPosts = paginated.map(({ post }) => post);
+
+    // 6. Populate user fields and saved/applied status (reuse logic from loadPosts)
+    const userIds = paginatedPosts.map((post) => post.posted_by);
+    const users = await UserModel.find({ _id: { $in: userIds } })
+      .lean()
+      .exec();
+    const userMap = users.reduce((acc, user) => {
+      acc[user._id] = user;
+      return acc;
+    }, {});
+    const savedPosts = await SavedPostModel.find({ user_id: current_user_id })
+      .lean()
+      .exec();
+    const appliedPosts = await ApplicationModel.find({
+      applicant_id: current_user_id,
+    })
+      .lean()
+      .exec();
+    const savedPostIds = new Set(savedPosts.map((sp) => sp.post_id));
+    const appliedPostStatusMap = new Map(
+      appliedPosts.map((ap) => [ap.post_id.toString(), ap.status])
+    );
+
+    return paginatedPosts.map((post) => {
+      const user = userMap[post.posted_by];
+      return {
+        _id: post._id,
+        title: post.title,
+        description: post.description,
+        posted_by: post.posted_by,
+        first_name: user?.first_name,
+        last_name: user?.last_name,
+        photo: user?.photo,
+        tech_stack: post.tech_stack,
+        work_mode: post.work_mode,
+        experience_level: post.experience_level,
+        location_id: post.location_id,
+        status: post.status,
+        views_count: post.views_count,
+        applications_count: post.applications_count,
+        is_saved: savedPostIds.has(post._id),
+        is_applied: appliedPostStatusMap.get(post._id.toString()) ?? null,
+        created_at: post.created_at,
+        updated_at: post.updated_at,
+        requirements: post.requirements,
+      };
+    });
   }
 }

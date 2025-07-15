@@ -81,6 +81,8 @@ export interface IPostDataSource {
   ): Promise<PostDetails | null>;
   loadPostByFilter(
     filter: PostFilterInput,
+    page: number,
+    limit: number,
     current_user_id: string
   ): Promise<PostSummary[]>;
   loadPostsByUserId(userId: string): Promise<PostSummary[]>;
@@ -90,6 +92,11 @@ export interface IPostDataSource {
   incrementPostView(postId: string): Promise<Post>;
   closePost(postId: string): Promise<Post>;
   openPost(postId: string): Promise<Post>;
+  loadByRecommendation(
+    page: number,
+    limit: number,
+    current_user_id: string
+  ): Promise<PostSummary[]>;
 }
 
 export interface ISavedPostDataSource {
@@ -237,4 +244,10 @@ export interface IChatDataSource {
   getUnreadCountForChats(
     userId: string
   ): Promise<{ chat_id: string; unread_count: number }[]>;
+  markMessagesAsRead(chatId: string, userId: string): Promise<boolean>;
+  getInitialCounts(userId: string): Promise<{
+    totalUnread: number;
+    chatCounts: Record<string, number>;
+    friendRequestCount: number;
+  }>;
 }

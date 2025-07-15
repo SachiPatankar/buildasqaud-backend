@@ -5,6 +5,8 @@
   "scripts": {
     "start": "nx serve backend",
     "build": "nx build backend",
+    "build:prod": "nx build backend --configuration=production",
+    "start:prod": "node apps/backend/dist/main.js",
     "serve": "nx serve backend",
     "lint": "nx lint backend",
     "test": "nx test backend",
@@ -30,6 +32,7 @@
     "graphql-scalars": "^1.24.2",
     "graphql-tag": "^2.12.6",
     "http": "^0.0.1-security",
+    "ioredis": "^5.6.1",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
     "mongoose": "^8.13.2",

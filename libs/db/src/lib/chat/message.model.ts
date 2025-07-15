@@ -67,10 +67,6 @@ const MessageSchema = new Schema<IMessage>(
   }
 );
 
-MessageSchema.index({ chat_id: 1, created_at: -1 }); // Get messages for a chat
-MessageSchema.index({ sender_id: 1 }); // Get messages by sender
-MessageSchema.index({ chat_id: 1, is_deleted: 1 }); // Active messages only
-
 export const MessageModel = mongoose.model<IMessage>(
   'MessageModel',
   MessageSchema

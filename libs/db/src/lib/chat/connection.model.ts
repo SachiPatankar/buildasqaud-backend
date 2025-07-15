@@ -60,10 +60,6 @@ ConnectionSchema.index(
   { unique: true }
 );
 
-ConnectionSchema.index({ requester_user_id: 1, status: 1 });
-ConnectionSchema.index({ addressee_user_id: 1, status: 1 });
-ConnectionSchema.index({ status: 1, created_at: -1 });
-
 export const ConnectionModel = mongoose.model<IConnection>(
   'ConnectionModel',
   ConnectionSchema

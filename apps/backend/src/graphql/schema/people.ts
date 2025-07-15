@@ -13,6 +13,7 @@ const typeDefs = gql`
     bio: String
     top_skills: [UserSkill]
     is_connection: String
+    chat_id: String
   }
 
   input PeopleFilterInput {

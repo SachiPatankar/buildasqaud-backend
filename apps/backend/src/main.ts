@@ -29,7 +29,7 @@ import ProfileDataSource from './graphql/datasources/profile';
 import ConnectionDataSource from './graphql/datasources/connection';
 import PeopleDataSource from './graphql/datasources/people';
 import ChatDataSource from './graphql/datasources/chat';
-import { initSocket } from '@socket';
+import { initSocket, socketEvents } from '@socket';
 
 const HOST = process.env.HOST ?? 'localhost';
 const PORT = parseInt(process.env.PORT ?? '3000', 10);
@@ -111,6 +111,17 @@ async function startServer() {
     // 8) HTTP + WebSocket
     const httpServer = createServer(app);
     initSocket(httpServer);
+
+    // Listen for userConnected event and emit initialCounts
+    socketEvents.on('userConnected', async ({ userId, socket }) => {
+      try {
+        const counts = await dataSources.chat.getInitialCounts(userId);
+        socket.emit('initialCounts', counts);
+        console.log('initialCounts', counts);
+      } catch (err) {
+        console.error('Failed to emit initialCounts:', err);
+      }
+    });
 
     httpServer.listen(PORT, () => {
       console.log(`🚀 Server listening on http://${HOST}:${PORT}`);

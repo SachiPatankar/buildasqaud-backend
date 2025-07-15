@@ -56,10 +56,6 @@ const UserSkillSchema = new Schema<IUserSkill>(
   }
 );
 
-UserSkillSchema.index({ user_id: 1, skill_name: 1 }, { unique: true });
-UserSkillSchema.index({ skill_name: 1 });
-UserSkillSchema.index({ proficiency_level: 1 });
-
 export const UserSkillModel = mongoose.model<IUserSkill>(
   'UserSkillModel',
   UserSkillSchema

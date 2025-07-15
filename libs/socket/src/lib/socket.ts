@@ -2,10 +2,12 @@ import { Server as IOServer, Socket as IOSocket } from 'socket.io';
 import { Server as HTTPServer } from 'http';
 import { parse as parseCookie } from 'cookie';
 import { verify } from 'jsonwebtoken';
+import { EventEmitter } from 'events';
 
 const ACCESS_TOKEN_SECRET = process.env['ACCESS_TOKEN_SECRET']!;
 
 let io: IOServer | undefined;
+export const socketEvents = new EventEmitter();
 
 export function initSocket(server: HTTPServer): IOServer {
   io = new IOServer(server, {
@@ -35,6 +37,14 @@ export function initSocket(server: HTTPServer): IOServer {
 
   io.on('connection', (socket: IOSocket) => {
     console.log(`🔌 Socket connected: ${socket.id}`);
+
+    // Join user-specific notification room
+    const userId = (socket as any).user.id || (socket as any).user._id;
+    if (userId) {
+      socket.join(`user-${userId}`);
+      console.log(`User ${userId} joined room user-${userId}`);
+      socketEvents.emit('userConnected', { userId, socket });
+    }
 
     socket.on('joinChat', (chatId: string) => {
       socket.join(chatId);

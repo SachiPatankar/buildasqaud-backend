@@ -42,6 +42,9 @@ const resolvers = {
         context.currentUser.id
       );
     },
+    getInitialCounts: async (_: any, __: any, context: ApolloContext) => {
+      return context.dataSources.chat.getInitialCounts(context.currentUser.id);
+    },
   },
 
   Mutation: {
@@ -76,6 +79,17 @@ const resolvers = {
     ): Promise<boolean> => {
       return context.dataSources.chat.deleteMessage(
         messageId,
+        context.currentUser.id
+      );
+    },
+
+    markMessagesAsRead: async (
+      _: any,
+      { chatId }: { chatId: string },
+      context: ApolloContext
+    ): Promise<boolean> => {
+      return context.dataSources.chat.markMessagesAsRead(
+        chatId,
         context.currentUser.id
       );
     },

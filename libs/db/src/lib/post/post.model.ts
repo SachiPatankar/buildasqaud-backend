@@ -88,25 +88,9 @@ const PostSchema = new Schema<IPost>(
     ],
     project_phase: {
       type: String,
-      enum: [
-        'idea',
-        'planning',
-        'development',
-        'testing',
-        'deployment',
-        'maintenance',
-      ],
     },
     project_type: {
       type: String,
-      enum: [
-        'academic',
-        'startup',
-        'hackathon',
-        'open_source',
-        'personal',
-        'freelance',
-      ],
     },
     work_mode: {
       type: String,
@@ -114,7 +98,7 @@ const PostSchema = new Schema<IPost>(
     },
     experience_level: {
       type: String,
-      enum: ['beginner', 'intermediate', 'advanced', 'not_specified'],
+      enum: ['beginner', 'intermediate', 'advanced', 'any'],
     },
     location_id: {
       type: String,
@@ -142,10 +126,5 @@ const PostSchema = new Schema<IPost>(
     },
   }
 );
-
-// Indexes for efficient querying and filtering
-PostSchema.index({ posted_by: 1 });
-PostSchema.index({ status: 1 });
-PostSchema.index({ created_at: -1 });
 
 export const PostModel = mongoose.model<IPost>('PostModel', PostSchema);

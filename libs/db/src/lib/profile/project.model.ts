@@ -76,9 +76,6 @@ const ProjectSchema = new Schema<IProject>(
   }
 );
 
-ProjectSchema.index({ user_id: 1 });
-ProjectSchema.index({ technologies: 1 });
-
 export const ProjectModel = mongoose.model<IProject>(
   'ProjectModel',
   ProjectSchema
