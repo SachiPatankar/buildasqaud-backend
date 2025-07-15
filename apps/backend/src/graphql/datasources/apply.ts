@@ -37,10 +37,10 @@ function buildPostSummary(post, user, savedPostIds, appliedPostStatusMap) {
 }
 
 export default class ApplicationDataSource implements IApplicationDataSource {
-  async loadApplicationsByPostId(
+  loadApplicationsByPostId = async (
     postId: string,
     current_user_id?: string
-  ): Promise<ApplicationsByPostIdResponse[]> {
+  ): Promise<ApplicationsByPostIdResponse[]> => {
     // Fetch all applications for the post
     const applications = await ApplicationModel.find({ post_id: postId })
       .sort({ created_at: -1 })
@@ -122,9 +122,9 @@ export default class ApplicationDataSource implements IApplicationDataSource {
         updated_at: app.updated_at,
       };
     });
-  }
+  };
 
-  async getApplicationsByUser(userId: string): Promise<any[]> {
+  getApplicationsByUser = async (userId: string): Promise<any[]> => {
     const applications = await ApplicationModel.find({ applicant_id: userId })
       .sort({
         created_at: -1,
@@ -169,13 +169,13 @@ export default class ApplicationDataSource implements IApplicationDataSource {
       post: postMap[app.post_id],
       application: app,
     }));
-  }
+  };
 
-  async applyToPost(
+  applyToPost = async (
     postId: string,
     applicantId: string,
     message: string
-  ): Promise<Application> {
+  ): Promise<Application> => {
     // Check if an application already exists for this user and post
     const application = await ApplicationModel.findOne({
       post_id: postId,
@@ -198,9 +198,9 @@ export default class ApplicationDataSource implements IApplicationDataSource {
       });
       return newApplication.save();
     }
-  }
+  };
 
-  async cancelApplyToPost(applicationId: string): Promise<boolean> {
+  cancelApplyToPost = async (applicationId: string): Promise<boolean> => {
     const application = await ApplicationModel.findById(applicationId);
     if (!application) {
       return false;
@@ -210,12 +210,12 @@ export default class ApplicationDataSource implements IApplicationDataSource {
     application.status = 'withdrawn';
     await application.save();
     return true;
-  }
+  };
 
-  async updateApplicationStatus(
+  updateApplicationStatus = async (
     applicationId: string,
     status: string
-  ): Promise<Application> {
+  ): Promise<Application> => {
     const application = await ApplicationModel.findByIdAndUpdate(
       applicationId,
       { status },
@@ -225,5 +225,5 @@ export default class ApplicationDataSource implements IApplicationDataSource {
       throw new Error('Application not found');
     }
     return application;
-  }
+  };
 }

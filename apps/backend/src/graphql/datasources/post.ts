@@ -17,11 +17,11 @@ import { ExperienceModel } from '@db';
 import { ProjectModel } from '@db';
 
 export default class PostDataSource implements IPostDataSource {
-  async loadPosts(
+  loadPosts = async (
     page: number,
     limit: number,
     current_user_id: string
-  ): Promise<PostSummary[]> {
+  ): Promise<PostSummary[]> => {
     // First, find the list of posts, populate user fields, and sort by created_at
     const posts = await PostModel.find()
       .skip((page - 1) * limit)
@@ -92,12 +92,12 @@ export default class PostDataSource implements IPostDataSource {
     });
 
     return postSummaries;
-  }
+  };
 
-  async loadPostById(
+  loadPostById = async (
     postId: string,
     current_user_id: string
-  ): Promise<PostDetails | null> {
+  ): Promise<PostDetails | null> => {
     // Fetch the post by ID and populate user fields
     const post = await PostModel.findById(postId).lean().exec();
     if (!post) {
@@ -172,14 +172,14 @@ export default class PostDataSource implements IPostDataSource {
       is_connection,
       chat_id,
     };
-  }
+  };
 
-  async loadPostByFilter(
+  loadPostByFilter = async (
     filter: PostFilterInput,
     page: number,
     limit: number,
     current_user_id: string
-  ): Promise<PostSummary[]> {
+  ): Promise<PostSummary[]> => {
     // Build MongoDB query from PostFilterInput
     const query: any = {};
     if (filter.status) {
@@ -283,50 +283,50 @@ export default class PostDataSource implements IPostDataSource {
     });
 
     return postSummaries;
-  }
+  };
 
-  async createPost(input: CreatePostInput, postedBy: string): Promise<Post> {
+  createPost = async (input: CreatePostInput, postedBy: string): Promise<Post> => {
     const newPost = new PostModel({ ...input, posted_by: postedBy });
     return newPost.save();
-  }
+  };
 
-  async updatePost(
+  updatePost = async (
     postId: string,
     input: UpdatePostInput
-  ): Promise<Post | null> {
+  ): Promise<Post | null> => {
     return PostModel.findByIdAndUpdate(postId, input, { new: true });
-  }
+  };
 
-  async deletePost(postId: string): Promise<boolean> {
+  deletePost = async (postId: string): Promise<boolean> => {
     await PostModel.findByIdAndDelete(postId);
     return true;
-  }
+  };
 
-  async incrementPostView(postId: string): Promise<Post> {
+  incrementPostView = async (postId: string): Promise<Post> => {
     return PostModel.findByIdAndUpdate(
       postId,
       { $inc: { views_count: 1 } },
       { new: true }
     );
-  }
+  };
 
-  async closePost(postId: string): Promise<Post> {
+  closePost = async (postId: string): Promise<Post> => {
     return PostModel.findByIdAndUpdate(
       postId,
       { status: 'closed' },
       { new: true }
     );
-  }
+  };
 
-  async openPost(postId: string): Promise<Post> {
+  openPost = async (postId: string): Promise<Post> => {
     return PostModel.findByIdAndUpdate(
       postId,
       { status: 'open' },
       { new: true }
     );
-  }
+  };
 
-  async loadPostsByUserId(userId: string): Promise<PostSummary[]> {
+  loadPostsByUserId = async (userId: string): Promise<PostSummary[]> => {
     // Find posts by the given userId
     const posts = await PostModel.find({ posted_by: userId })
       .sort({ created_at: -1 })
@@ -381,13 +381,13 @@ export default class PostDataSource implements IPostDataSource {
     });
 
     return postSummaries;
-  }
+  };
 
-  async loadByRecommendation(
+  loadByRecommendation = async (
     page: number,
     limit: number,
     current_user_id: string
-  ): Promise<PostSummary[]> {
+  ): Promise<PostSummary[]> => {
     // 1. Fetch user profile data
     const [skills, experiences, projects] = await Promise.all([
       UserSkillModel.find({ user_id: current_user_id }).lean().exec(),
@@ -514,5 +514,5 @@ export default class PostDataSource implements IPostDataSource {
         requirements: post.requirements,
       };
     });
-  }
+  };
 }

@@ -4,12 +4,11 @@ import { Connection } from '../../types/generated'; // Import generated types fo
 import { safeEmitToUser } from '@socket'; // Import the socket helper
 
 export default class ConnectionDataSource implements IConnectionDataSource {
-  // Send a friend request
-  async sendFriendReq(
+  sendFriendReq = async (
     requesterUserId: string,
     addresseeUserId: string,
     message: string
-  ): Promise<Connection> {
+  ): Promise<Connection> => {
     const newConnection = new ConnectionModel({
       requester_user_id: requesterUserId,
       addressee_user_id: addresseeUserId,
@@ -29,55 +28,9 @@ export default class ConnectionDataSource implements IConnectionDataSource {
     });
 
     return savedConnection;
-  }
+  };
 
-  // Accept a friend request
-  // async acceptFriendReq(connectionId: string): Promise<Connection> {
-  //   const connection = await ConnectionModel.findByIdAndUpdate(
-  //     connectionId,
-  //     { status: 'accepted', responded_at: new Date() },
-  //     { new: true }
-  //   );
-  //   if (!connection) throw new Error('Connection not found');
-
-  //   // Check if chat already exists
-  //   let chat = await ChatModel.findOne({
-  //     participant_ids: {
-  //       $all: [connection.requester_user_id, connection.addressee_user_id],
-  //     },
-  //   });
-  //   if (!chat) {
-  //     chat = await ChatModel.create({
-  //       participant_ids: [
-  //         connection.requester_user_id,
-  //         connection.addressee_user_id,
-  //       ],
-  //       is_active: false,
-  //     });
-  //   }
-  //   connection.chat_id = chat._id;
-  //   await connection.save();
-
-  //   // Update connections_count for both users
-  //   await UserModel.updateOne(
-  //     { _id: connection.requester_user_id },
-  //     { $inc: { connections_count: 1 } }
-  //   );
-  //   await UserModel.updateOne(
-  //     { _id: connection.addressee_user_id },
-  //     { $inc: { connections_count: 1 } }
-  //   );
-
-  //   return connection;
-  // }
-
-  // // Decline a friend request
-  // async declineFriendReq(connectionId: string): Promise<boolean> {
-  //   const connection = await ConnectionModel.findByIdAndDelete(connectionId);
-  //   return connection ? true : false;
-  // }
-
-  async acceptFriendReq(connectionId: string): Promise<Connection> {
+  acceptFriendReq = async (connectionId: string): Promise<Connection> => {
     const connection = await ConnectionModel.findByIdAndUpdate(
       connectionId,
       { status: 'accepted', responded_at: new Date() },
@@ -117,10 +70,9 @@ export default class ConnectionDataSource implements IConnectionDataSource {
     safeEmitToUser(connection.addressee_user_id, 'friendRequestDecrement', {});
 
     return connection;
-  }
+  };
 
-  // Decline a friend request
-  async declineFriendReq(connectionId: string): Promise<boolean> {
+  declineFriendReq = async (connectionId: string): Promise<boolean> => {
     const connection = await ConnectionModel.findByIdAndDelete(connectionId);
 
     if (connection) {
@@ -134,13 +86,12 @@ export default class ConnectionDataSource implements IConnectionDataSource {
     }
 
     return false;
-  }
+  };
 
-  // Block a user
-  async blockUser(
+  blockUser = async (
     requesterUserId: string,
     addresseeUserId: string
-  ): Promise<Connection> {
+  ): Promise<Connection> => {
     const connection = await ConnectionModel.findOneAndUpdate(
       {
         requester_user_id: requesterUserId,
@@ -150,10 +101,9 @@ export default class ConnectionDataSource implements IConnectionDataSource {
       { new: true }
     );
     return connection!;
-  }
+  };
 
-  // Remove a connection
-  async removeConnection(connectionId: string): Promise<boolean> {
+  removeConnection = async (connectionId: string): Promise<boolean> => {
     const connection = await ConnectionModel.findByIdAndDelete(connectionId);
     if (connection) {
       // Decrement connections_count for both users
@@ -167,10 +117,9 @@ export default class ConnectionDataSource implements IConnectionDataSource {
       );
     }
     return connection ? true : false;
-  }
+  };
 
-  // Load connections list for a user
-  async loadConnectionsList(userId: string): Promise<Connection[]> {
+  loadConnectionsList = async (userId: string): Promise<Connection[]> => {
     const connections = await ConnectionModel.aggregate([
       {
         $match: {
@@ -215,10 +164,9 @@ export default class ConnectionDataSource implements IConnectionDataSource {
       },
     ]);
     return connections;
-  }
+  };
 
-  // Load pending friend requests for a user
-  async loadPendingFriendRequests(userId: string): Promise<Connection[]> {
+  loadPendingFriendRequests = async (userId: string): Promise<Connection[]> => {
     const connections = await ConnectionModel.find({
       addressee_user_id: userId,
       status: 'pending',
@@ -238,10 +186,9 @@ export default class ConnectionDataSource implements IConnectionDataSource {
         photo: user.photo || '',
       };
     });
-  }
+  };
 
-  // Load sent friend requests for a user
-  async loadSentFriendRequests(userId: string): Promise<Connection[]> {
+  loadSentFriendRequests = async (userId: string): Promise<Connection[]> => {
     const connections = await ConnectionModel.aggregate([
       {
         $match: {
@@ -279,13 +226,12 @@ export default class ConnectionDataSource implements IConnectionDataSource {
       },
     ]);
     return connections;
-  }
+  };
 
-  // Check connection status between two users
-  async checkConnectionStatus(
+  checkConnectionStatus = async (
     requesterUserId: string,
     addresseeUserId: string
-  ): Promise<string> {
+  ): Promise<string> => {
     const connection = await ConnectionModel.findOne({
       $or: [
         {
@@ -299,5 +245,5 @@ export default class ConnectionDataSource implements IConnectionDataSource {
       ],
     });
     return connection ? connection.status : 'none';
-  }
+  };
 }

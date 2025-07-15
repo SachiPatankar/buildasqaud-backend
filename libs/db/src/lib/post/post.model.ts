@@ -14,24 +14,12 @@ export interface IPost extends Document {
   posted_by: string;
   requirements?: IRequirement;
   tech_stack?: string[];
-  project_phase?:
-    | 'idea'
-    | 'planning'
-    | 'development'
-    | 'testing'
-    | 'deployment'
-    | 'maintenance';
-  project_type?:
-    | 'academic'
-    | 'startup'
-    | 'hackathon'
-    | 'open_source'
-    | 'personal'
-    | 'freelance';
-  work_mode?: 'remote' | 'hybrid' | 'in_person';
-  experience_level?: string; // Added for experience level
+  project_phase?: string;
+  project_type?: string;
+  work_mode?: 'remote' | 'hybrid' | 'in person';
+  experience_level?: 'beginner' | 'intermediate'| 'advanced'| 'any'; // Added for experience level
   location_id?: string;
-  status: 'open' | 'closed' | 'paused' | 'completed';
+  status: 'open' | 'closed';
   views_count: number;
   applications_count: number;
   created_at: Date;
@@ -94,7 +82,7 @@ const PostSchema = new Schema<IPost>(
     },
     work_mode: {
       type: String,
-      enum: ['remote', 'hybrid', 'in_person'],
+      enum: ['remote', 'hybrid', 'in person'],
     },
     experience_level: {
       type: String,

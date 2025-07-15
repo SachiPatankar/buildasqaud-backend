@@ -21,8 +21,7 @@ import {
 } from '../../types/generated'; // Import generated types
 
 export default class ProfileDataSource implements IProfileDataSource {
-  // ACHIEVEMENT DATA SOURCE METHODS
-  async createAchievement(userId: string, input: CreateAchievementInput) {
+  createAchievement = async (userId: string, input: CreateAchievementInput) => {
     let order = input.order;
     if (order === undefined || order === null) {
       const last = await AchievementModel.findOne({ user_id: userId }).sort({
@@ -36,28 +35,27 @@ export default class ProfileDataSource implements IProfileDataSource {
       order,
     });
     return newAchievement.save();
-  }
+  };
 
-  async updateAchievement(
+  updateAchievement = async (
     achievementId: string,
     input: UpdateAchievementInput
-  ) {
+  ) => {
     return AchievementModel.findByIdAndUpdate(achievementId, input, {
       new: true,
     });
-  }
+  };
 
-  async deleteAchievement(achievementId: string) {
+  deleteAchievement = async (achievementId: string) => {
     await AchievementModel.findByIdAndDelete(achievementId);
     return true;
-  }
+  };
 
-  async getAchievementsByUser(userId: string) {
+  getAchievementsByUser = async (userId: string) => {
     return AchievementModel.find({ user_id: userId });
-  }
+  };
 
-  // EDUCATION DATA SOURCE METHODS
-  async createEducation(userId: string, input: CreateEducationInput) {
+  createEducation = async (userId: string, input: CreateEducationInput) => {
     let order = input.order;
     if (order === undefined || order === null) {
       const last = await EducationModel.findOne({ user_id: userId }).sort({
@@ -71,23 +69,22 @@ export default class ProfileDataSource implements IProfileDataSource {
       order,
     });
     return newEducation.save();
-  }
+  };
 
-  async updateEducation(educationId: string, input: UpdateEducationInput) {
+  updateEducation = async (educationId: string, input: UpdateEducationInput) => {
     return EducationModel.findByIdAndUpdate(educationId, input, { new: true });
-  }
+  };
 
-  async deleteEducation(educationId: string) {
+  deleteEducation = async (educationId: string) => {
     await EducationModel.findByIdAndDelete(educationId);
     return true;
-  }
+  };
 
-  async getEducationByUser(userId: string) {
+  getEducationByUser = async (userId: string) => {
     return EducationModel.find({ user_id: userId });
-  }
+  };
 
-  // EXPERIENCE DATA SOURCE METHODS
-  async createExperience(userId: string, input: CreateExperienceInput) {
+  createExperience = async (userId: string, input: CreateExperienceInput) => {
     let order = input.order;
     if (order === undefined || order === null) {
       const last = await ExperienceModel.findOne({ user_id: userId }).sort({
@@ -101,25 +98,24 @@ export default class ProfileDataSource implements IProfileDataSource {
       order,
     });
     return newExperience.save();
-  }
+  };
 
-  async updateExperience(experienceId: string, input: UpdateExperienceInput) {
+  updateExperience = async (experienceId: string, input: UpdateExperienceInput) => {
     return ExperienceModel.findByIdAndUpdate(experienceId, input, {
       new: true,
     });
-  }
+  };
 
-  async deleteExperience(experienceId: string) {
+  deleteExperience = async (experienceId: string) => {
     await ExperienceModel.findByIdAndDelete(experienceId);
     return true;
-  }
+  };
 
-  async getExperienceByUser(userId: string) {
+  getExperienceByUser = async (userId: string) => {
     return ExperienceModel.find({ user_id: userId });
-  }
+  };
 
-  // PROJECT DATA SOURCE METHODS
-  async createProject(userId: string, input: CreateProjectInput) {
+  createProject = async (userId: string, input: CreateProjectInput) => {
     let order = input.order;
     if (order === undefined || order === null) {
       const last = await ProjectModel.findOne({ user_id: userId }).sort({
@@ -133,23 +129,22 @@ export default class ProfileDataSource implements IProfileDataSource {
       order,
     });
     return newProject.save();
-  }
+  };
 
-  async updateProject(projectId: string, input: UpdateProjectInput) {
+  updateProject = async (projectId: string, input: UpdateProjectInput) => {
     return ProjectModel.findByIdAndUpdate(projectId, input, { new: true });
-  }
+  };
 
-  async deleteProject(projectId: string) {
+  deleteProject = async (projectId: string) => {
     await ProjectModel.findByIdAndDelete(projectId);
     return true;
-  }
+  };
 
-  async getProjectsByUser(userId: string) {
+  getProjectsByUser = async (userId: string) => {
     return ProjectModel.find({ user_id: userId });
-  }
+  };
 
-  // USER SKILLS DATA SOURCE METHODS
-  async createUserSkill(userId: string, input: CreateUserSkillInput) {
+  createUserSkill = async (userId: string, input: CreateUserSkillInput) => {
     let order = input.order;
     if (order === undefined || order === null) {
       const last = await UserSkillModel.findOne({ user_id: userId }).sort({
@@ -163,18 +158,18 @@ export default class ProfileDataSource implements IProfileDataSource {
       order,
     });
     return newUserSkill.save();
-  }
+  };
 
-  async updateUserSkill(userSkillId: string, input: UpdateUserSkillInput) {
+  updateUserSkill = async (userSkillId: string, input: UpdateUserSkillInput) => {
     return UserSkillModel.findByIdAndUpdate(userSkillId, input, { new: true });
-  }
+  };
 
-  async deleteUserSkill(userSkillId: string) {
+  deleteUserSkill = async (userSkillId: string) => {
     await UserSkillModel.findByIdAndDelete(userSkillId);
     return true;
-  }
+  };
 
-  async getSkillsByUser(userId: string) {
+  getSkillsByUser = async (userId: string) => {
     return UserSkillModel.find({ user_id: userId });
-  }
+  };
 }

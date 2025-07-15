@@ -11,12 +11,7 @@ export interface IExperience extends Document {
   is_current: boolean;
   description?: string;
   location_id?: string;
-  employment_type?:
-    | 'full-time'
-    | 'part-time'
-    | 'contract'
-    | 'internship'
-    | 'freelance';
+  employment_type?: string;
   created_at: Date;
   updated_at: Date;
   order: number;
@@ -61,7 +56,6 @@ const ExperienceSchema = new Schema<IExperience>(
     },
     employment_type: {
       type: String,
-      enum: ['full-time', 'part-time', 'contract', 'internship', 'freelance'],
     },
     location_id: {
       type: String,

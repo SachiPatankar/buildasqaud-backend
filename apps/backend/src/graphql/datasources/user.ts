@@ -3,8 +3,7 @@ import { UserModel, ConnectionModel, ChatModel } from '@db'; // Assuming UserMod
 import { User, CreateUserInput, UpdateUserInput } from '../../types/generated'; // Generated types from codegen
 
 export default class UserDataSource implements IUserDataSource {
-  // Create a new user
-  async createUser(input: CreateUserInput): Promise<User> {
+  createUser = async (input: CreateUserInput): Promise<User> => {
     const newUser = new UserModel({
       ...input,
       connections_count: 0, // Initialize with 0 connections
@@ -12,29 +11,26 @@ export default class UserDataSource implements IUserDataSource {
 
     await newUser.save();
     return newUser;
-  }
+  };
 
-  // Update an existing user
-  async updateUser(input: UpdateUserInput, userId: string): Promise<User> {
+  updateUser = async (input: UpdateUserInput, userId: string): Promise<User> => {
     const updatedUser = await UserModel.findByIdAndUpdate(userId, input, {
       new: true,
     });
     if (!updatedUser) throw new Error('User not found');
     return updatedUser;
-  }
+  };
 
-  // Delete a user by their ID
-  async deleteUser(userId: string): Promise<boolean> {
+  deleteUser = async (userId: string): Promise<boolean> => {
     const deletedUser = await UserModel.findByIdAndDelete(userId);
     return deletedUser ? true : false;
-  }
+  };
 
-  // Change the user's password
-  async changePassword(
+  changePassword = async (
     userId: string,
     oldPassword: string,
     newPassword: string
-  ): Promise<boolean> {
+  ): Promise<boolean> => {
     const user = await UserModel.findById(userId);
     if (!user || user.password !== oldPassword)
       throw new Error('Invalid password');
@@ -42,13 +38,12 @@ export default class UserDataSource implements IUserDataSource {
     user.password = newPassword;
     await user.save();
     return true;
-  }
+  };
 
-  // Fetch a user by their ID
-  async loadUserById(
+  loadUserById = async (
     userId: string,
     current_user_id?: string
-  ): Promise<User | null> {
+  ): Promise<User | null> => {
     const user = await UserModel.findById(userId);
     if (!user) return null;
     let is_connection = null;
@@ -73,5 +68,5 @@ export default class UserDataSource implements IUserDataSource {
       is_connection,
       chat_id,
     };
-  }
+  };
 }

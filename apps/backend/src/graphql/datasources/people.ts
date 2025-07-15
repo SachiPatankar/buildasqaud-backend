@@ -5,11 +5,11 @@ import { Person, PeopleFilterInput } from '../../types/generated'; // Generated 
 import { ConnectionModel, ChatModel } from '@db';
 
 export default class PeopleDataSource implements IPeopleDataSource {
-  async loadPeople(
+  loadPeople = async (
     page: number,
     limit: number,
     current_user_id: string
-  ): Promise<Person[]> {
+  ): Promise<Person[]> => {
     const users = await UserModel.find()
       .skip((page - 1) * limit)
       .limit(limit)
@@ -53,14 +53,14 @@ export default class PeopleDataSource implements IPeopleDataSource {
       })
     );
     return peopleWithTopSkills;
-  }
+  };
 
-  async loadPeopleByFilter(
+  loadPeopleByFilter = async (
     filter: PeopleFilterInput,
     page: number,
     limit: number,
     current_user_id: string
-  ): Promise<Person[]> {
+  ): Promise<Person[]> => {
     // Build query for UserModel
     const userQuery: any = {};
     if (filter.title) {
@@ -125,9 +125,9 @@ export default class PeopleDataSource implements IPeopleDataSource {
       })
     );
     return peopleWithTopSkills;
-  }
+  };
 
-  async loadPersonById(id: string, current_user_id?: string): Promise<Person> {
+  loadPersonById = async (id: string, current_user_id?: string): Promise<Person> => {
     const user = await UserModel.findById(id).select(
       'first_name last_name photo location_id title bio'
     );
@@ -167,5 +167,5 @@ export default class PeopleDataSource implements IPeopleDataSource {
       is_connection,
       chat_id,
     };
-  }
+  };
 }

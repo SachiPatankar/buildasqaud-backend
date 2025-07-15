@@ -19,6 +19,7 @@ import typeDefs from './graphql/schema';
 import resolvers from './graphql/resolvers';
 import { ApolloContext } from './graphql/types';
 import { getCurrentUserFromReq } from './graphql/auth';
+import { GraphQLError } from 'graphql';
 
 import UserDataSource from './graphql/datasources/user';
 import S3DataSource from './graphql/datasources/s3';
@@ -91,7 +92,24 @@ async function startServer() {
     };
 
     const schema = makeExecutableSchema({ typeDefs, resolvers });
-    const apolloServer = new ApolloServer<ApolloContext>({ schema });
+    const apolloServer = new ApolloServer<ApolloContext>({
+      schema,
+      formatError: (err) => {
+        // Log the error for monitoring
+        console.error('GraphQL Error:', err);
+        // Customize the error response
+        return {
+          message: err.message,
+          path: err.path,
+          extensions: {
+            code: err.extensions?.code,
+            ...(process.env.NODE_ENV === 'development' && (err.extensions?.exception as any)?.stacktrace
+              ? { stacktrace: (err.extensions?.exception as any).stacktrace }
+              : {}),
+          },
+        };
+      },
+    });
     await apolloServer.start();
 
     app.use(

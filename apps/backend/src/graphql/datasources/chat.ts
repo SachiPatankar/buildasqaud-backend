@@ -11,12 +11,11 @@ import {
 } from '../../lib/redis-helpers';
 
 export default class ChatDataSource implements IChatDataSource {
-  // Send a message and emit via socket
-  async sendMessage(
+  sendMessage = async (
     chatId: string,
     senderId: string,
     content: string
-  ): Promise<Message> {
+  ): Promise<Message> => {
     const chat = await ChatModel.findById(chatId);
     if (!chat || !chat.participant_ids.includes(senderId)) {
       throw new Error('Unauthorized or chat not found');
@@ -72,14 +71,13 @@ export default class ChatDataSource implements IChatDataSource {
     }
 
     return newMessage;
-  }
+  };
 
-  // Edit an existing message
-  async editMessage(
+  editMessage = async (
     messageId: string,
     content: string,
     userId: string
-  ): Promise<Message> {
+  ): Promise<Message> => {
     const message = await MessageModel.findById(messageId);
     if (!message) throw new Error('Message not found');
     // Validate user is sender
@@ -90,14 +88,13 @@ export default class ChatDataSource implements IChatDataSource {
     const io = getIO();
     io.to(message.chat_id).emit('updateMessage', message);
     return message;
-  }
+  };
 
-  // Delete a message
-  async deleteMessage(
+  deleteMessage = async (
     messageId: string,
     userId: string,
     forAll = false
-  ): Promise<boolean> {
+  ): Promise<boolean> => {
     const message = await MessageModel.findById(messageId);
     if (!message) throw new Error('Message not found');
     // Validate user is participant
@@ -115,22 +112,20 @@ export default class ChatDataSource implements IChatDataSource {
     const io = getIO();
     io.to(message.chat_id).emit('deleteMessage', message);
     return true;
-  }
+  };
 
-  // Get all messages in a chat
-  async getMessagesForChat(
+  getMessagesForChat = async (
     chatId: string,
     page: number,
     limit: number
-  ): Promise<Message[]> {
+  ): Promise<Message[]> => {
     return MessageModel.find({ chat_id: chatId })
       .skip((page - 1) * limit)
       .limit(limit)
       .sort({ created_at: -1 });
-  }
+  };
 
-  // Get chat list for a user (only active chats)
-  async getChatListForUser(userId: string): Promise<Chat[]> {
+  getChatListForUser = async (userId: string): Promise<Chat[]> => {
     const chats = await ChatModel.aggregate([
       {
         $match: {
@@ -217,12 +212,11 @@ export default class ChatDataSource implements IChatDataSource {
       { $sort: { last_message_at: -1, updated_at: -1 } },
     ]);
     return chats;
-  }
+  };
 
-  // Get unread message count for each chat for a user
-  async getUnreadCountForChats(
+  getUnreadCountForChats = async (
     userId: string
-  ): Promise<{ chat_id: string; unread_count: number }[]> {
+  ): Promise<{ chat_id: string; unread_count: number }[]> => {
     // 1. Try Redis first
     const redisCounts = await getChatCounts(userId);
     if (Object.keys(redisCounts).length > 0) {
@@ -263,10 +257,9 @@ export default class ChatDataSource implements IChatDataSource {
       chat_id,
       unread_count,
     }));
-  }
+  };
 
-  // Get all active chat IDs for a user
-  async getChatIdsForUser(userId: string): Promise<string[]> {
+  getChatIdsForUser = async (userId: string): Promise<string[]> => {
     const chats = await ChatModel.find(
       {
         is_active: true,
@@ -275,10 +268,9 @@ export default class ChatDataSource implements IChatDataSource {
       { _id: 1 }
     );
     return chats.map((chat: any) => String(chat._id));
-  }
+  };
 
-  // Mark all messages in a chat as read by a user
-  async markMessagesAsRead(chatId: string, userId: string): Promise<boolean> {
+  markMessagesAsRead = async (chatId: string, userId: string): Promise<boolean> => {
     const now = new Date();
     await MessageModel.updateMany(
       {
@@ -298,9 +290,9 @@ export default class ChatDataSource implements IChatDataSource {
     safeEmitToUser(userId, 'totalUnreadUpdate', { count: totalUnread });
 
     return true;
-  }
+  };
 
-  async getInitialCounts(userId: string) {
+  getInitialCounts = async (userId: string) => {
     let totalUnread = 0;
     let chatCounts = {};
 
@@ -354,5 +346,5 @@ export default class ChatDataSource implements IChatDataSource {
       chatCounts,
       friendRequestCount,
     };
-  }
+  };
 }
