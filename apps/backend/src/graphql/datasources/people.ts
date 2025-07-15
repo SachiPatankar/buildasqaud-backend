@@ -127,7 +127,10 @@ export default class PeopleDataSource implements IPeopleDataSource {
     return peopleWithTopSkills;
   };
 
-  loadPersonById = async (id: string, current_user_id?: string): Promise<Person> => {
+  loadPersonById = async (
+    id: string,
+    current_user_id?: string
+  ): Promise<Person> => {
     const user = await UserModel.findById(id).select(
       'first_name last_name photo location_id title bio'
     );

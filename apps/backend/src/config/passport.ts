@@ -89,6 +89,7 @@ export const setupPassport = () => {
           clientID: GITHUB_CLIENT_ID,
           clientSecret: GITHUB_CLIENT_SECRET,
           callbackURL: GITHUB_CALLBACK_URL,
+          scope: ['user:email']
         },
         async (_, __, profile: PassportProfile, done) => {
           try {

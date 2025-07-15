@@ -17,7 +17,7 @@ export interface IPost extends Document {
   project_phase?: string;
   project_type?: string;
   work_mode?: 'remote' | 'hybrid' | 'in person';
-  experience_level?: 'beginner' | 'intermediate'| 'advanced'| 'any'; // Added for experience level
+  experience_level?: 'beginner' | 'intermediate' | 'advanced' | 'any'; // Added for experience level
   location_id?: string;
   status: 'open' | 'closed';
   views_count: number;

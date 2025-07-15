@@ -71,7 +71,10 @@ export default class ProfileDataSource implements IProfileDataSource {
     return newEducation.save();
   };
 
-  updateEducation = async (educationId: string, input: UpdateEducationInput) => {
+  updateEducation = async (
+    educationId: string,
+    input: UpdateEducationInput
+  ) => {
     return EducationModel.findByIdAndUpdate(educationId, input, { new: true });
   };
 
@@ -100,7 +103,10 @@ export default class ProfileDataSource implements IProfileDataSource {
     return newExperience.save();
   };
 
-  updateExperience = async (experienceId: string, input: UpdateExperienceInput) => {
+  updateExperience = async (
+    experienceId: string,
+    input: UpdateExperienceInput
+  ) => {
     return ExperienceModel.findByIdAndUpdate(experienceId, input, {
       new: true,
     });
@@ -160,7 +166,10 @@ export default class ProfileDataSource implements IProfileDataSource {
     return newUserSkill.save();
   };
 
-  updateUserSkill = async (userSkillId: string, input: UpdateUserSkillInput) => {
+  updateUserSkill = async (
+    userSkillId: string,
+    input: UpdateUserSkillInput
+  ) => {
     return UserSkillModel.findByIdAndUpdate(userSkillId, input, { new: true });
   };
 

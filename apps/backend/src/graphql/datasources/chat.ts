@@ -270,7 +270,10 @@ export default class ChatDataSource implements IChatDataSource {
     return chats.map((chat: any) => String(chat._id));
   };
 
-  markMessagesAsRead = async (chatId: string, userId: string): Promise<boolean> => {
+  markMessagesAsRead = async (
+    chatId: string,
+    userId: string
+  ): Promise<boolean> => {
     const now = new Date();
     await MessageModel.updateMany(
       {

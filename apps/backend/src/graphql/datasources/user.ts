@@ -13,7 +13,10 @@ export default class UserDataSource implements IUserDataSource {
     return newUser;
   };
 
-  updateUser = async (input: UpdateUserInput, userId: string): Promise<User> => {
+  updateUser = async (
+    input: UpdateUserInput,
+    userId: string
+  ): Promise<User> => {
     const updatedUser = await UserModel.findByIdAndUpdate(userId, input, {
       new: true,
     });

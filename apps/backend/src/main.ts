@@ -103,7 +103,8 @@ async function startServer() {
           path: err.path,
           extensions: {
             code: err.extensions?.code,
-            ...(process.env.NODE_ENV === 'development' && (err.extensions?.exception as any)?.stacktrace
+            ...(process.env.NODE_ENV === 'development' &&
+            (err.extensions?.exception as any)?.stacktrace
               ? { stacktrace: (err.extensions?.exception as any).stacktrace }
               : {}),
           },

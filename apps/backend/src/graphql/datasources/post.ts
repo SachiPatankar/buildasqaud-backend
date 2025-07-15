@@ -285,7 +285,10 @@ export default class PostDataSource implements IPostDataSource {
     return postSummaries;
   };
 
-  createPost = async (input: CreatePostInput, postedBy: string): Promise<Post> => {
+  createPost = async (
+    input: CreatePostInput,
+    postedBy: string
+  ): Promise<Post> => {
     const newPost = new PostModel({ ...input, posted_by: postedBy });
     return newPost.save();
   };
