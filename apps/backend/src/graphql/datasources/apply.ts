@@ -13,7 +13,7 @@ import {
 } from '../../types/generated';
 
 // Helper to build PostSummary from post doc, user, savedPosts, appliedPosts
-function buildPostSummary(post, user, savedPostIds, appliedPostStatusMap) {
+function buildPostSummary(post, user, appliedPostStatusMap) {
   return {
     _id: post._id,
     title: post.title,
@@ -29,7 +29,7 @@ function buildPostSummary(post, user, savedPostIds, appliedPostStatusMap) {
     status: post.status,
     views_count: post.views_count,
     applications_count: post.applications_count,
-    is_saved: savedPostIds.has(post._id.toString()),
+    is_saved: false,
     is_applied: appliedPostStatusMap.get(post._id.toString()) ?? null,
     created_at: post.created_at,
     updated_at: post.updated_at,
@@ -159,7 +159,6 @@ export default class ApplicationDataSource implements IApplicationDataSource {
       acc[post._id.toString()] = buildPostSummary(
         post,
         user,
-        savedPostIds,
         appliedPostStatusMap
       );
       return acc;
@@ -176,28 +175,14 @@ export default class ApplicationDataSource implements IApplicationDataSource {
     applicantId: string,
     message: string
   ): Promise<Application> => {
-    // Check if an application already exists for this user and post
-    const application = await ApplicationModel.findOne({
+    // Always create a new application
+    const newApplication = new ApplicationModel({
       post_id: postId,
       applicant_id: applicantId,
+      message,
+      status: 'pending',
     });
-
-    if (application) {
-      // Update the message and reset status to 'pending'
-      application.message = message;
-      application.status = 'pending';
-      await application.save();
-      return application;
-    } else {
-      // Create a new application
-      const newApplication = new ApplicationModel({
-        post_id: postId,
-        applicant_id: applicantId,
-        message,
-        status: 'pending',
-      });
-      return newApplication.save();
-    }
+    return newApplication.save();
   };
 
   cancelApplyToPost = async (applicationId: string): Promise<boolean> => {
@@ -206,9 +191,8 @@ export default class ApplicationDataSource implements IApplicationDataSource {
       return false;
     }
 
-    // If the application exists, withdraw it by setting the status to 'withdrawn'
-    application.status = 'withdrawn';
-    await application.save();
+    // If the application exists, delete it
+    await ApplicationModel.findByIdAndDelete(applicationId);
     return true;
   };
 
@@ -225,5 +209,42 @@ export default class ApplicationDataSource implements IApplicationDataSource {
       throw new Error('Application not found');
     }
     return application;
+  };
+
+  searchMyApplications = async (userId, search) => {
+    // Find applications for the user
+    const applications = await ApplicationModel.find({ applicant_id: userId }).lean();
+    if (applications.length === 0) return [];
+    // Fetch all post IDs
+    const postIds = applications.map(app => app.post_id);
+    let posts = [];
+    if (search.length < 3) {
+      // Use regex for prefix match on title
+      posts = await PostModel.find({ _id: { $in: postIds }, title: { $regex: `^${search}`, $options: 'i' } }).lean();
+    } else {
+      // Full-text search posts by title/description
+      posts = await PostModel.aggregate([
+        { $match: { _id: { $in: postIds }, $text: { $search: search } } },
+        { $addFields: { score: { $meta: 'textScore' } } },
+        { $sort: { score: -1 } }
+      ]);
+    }
+    const filteredPostIds = new Set(posts.map(post => post._id.toString()));
+    const filteredApplications = applications.filter(app => filteredPostIds.has(app.post_id.toString()));
+    const userIds = posts.map(post => post.posted_by);
+    const users = await UserModel.find({ _id: { $in: userIds } }).lean();
+    const userMap = users.reduce((acc, user) => { acc[user._id.toString()] = user; return acc; }, {});
+    const appliedPosts = await ApplicationModel.find({ applicant_id: userId }).lean();
+    const appliedPostStatusMap = new Map();
+    appliedPosts.forEach(ap => { appliedPostStatusMap.set(ap.post_id.toString(), ap.status); });
+    const postMap = posts.reduce((acc, post) => {
+      const user = userMap[post.posted_by.toString()];
+      acc[post._id.toString()] = buildPostSummary(post, user, appliedPostStatusMap);
+      return acc;
+    }, {});
+    return filteredApplications.map(app => ({
+      post: postMap[app.post_id],
+      application: app,
+    }));
   };
 }

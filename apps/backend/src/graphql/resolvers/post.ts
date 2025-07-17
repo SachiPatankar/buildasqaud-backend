@@ -76,6 +76,13 @@ const resolvers = {
       const resolvedUserId = userId || context.currentUser.id;
       return context.dataSources.post.loadPostsByUserId(resolvedUserId);
     },
+    searchProjects: async (
+      _: any,
+      { search }: { search: string },
+      context: ApolloContext
+    ): Promise<PostSummary[]> => {
+      return context.dataSources.post.searchProjects(search, context.currentUser.id);
+    },
   },
 
   Mutation: {

@@ -56,6 +56,8 @@ const UserSkillSchema = new Schema<IUserSkill>(
   }
 );
 
+UserSkillSchema.index({ skill_name: 'text' });
+
 export const UserSkillModel = mongoose.model<IUserSkill>(
   'UserSkillModel',
   UserSkillSchema

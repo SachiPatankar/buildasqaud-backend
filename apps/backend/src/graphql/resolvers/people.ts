@@ -42,6 +42,13 @@ const resolvers = {
     ): Promise<Person> => {
       return context.dataSources.people.loadPersonById(id);
     },
+    searchPeople: async (
+      _: any,
+      { search }: { search: string },
+      context: ApolloContext
+    ): Promise<Person[]> => {
+      return context.dataSources.people.searchPeople(search, context.currentUser.id);
+    },
   },
 };
 

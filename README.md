@@ -2,14 +2,12 @@
   <img src="https://build-a-squad.s3.ap-south-1.amazonaws.com/buildasquad_logo.png" alt="BuildASquad Logo" height="200"/>
 </p>
 
-
 # 🚀 BuildASquad Backend
 
 [![Render](https://img.shields.io/badge/deployed%20on-Render-000?logo=render)](https://buildasqaud-backend.onrender.com/)
-    <img src="https://img.shields.io/github/last-commit/SachiPatankar/buildasquad-backend?style=default&logo=git&logoColor=white&color=ff781a" alt="last-commit">
-	<img src="https://img.shields.io/github/languages/top/SachiPatankar/buildasquad-backend?style=default&color=ff781a" alt="repo-top-language">
-	<img src="https://img.shields.io/github/languages/count/SachiPatankar/buildasquad-backend?style=default&color=ff781a" alt="repo-language-count">
-
+<img src="https://img.shields.io/github/last-commit/SachiPatankar/buildasquad-backend?style=default&logo=git&logoColor=white&color=ff781a" alt="last-commit">
+<img src="https://img.shields.io/github/languages/top/SachiPatankar/buildasquad-backend?style=default&color=ff781a" alt="repo-top-language">
+<img src="https://img.shields.io/github/languages/count/SachiPatankar/buildasquad-backend?style=default&color=ff781a" alt="repo-language-count">
 
 > **TypeScript Nx Monorepo** | GraphQL + REST API | Redis | Socket.IO | MongoDB | AWS S3
 
@@ -18,6 +16,7 @@
 ## 📍 Project Description
 
 **BuildASquad** is a platform for discovering teammates and collaborating on projects. The backend powers features like:
+
 - Project posts and applications
 - Real-time chat and notifications
 - OAuth login (Google, GitHub)
@@ -41,6 +40,7 @@ backend2/
 ├── codegen/            # GraphQL codegen config
 ├── ...                 # Nx config, scripts, etc.
 ```
+
 - **apps/**: Application entrypoints (API server)
 - **libs/**: Shared libraries for database, sockets, AWS, etc.
 
@@ -63,6 +63,7 @@ backend2/
    ```
 
 ### Sample `.env`
+
 ```
 # ─── DATABASE ─────────────────────────────
 NX_MONGO_URL=mongodb+srv://<user>:<pass>@cluster0.mongodb.net/buildasquad
@@ -179,7 +180,7 @@ REDIS_URL=redis://default:yourredispassword@localhost:6379
 
 ## 🚀 Deployment
 
-- **Hosting**: Deployed on [Render](https://buildasqaud-backend.onrender.com/) 
+- **Hosting**: Deployed on [Render](https://buildasqaud-backend.onrender.com/)
 - **Build**: `npm run build:prod` and `npm run start:prod` for production
 
 ---

@@ -27,6 +27,16 @@ const resolvers = {
         context.currentUser.id
       );
     },
+    searchMyApplications: async (
+      _: any,
+      { search }: { search: string },
+      context: ApolloContext
+    ): Promise<ApplicationsByUserIdResponse[]> => {
+      return context.dataSources.application.searchMyApplications(
+        context.currentUser.id,
+        search
+      );
+    },
   },
 
   Mutation: {

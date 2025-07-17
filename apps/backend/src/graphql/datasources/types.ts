@@ -97,6 +97,7 @@ export interface IPostDataSource {
     limit: number,
     current_user_id: string
   ): Promise<PostSummary[]>;
+  searchProjects(search: string, current_user_id: string): Promise<PostSummary[]>;
 }
 
 export interface ISavedPostDataSource {
@@ -123,6 +124,7 @@ export interface IApplicationDataSource {
     applicationId: string,
     status: string
   ): Promise<Application>;
+  searchMyApplications(userId: string, search: string): Promise<ApplicationsByUserIdResponse[]>;
 }
 
 export interface IProfileDataSource {
@@ -216,6 +218,7 @@ export interface IPeopleDataSource {
     current_user_id: string
   ): Promise<Person[]>; // Load people based on filters
   loadPersonById(id: string): Promise<Person>; // Load a single person by ID
+  searchPeople(search: string, current_user_id: string): Promise<Person[]>;
 }
 
 export interface IChatDataSource {

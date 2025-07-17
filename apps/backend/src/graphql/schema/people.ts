@@ -29,6 +29,7 @@ const typeDefs = gql`
       limit: Int
     ): [Person]!
     loadPersonById(id: String!): Person!
+    searchPeople(search: String!): [Person]!
   }
 `;
 

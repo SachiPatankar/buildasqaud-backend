@@ -83,7 +83,7 @@ export default class PostDataSource implements IPostDataSource {
         status: post.status,
         views_count: post.views_count,
         applications_count: post.applications_count,
-        is_saved: savedPostIds.has(post._id),
+        is_saved: false,
         is_applied: appliedPostStatusMap.get(post._id.toString()) ?? null,
         created_at: post.created_at,
         updated_at: post.updated_at,
@@ -274,7 +274,7 @@ export default class PostDataSource implements IPostDataSource {
         status: post.status,
         views_count: post.views_count,
         applications_count: post.applications_count,
-        is_saved: savedPostIds.has(post._id),
+        is_saved: false,
         is_applied: appliedPostStatusMap.get(post._id.toString()) ?? null,
         created_at: post.created_at,
         updated_at: post.updated_at,
@@ -288,11 +288,19 @@ export default class PostDataSource implements IPostDataSource {
   createPost = async (
     input: CreatePostInput,
     postedBy: string
-  ): Promise<Post> => {
-    const newPost = new PostModel({ ...input, posted_by: postedBy });
+   ): Promise<Post> => {
+    const cleanedInput = { ...input };
+    
+    if (cleanedInput.work_mode === '') {
+      cleanedInput.work_mode = undefined;
+    }
+    if (cleanedInput.experience_level === '') {
+      cleanedInput.experience_level = undefined;
+    }
+    
+    const newPost = new PostModel({ ...cleanedInput, posted_by: postedBy });
     return newPost.save();
-  };
-
+   };
   updatePost = async (
     postId: string,
     input: UpdatePostInput
@@ -375,7 +383,7 @@ export default class PostDataSource implements IPostDataSource {
         status: post.status,
         views_count: post.views_count,
         applications_count: post.applications_count,
-        is_saved: savedPostIds.has(post._id),
+        is_saved: false,
         is_applied: appliedPostStatusMap.get(post._id.toString()) ?? null,
         created_at: post.created_at,
         updated_at: post.updated_at,
@@ -510,7 +518,59 @@ export default class PostDataSource implements IPostDataSource {
         status: post.status,
         views_count: post.views_count,
         applications_count: post.applications_count,
-        is_saved: savedPostIds.has(post._id),
+        is_saved: false,
+        is_applied: appliedPostStatusMap.get(post._id.toString()) ?? null,
+        created_at: post.created_at,
+        updated_at: post.updated_at,
+        requirements: post.requirements,
+      };
+    });
+  };
+
+  searchProjects = async (search, current_user_id) => {
+    let posts = [];
+    if (search.length < 3) {
+      // Use regex for prefix match
+      posts = await PostModel.find({
+        $or: [
+          { title: { $regex: `^${search}`, $options: 'i' } },
+          { tech_stack: { $elemMatch: { $regex: `^${search}`, $options: 'i' } } },
+          { project_type: { $elemMatch: { $regex: `^${search}`, $options: 'i' } } },
+          { 'requirements.desired_skills': { $elemMatch: { $regex: `^${search}`, $options: 'i' } } },
+          { 'requirements.desired_roles': { $elemMatch: { $regex: `^${search}`, $options: 'i' } } },
+        ],
+      }).lean();
+    } else {
+      // Use $text for full-text search
+      posts = await PostModel.aggregate([
+        { $match: { $text: { $search: search } } },
+        { $addFields: { score: { $meta: 'textScore' } } },
+        { $sort: { score: -1 } }
+      ]);
+    }
+    const userIds = posts.map(post => post.posted_by);
+    const users = await UserModel.find({ _id: { $in: userIds } }).lean();
+    const userMap = users.reduce((acc, user) => { acc[user._id] = user; return acc; }, {});
+    const appliedPosts = await ApplicationModel.find({ applicant_id: current_user_id }).lean();
+    const appliedPostStatusMap = new Map(appliedPosts.map(ap => [ap.post_id.toString(), ap.status]));
+    return posts.map(post => {
+      const user = userMap[post.posted_by];
+      return {
+        _id: post._id,
+        title: post.title,
+        description: post.description,
+        posted_by: post.posted_by,
+        first_name: user?.first_name,
+        last_name: user?.last_name,
+        photo: user?.photo,
+        tech_stack: post.tech_stack,
+        work_mode: post.work_mode,
+        experience_level: post.experience_level,
+        location_id: post.location_id,
+        status: post.status,
+        views_count: post.views_count,
+        applications_count: post.applications_count,
+        is_saved: false,
         is_applied: appliedPostStatusMap.get(post._id.toString()) ?? null,
         created_at: post.created_at,
         updated_at: post.updated_at,

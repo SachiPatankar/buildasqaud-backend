@@ -94,6 +94,7 @@ const typeDefs = gql`
     loadByRecommendation(page: Int, limit: Int): [PostSummary]!
     loadPostsByUserId(userId: String): [PostSummary]!
     getSavedPosts: [PostSummary]
+    searchProjects(search: String!): [PostSummary]!
   }
 
   input PostFilterInput {

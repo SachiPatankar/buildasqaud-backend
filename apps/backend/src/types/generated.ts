@@ -617,6 +617,9 @@ export type Query = {
   loadPostsByUserId: Array<Maybe<PostSummary>>;
   loadSentFriendRequests: Array<Maybe<Connection>>;
   loadUserById?: Maybe<User>;
+  searchMyApplications: Array<Maybe<ApplicationsByUserIdResponse>>;
+  searchPeople: Array<Maybe<Person>>;
+  searchProjects: Array<Maybe<PostSummary>>;
 };
 
 export type QueryCheckConnectionStatusArgs = {
@@ -708,6 +711,18 @@ export type QueryLoadPostsByUserIdArgs = {
 
 export type QueryLoadUserByIdArgs = {
   userId?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type QuerySearchMyApplicationsArgs = {
+  search: Scalars['String']['input'];
+};
+
+export type QuerySearchPeopleArgs = {
+  search: Scalars['String']['input'];
+};
+
+export type QuerySearchProjectsArgs = {
+  search: Scalars['String']['input'];
 };
 
 export type ReadStatus = {

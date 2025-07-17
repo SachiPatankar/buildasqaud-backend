@@ -39,6 +39,7 @@ const typeDefs = gql`
   extend type Query {
     loadApplicationsByPostId(postId: String!): [ApplicationsByPostIdResponse]!
     getApplicationsByUser: [ApplicationsByUserIdResponse]!
+    searchMyApplications(search: String!): [ApplicationsByUserIdResponse]!
   }
 
   extend type Mutation {
