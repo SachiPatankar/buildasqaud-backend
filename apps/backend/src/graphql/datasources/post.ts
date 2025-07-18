@@ -288,19 +288,19 @@ export default class PostDataSource implements IPostDataSource {
   createPost = async (
     input: CreatePostInput,
     postedBy: string
-   ): Promise<Post> => {
+  ): Promise<Post> => {
     const cleanedInput = { ...input };
-    
+
     if (cleanedInput.work_mode === '') {
       cleanedInput.work_mode = undefined;
     }
     if (cleanedInput.experience_level === '') {
       cleanedInput.experience_level = undefined;
     }
-    
+
     const newPost = new PostModel({ ...cleanedInput, posted_by: postedBy });
     return newPost.save();
-   };
+  };
   updatePost = async (
     postId: string,
     input: UpdatePostInput
@@ -534,10 +534,24 @@ export default class PostDataSource implements IPostDataSource {
       posts = await PostModel.find({
         $or: [
           { title: { $regex: `^${search}`, $options: 'i' } },
-          { tech_stack: { $elemMatch: { $regex: `^${search}`, $options: 'i' } } },
-          { project_type: { $elemMatch: { $regex: `^${search}`, $options: 'i' } } },
-          { 'requirements.desired_skills': { $elemMatch: { $regex: `^${search}`, $options: 'i' } } },
-          { 'requirements.desired_roles': { $elemMatch: { $regex: `^${search}`, $options: 'i' } } },
+          {
+            tech_stack: { $elemMatch: { $regex: `^${search}`, $options: 'i' } },
+          },
+          {
+            project_type: {
+              $elemMatch: { $regex: `^${search}`, $options: 'i' },
+            },
+          },
+          {
+            'requirements.desired_skills': {
+              $elemMatch: { $regex: `^${search}`, $options: 'i' },
+            },
+          },
+          {
+            'requirements.desired_roles': {
+              $elemMatch: { $regex: `^${search}`, $options: 'i' },
+            },
+          },
         ],
       }).lean();
     } else {
@@ -545,15 +559,22 @@ export default class PostDataSource implements IPostDataSource {
       posts = await PostModel.aggregate([
         { $match: { $text: { $search: search } } },
         { $addFields: { score: { $meta: 'textScore' } } },
-        { $sort: { score: -1 } }
+        { $sort: { score: -1 } },
       ]);
     }
-    const userIds = posts.map(post => post.posted_by);
+    const userIds = posts.map((post) => post.posted_by);
     const users = await UserModel.find({ _id: { $in: userIds } }).lean();
-    const userMap = users.reduce((acc, user) => { acc[user._id] = user; return acc; }, {});
-    const appliedPosts = await ApplicationModel.find({ applicant_id: current_user_id }).lean();
-    const appliedPostStatusMap = new Map(appliedPosts.map(ap => [ap.post_id.toString(), ap.status]));
-    return posts.map(post => {
+    const userMap = users.reduce((acc, user) => {
+      acc[user._id] = user;
+      return acc;
+    }, {});
+    const appliedPosts = await ApplicationModel.find({
+      applicant_id: current_user_id,
+    }).lean();
+    const appliedPostStatusMap = new Map(
+      appliedPosts.map((ap) => [ap.post_id.toString(), ap.status])
+    );
+    return posts.map((post) => {
       const user = userMap[post.posted_by];
       return {
         _id: post._id,

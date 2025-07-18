@@ -81,7 +81,10 @@ const resolvers = {
       { search }: { search: string },
       context: ApolloContext
     ): Promise<PostSummary[]> => {
-      return context.dataSources.post.searchProjects(search, context.currentUser.id);
+      return context.dataSources.post.searchProjects(
+        search,
+        context.currentUser.id
+      );
     },
   },
 

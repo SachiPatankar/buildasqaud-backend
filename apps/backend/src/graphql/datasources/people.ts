@@ -182,40 +182,58 @@ export default class PeopleDataSource implements IPeopleDataSource {
           { last_name: { $regex: `^${search}`, $options: 'i' } },
           { title: { $regex: `^${search}`, $options: 'i' } },
         ],
-      }).select('first_name last_name photo location_id title bio').lean();
+      })
+        .select('first_name last_name photo location_id title bio')
+        .lean();
     } else {
       // Use $text for full-text search
       users = await UserModel.aggregate([
         { $match: { $text: { $search: search } } },
         { $addFields: { score: { $meta: 'textScore' } } },
-        { $sort: { score: -1 } }
+        { $sort: { score: -1 } },
       ]);
     }
     // Full-text search skills (always, for now)
     const skillUsers = await UserSkillModel.aggregate([
       { $match: { $text: { $search: search } } },
-      { $group: { _id: '$user_id' } }
+      { $group: { _id: '$user_id' } },
     ]);
-    const skillUserIds = skillUsers.map(u => u._id);
+    const skillUserIds = skillUsers.map((u) => u._id);
     // Merge users from both queries
-    const userIds = new Set([...users.map(u => u._id?.toString()), ...skillUserIds.map(id => id?.toString())]);
-    const allUsers = await UserModel.find({ _id: { $in: Array.from(userIds) } }).select('first_name last_name photo location_id title bio').lean();
+    const userIds = new Set([
+      ...users.map((u) => u._id?.toString()),
+      ...skillUserIds.map((id) => id?.toString()),
+    ]);
+    const allUsers = await UserModel.find({ _id: { $in: Array.from(userIds) } })
+      .select('first_name last_name photo location_id title bio')
+      .lean();
     // Attach top skills, connection, and chat info
     const peopleWithTopSkills = await Promise.all(
       allUsers.map(async (user) => {
-        const topSkills = await UserSkillModel.find({ user_id: user._id, is_top: true }).limit(4);
+        const topSkills = await UserSkillModel.find({
+          user_id: user._id,
+          is_top: true,
+        }).limit(4);
         let is_connection = null;
         let chat_id = null;
         if (current_user_id && user._id.toString() !== current_user_id) {
           const connection = await ConnectionModel.findOne({
             $or: [
-              { requester_user_id: current_user_id, addressee_user_id: user._id },
-              { requester_user_id: user._id, addressee_user_id: current_user_id },
+              {
+                requester_user_id: current_user_id,
+                addressee_user_id: user._id,
+              },
+              {
+                requester_user_id: user._id,
+                addressee_user_id: current_user_id,
+              },
             ],
           });
           is_connection = connection ? connection.status : null;
           if (is_connection === 'accepted') {
-            const chat = await ChatModel.findOne({ participant_ids: { $all: [current_user_id, user._id.toString()] } });
+            const chat = await ChatModel.findOne({
+              participant_ids: { $all: [current_user_id, user._id.toString()] },
+            });
             chat_id = chat ? chat._id : null;
           }
         }

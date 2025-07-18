@@ -213,36 +213,54 @@ export default class ApplicationDataSource implements IApplicationDataSource {
 
   searchMyApplications = async (userId, search) => {
     // Find applications for the user
-    const applications = await ApplicationModel.find({ applicant_id: userId }).lean();
+    const applications = await ApplicationModel.find({
+      applicant_id: userId,
+    }).lean();
     if (applications.length === 0) return [];
     // Fetch all post IDs
-    const postIds = applications.map(app => app.post_id);
+    const postIds = applications.map((app) => app.post_id);
     let posts = [];
     if (search.length < 3) {
       // Use regex for prefix match on title
-      posts = await PostModel.find({ _id: { $in: postIds }, title: { $regex: `^${search}`, $options: 'i' } }).lean();
+      posts = await PostModel.find({
+        _id: { $in: postIds },
+        title: { $regex: `^${search}`, $options: 'i' },
+      }).lean();
     } else {
       // Full-text search posts by title/description
       posts = await PostModel.aggregate([
         { $match: { _id: { $in: postIds }, $text: { $search: search } } },
         { $addFields: { score: { $meta: 'textScore' } } },
-        { $sort: { score: -1 } }
+        { $sort: { score: -1 } },
       ]);
     }
-    const filteredPostIds = new Set(posts.map(post => post._id.toString()));
-    const filteredApplications = applications.filter(app => filteredPostIds.has(app.post_id.toString()));
-    const userIds = posts.map(post => post.posted_by);
+    const filteredPostIds = new Set(posts.map((post) => post._id.toString()));
+    const filteredApplications = applications.filter((app) =>
+      filteredPostIds.has(app.post_id.toString())
+    );
+    const userIds = posts.map((post) => post.posted_by);
     const users = await UserModel.find({ _id: { $in: userIds } }).lean();
-    const userMap = users.reduce((acc, user) => { acc[user._id.toString()] = user; return acc; }, {});
-    const appliedPosts = await ApplicationModel.find({ applicant_id: userId }).lean();
-    const appliedPostStatusMap = new Map();
-    appliedPosts.forEach(ap => { appliedPostStatusMap.set(ap.post_id.toString(), ap.status); });
-    const postMap = posts.reduce((acc, post) => {
-      const user = userMap[post.posted_by.toString()];
-      acc[post._id.toString()] = buildPostSummary(post, user, appliedPostStatusMap);
+    const userMap = users.reduce((acc, user) => {
+      acc[user._id.toString()] = user;
       return acc;
     }, {});
-    return filteredApplications.map(app => ({
+    const appliedPosts = await ApplicationModel.find({
+      applicant_id: userId,
+    }).lean();
+    const appliedPostStatusMap = new Map();
+    appliedPosts.forEach((ap) => {
+      appliedPostStatusMap.set(ap.post_id.toString(), ap.status);
+    });
+    const postMap = posts.reduce((acc, post) => {
+      const user = userMap[post.posted_by.toString()];
+      acc[post._id.toString()] = buildPostSummary(
+        post,
+        user,
+        appliedPostStatusMap
+      );
+      return acc;
+    }, {});
+    return filteredApplications.map((app) => ({
       post: postMap[app.post_id],
       application: app,
     }));

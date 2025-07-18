@@ -97,7 +97,10 @@ export interface IPostDataSource {
     limit: number,
     current_user_id: string
   ): Promise<PostSummary[]>;
-  searchProjects(search: string, current_user_id: string): Promise<PostSummary[]>;
+  searchProjects(
+    search: string,
+    current_user_id: string
+  ): Promise<PostSummary[]>;
 }
 
 export interface ISavedPostDataSource {
@@ -124,7 +127,10 @@ export interface IApplicationDataSource {
     applicationId: string,
     status: string
   ): Promise<Application>;
-  searchMyApplications(userId: string, search: string): Promise<ApplicationsByUserIdResponse[]>;
+  searchMyApplications(
+    userId: string,
+    search: string
+  ): Promise<ApplicationsByUserIdResponse[]>;
 }
 
 export interface IProfileDataSource {
