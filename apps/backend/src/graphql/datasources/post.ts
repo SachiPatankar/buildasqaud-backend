@@ -574,8 +574,8 @@ export default class PostDataSource implements IPostDataSource {
       return acc;
     }, {});
     const savedPosts = await SavedPostModel.find({ user_id: current_user_id })
-    .lean()
-    .exec();
+      .lean()
+      .exec();
     const savedPostIds = new Set(savedPosts.map((sp) => sp.post_id));
     const appliedPosts = await ApplicationModel.find({
       applicant_id: current_user_id,

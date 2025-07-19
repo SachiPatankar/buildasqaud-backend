@@ -16,7 +16,7 @@ export interface IPost extends Document {
   tech_stack?: string[];
   project_phase?: string;
   project_type?: string;
-  work_mode?: 'remote' | 'hybrid' | 'in person'|'not stated';
+  work_mode?: 'remote' | 'hybrid' | 'in person' | 'not stated';
   experience_level?: 'beginner' | 'intermediate' | 'advanced' | 'any'; // Added for experience level
   location_id?: string;
   status: 'open' | 'closed';
@@ -82,13 +82,13 @@ const PostSchema = new Schema<IPost>(
     },
     work_mode: {
       type: String,
-      enum: ['remote', 'hybrid', 'in person', "not stated"],
-      default: 'not stated'
+      enum: ['remote', 'hybrid', 'in person', 'not stated'],
+      default: 'not stated',
     },
     experience_level: {
       type: String,
       enum: ['beginner', 'intermediate', 'advanced', 'any'],
-      default: 'any'
+      default: 'any',
     },
     location_id: {
       type: String,

@@ -20,8 +20,13 @@ export default class PeopleDataSource implements IPeopleDataSource {
         const topSkillsDocs = await UserSkillModel.find({
           user_id: user._id,
           is_top: true,
-        }).limit(4).lean();
-        const topSkills = topSkillsDocs.map(skill => ({ ...skill, is_top: Boolean(skill.is_top) }));
+        })
+          .limit(4)
+          .lean();
+        const topSkills = topSkillsDocs.map((skill) => ({
+          ...skill,
+          is_top: Boolean(skill.is_top),
+        }));
         let is_connection = null;
         let chat_id = null;
         if (current_user_id && user._id.toString() !== current_user_id) {
@@ -93,8 +98,13 @@ export default class PeopleDataSource implements IPeopleDataSource {
         const topSkillsDocs = await UserSkillModel.find({
           user_id: user._id,
           is_top: true,
-        }).limit(4).lean();
-        const topSkills = topSkillsDocs.map(skill => ({ ...skill, is_top: Boolean(skill.is_top) }));
+        })
+          .limit(4)
+          .lean();
+        const topSkills = topSkillsDocs.map((skill) => ({
+          ...skill,
+          is_top: Boolean(skill.is_top),
+        }));
         let is_connection = null;
         let chat_id = null;
         if (current_user_id && user._id.toString() !== current_user_id) {
@@ -142,8 +152,13 @@ export default class PeopleDataSource implements IPeopleDataSource {
     const topSkillsDocs = await UserSkillModel.find({
       user_id: user._id,
       is_top: true,
-    }).limit(4).lean();
-    const topSkills = topSkillsDocs.map(skill => ({ ...skill, is_top: Boolean(skill.is_top) }));
+    })
+      .limit(4)
+      .lean();
+    const topSkills = topSkillsDocs.map((skill) => ({
+      ...skill,
+      is_top: Boolean(skill.is_top),
+    }));
     let is_connection = null;
     let chat_id = null;
     if (current_user_id && user._id.toString() !== current_user_id) {
@@ -216,8 +231,13 @@ export default class PeopleDataSource implements IPeopleDataSource {
         const topSkillsDocs = await UserSkillModel.find({
           user_id: user._id,
           is_top: true,
-        }).limit(4).lean();
-        const topSkills = topSkillsDocs.map(skill => ({ ...skill, is_top: Boolean(skill.is_top) }));
+        })
+          .limit(4)
+          .lean();
+        const topSkills = topSkillsDocs.map((skill) => ({
+          ...skill,
+          is_top: Boolean(skill.is_top),
+        }));
         let is_connection = null;
         let chat_id = null;
         if (current_user_id && user._id.toString() !== current_user_id) {

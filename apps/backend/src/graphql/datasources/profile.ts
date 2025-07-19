@@ -171,7 +171,9 @@ export default class ProfileDataSource implements IProfileDataSource {
     userSkillId: string,
     input: UpdateUserSkillInput
   ) => {
-    const updated = await UserSkillModel.findByIdAndUpdate(userSkillId, input, { new: true });
+    const updated = await UserSkillModel.findByIdAndUpdate(userSkillId, input, {
+      new: true,
+    });
     if (!updated) return null;
     const skillObj = updated.toObject();
     return { ...skillObj, is_top: Boolean(skillObj.is_top) };
@@ -184,6 +186,6 @@ export default class ProfileDataSource implements IProfileDataSource {
 
   getSkillsByUser = async (userId: string) => {
     const skills = await UserSkillModel.find({ user_id: userId }).lean();
-    return skills.map(skill => ({ ...skill, is_top: Boolean(skill.is_top) }));
+    return skills.map((skill) => ({ ...skill, is_top: Boolean(skill.is_top) }));
   };
 }
