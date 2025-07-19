@@ -83,7 +83,7 @@ export default class PostDataSource implements IPostDataSource {
         status: post.status,
         views_count: post.views_count,
         applications_count: post.applications_count,
-        is_saved: false,
+        is_saved: savedPostIds.has(post._id.toString()),
         is_applied: appliedPostStatusMap.get(post._id.toString()) ?? null,
         created_at: post.created_at,
         updated_at: post.updated_at,
@@ -274,7 +274,7 @@ export default class PostDataSource implements IPostDataSource {
         status: post.status,
         views_count: post.views_count,
         applications_count: post.applications_count,
-        is_saved: false,
+        is_saved: savedPostIds.has(post._id.toString()),
         is_applied: appliedPostStatusMap.get(post._id.toString()) ?? null,
         created_at: post.created_at,
         updated_at: post.updated_at,
@@ -475,6 +475,11 @@ export default class PostDataSource implements IPostDataSource {
       .map((post) => ({ post, score: scorePost(post) }))
       .sort((a, b) => b.score - a.score);
 
+    // Fallback: If no recommended posts, use recency fallback
+    if (scoredPosts.length === 0) {
+      return this.loadPosts(page, limit, current_user_id);
+    }
+
     // 5. Pagination
     const paginated = scoredPosts.slice((page - 1) * limit, page * limit);
     const paginatedPosts = paginated.map(({ post }) => post);
@@ -518,7 +523,7 @@ export default class PostDataSource implements IPostDataSource {
         status: post.status,
         views_count: post.views_count,
         applications_count: post.applications_count,
-        is_saved: false,
+        is_saved: savedPostIds.has(post._id.toString()),
         is_applied: appliedPostStatusMap.get(post._id.toString()) ?? null,
         created_at: post.created_at,
         updated_at: post.updated_at,
@@ -568,6 +573,10 @@ export default class PostDataSource implements IPostDataSource {
       acc[user._id] = user;
       return acc;
     }, {});
+    const savedPosts = await SavedPostModel.find({ user_id: current_user_id })
+    .lean()
+    .exec();
+    const savedPostIds = new Set(savedPosts.map((sp) => sp.post_id));
     const appliedPosts = await ApplicationModel.find({
       applicant_id: current_user_id,
     }).lean();
@@ -591,7 +600,7 @@ export default class PostDataSource implements IPostDataSource {
         status: post.status,
         views_count: post.views_count,
         applications_count: post.applications_count,
-        is_saved: false,
+        is_saved: savedPostIds.has(post._id.toString()),
         is_applied: appliedPostStatusMap.get(post._id.toString()) ?? null,
         created_at: post.created_at,
         updated_at: post.updated_at,
