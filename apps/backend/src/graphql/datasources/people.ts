@@ -17,10 +17,11 @@ export default class PeopleDataSource implements IPeopleDataSource {
 
     const peopleWithTopSkills = await Promise.all(
       users.map(async (user) => {
-        const topSkills = await UserSkillModel.find({
+        const topSkillsDocs = await UserSkillModel.find({
           user_id: user._id,
           is_top: true,
-        }).limit(4);
+        }).limit(4).lean();
+        const topSkills = topSkillsDocs.map(skill => ({ ...skill, is_top: Boolean(skill.is_top) }));
         let is_connection = null;
         let chat_id = null;
         if (current_user_id && user._id.toString() !== current_user_id) {
@@ -89,10 +90,11 @@ export default class PeopleDataSource implements IPeopleDataSource {
 
     const peopleWithTopSkills = await Promise.all(
       users.map(async (user) => {
-        const topSkills = await UserSkillModel.find({
+        const topSkillsDocs = await UserSkillModel.find({
           user_id: user._id,
           is_top: true,
-        }).limit(4);
+        }).limit(4).lean();
+        const topSkills = topSkillsDocs.map(skill => ({ ...skill, is_top: Boolean(skill.is_top) }));
         let is_connection = null;
         let chat_id = null;
         if (current_user_id && user._id.toString() !== current_user_id) {
@@ -137,10 +139,11 @@ export default class PeopleDataSource implements IPeopleDataSource {
     if (!user) {
       throw new Error('Person not found');
     }
-    const topSkills = await UserSkillModel.find({
+    const topSkillsDocs = await UserSkillModel.find({
       user_id: user._id,
       is_top: true,
-    }).limit(4);
+    }).limit(4).lean();
+    const topSkills = topSkillsDocs.map(skill => ({ ...skill, is_top: Boolean(skill.is_top) }));
     let is_connection = null;
     let chat_id = null;
     if (current_user_id && user._id.toString() !== current_user_id) {
@@ -210,10 +213,11 @@ export default class PeopleDataSource implements IPeopleDataSource {
     // Attach top skills, connection, and chat info
     const peopleWithTopSkills = await Promise.all(
       allUsers.map(async (user) => {
-        const topSkills = await UserSkillModel.find({
+        const topSkillsDocs = await UserSkillModel.find({
           user_id: user._id,
           is_top: true,
-        }).limit(4);
+        }).limit(4).lean();
+        const topSkills = topSkillsDocs.map(skill => ({ ...skill, is_top: Boolean(skill.is_top) }));
         let is_connection = null;
         let chat_id = null;
         if (current_user_id && user._id.toString() !== current_user_id) {

@@ -203,6 +203,7 @@ const typeDefs = gql`
     skill_name: String!
     proficiency_level: String!
     years_experience: Int
+    is_top: Boolean!
     order: Int
     created_at: Date!
     updated_at: Date!
@@ -212,6 +213,7 @@ const typeDefs = gql`
     skill_name: String!
     proficiency_level: String!
     years_experience: Int
+    is_top: Boolean
     order: Int
   }
 
@@ -219,6 +221,7 @@ const typeDefs = gql`
     skill_name: String
     proficiency_level: String
     years_experience: Int
+    is_top: Boolean
     order: Int
   }
 

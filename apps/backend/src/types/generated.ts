@@ -174,6 +174,7 @@ export type CreateUserInput = {
 };
 
 export type CreateUserSkillInput = {
+  is_top?: InputMaybe<Scalars['Boolean']['input']>;
   order?: InputMaybe<Scalars['Int']['input']>;
   proficiency_level: Scalars['String']['input'];
   skill_name: Scalars['String']['input'];
@@ -829,6 +830,7 @@ export type UpdateUserInput = {
 };
 
 export type UpdateUserSkillInput = {
+  is_top?: InputMaybe<Scalars['Boolean']['input']>;
   order?: InputMaybe<Scalars['Int']['input']>;
   proficiency_level?: InputMaybe<Scalars['String']['input']>;
   skill_name?: InputMaybe<Scalars['String']['input']>;
@@ -859,6 +861,7 @@ export type UserSkill = {
   __typename?: 'UserSkill';
   _id: Scalars['String']['output'];
   created_at: Scalars['Date']['output'];
+  is_top: Scalars['Boolean']['output'];
   order?: Maybe<Scalars['Int']['output']>;
   proficiency_level: Scalars['String']['output'];
   skill_name: Scalars['String']['output'];

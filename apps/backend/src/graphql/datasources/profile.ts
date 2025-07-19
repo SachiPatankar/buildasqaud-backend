@@ -158,19 +158,23 @@ export default class ProfileDataSource implements IProfileDataSource {
       });
       order = last ? last.order + 1 : 0;
     }
-    const newUserSkill = new UserSkillModel({
+    const newUserSkill = await new UserSkillModel({
       ...input,
       user_id: userId,
       order,
-    });
-    return newUserSkill.save();
+    }).save();
+    const skillObj = newUserSkill.toObject();
+    return { ...skillObj, is_top: Boolean(skillObj.is_top) };
   };
 
   updateUserSkill = async (
     userSkillId: string,
     input: UpdateUserSkillInput
   ) => {
-    return UserSkillModel.findByIdAndUpdate(userSkillId, input, { new: true });
+    const updated = await UserSkillModel.findByIdAndUpdate(userSkillId, input, { new: true });
+    if (!updated) return null;
+    const skillObj = updated.toObject();
+    return { ...skillObj, is_top: Boolean(skillObj.is_top) };
   };
 
   deleteUserSkill = async (userSkillId: string) => {
@@ -179,6 +183,7 @@ export default class ProfileDataSource implements IProfileDataSource {
   };
 
   getSkillsByUser = async (userId: string) => {
-    return UserSkillModel.find({ user_id: userId });
+    const skills = await UserSkillModel.find({ user_id: userId }).lean();
+    return skills.map(skill => ({ ...skill, is_top: Boolean(skill.is_top) }));
   };
 }
