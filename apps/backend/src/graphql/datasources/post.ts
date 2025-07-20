@@ -1,20 +1,19 @@
 // graphql/datasources/post.ts
 import { IPostDataSource } from './types';
-import { ApplicationModel, PostModel, SavedPostModel, UserModel } from '@db';
-import { ConnectionModel, ChatModel } from '@db';
 import {
-  CreatePostInput,
-  UpdatePostInput,
-  PostFilterInput,
-  Post,
-  PostSummary,
-  PostDetails,
-} from '../../types/generated';
-
-// Only keep these imports for profile models:
-import { UserSkillModel } from '@db';
-import { ExperienceModel } from '@db';
-import { ProjectModel } from '@db';
+  PostModel,
+  UserModel,
+  SavedPostModel,
+  ApplicationModel,
+  UserSkillModel,
+  ExperienceModel,
+  ProjectModel,
+  ConnectionModel,
+  ChatModel,
+} from '@db';
+import { Post, CreatePostInput, UpdatePostInput, PostFilterInput, PostSummary, PostDetails } from '../../types/generated';
+import { RecommendationEngine } from '../../lib/recommendation-engine';
+import { AdvancedSearch } from '../../lib/advanced-search';
 
 export default class PostDataSource implements IPostDataSource {
   loadPosts = async (
@@ -22,26 +21,134 @@ export default class PostDataSource implements IPostDataSource {
     limit: number,
     current_user_id: string
   ): Promise<PostSummary[]> => {
-    // First, find the list of posts, populate user fields, and sort by created_at
+    try {
+      // Use aggregation pipeline for better performance
+      const posts = await PostModel.aggregate([
+        // Stage 1: Sort and paginate posts
+        {
+          $sort: { created_at: -1 }
+        },
+        {
+          $skip: (page - 1) * limit
+        },
+        {
+          $limit: limit
+        },
+        // Stage 2: Lookup user data
+        {
+          $lookup: {
+            from: 'usermodels',
+            localField: 'posted_by',
+            foreignField: '_id',
+            as: 'user',
+            pipeline: [
+              {
+                $project: {
+                  first_name: 1,
+                  last_name: 1,
+                  photo: 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          $unwind: '$user'
+        },
+        // Stage 3: Add saved and applied status
+        {
+          $lookup: {
+            from: 'savedpostmodels',
+            let: { postId: '$_id', userId: { $literal: current_user_id } },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$post_id', '$$postId'] },
+                      { $eq: ['$user_id', '$$userId'] }
+                    ]
+                  }
+                }
+              }
+            ],
+            as: 'saved'
+          }
+        },
+        {
+          $lookup: {
+            from: 'applicationmodels',
+            let: { postId: '$_id', userId: { $literal: current_user_id } },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$post_id', '$$postId'] },
+                      { $eq: ['$applicant_id', '$$userId'] }
+                    ]
+                  }
+                }
+              },
+              {
+                $project: { status: 1 }
+              }
+            ],
+            as: 'applied'
+          }
+        },
+        // Stage 4: Project final format
+        {
+          $project: {
+            _id: 1,
+            title: 1,
+            description: 1,
+            posted_by: 1,
+            first_name: '$user.first_name',
+            last_name: '$user.last_name',
+            photo: '$user.photo',
+            tech_stack: 1,
+            work_mode: 1,
+            experience_level: 1,
+            location_id: 1,
+            status: 1,
+            views_count: 1,
+            applications_count: 1,
+            is_saved: { $gt: [{ $size: '$saved' }, 0] },
+            is_applied: {
+              $cond: {
+                if: { $gt: [{ $size: '$applied' }, 0] },
+                then: { $arrayElemAt: ['$applied.status', 0] },
+                else: null
+              }
+            },
+            created_at: 1,
+            updated_at: 1,
+            requirements: 1
+          }
+        }
+      ]);
+
+      return posts;
+    } catch (error) {
+      console.error('Error in loadPosts:', error);
+      // Fallback to original implementation
     const posts = await PostModel.find()
       .skip((page - 1) * limit)
       .limit(limit)
       .sort({ created_at: -1 })
-      .lean() // Lean makes it more efficient for subsequent operations
+        .lean()
       .exec();
 
-    // Retrieve the users who posted the posts to populate the necessary fields
     const userIds = posts.map((post) => post.posted_by);
     const users = await UserModel.find({ _id: { $in: userIds } })
       .lean()
       .exec();
     const userMap = users.reduce((acc, user) => {
-      acc[user._id] = user; // Map each user by their UUID for easy access
+        acc[user._id] = user;
       return acc;
     }, {});
 
-    // Get the list of saved posts and applications for the current user
-    console.log(current_user_id, 'current_user_id');
     const savedPosts = await SavedPostModel.find({ user_id: current_user_id })
       .lean()
       .exec();
@@ -51,31 +158,23 @@ export default class PostDataSource implements IPostDataSource {
       .lean()
       .exec();
 
-    // Map post_id to status for quick lookup
     const appliedPostStatusMap = new Map<string, string>();
     appliedPosts.forEach((ap) => {
       appliedPostStatusMap.set(ap.post_id.toString(), ap.status);
     });
 
     const savedPostIds = new Set(savedPosts.map((sp) => sp.post_id));
-    // For backward compatibility, keep appliedPostIds as a Set
-    const appliedPostIds = new Set(appliedPosts.map((ap) => ap.post_id));
 
-    console.log('Saved Post IDs:', savedPostIds);
-    console.log('Applied Post IDs:', appliedPostIds);
-
-    // Map posts to include user data and check if they are saved or applied
-    const postSummaries = posts.map((post) => {
-      const user = userMap[post.posted_by]; // Get the user who posted the post
-
+      return posts.map((post) => {
+        const user = userMap[post.posted_by];
       return {
         _id: post._id,
         title: post.title,
         description: post.description,
         posted_by: post.posted_by,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        photo: user.photo,
+          first_name: user?.first_name,
+          last_name: user?.last_name,
+          photo: user?.photo,
         tech_stack: post.tech_stack,
         work_mode: post.work_mode,
         experience_level: post.experience_level,
@@ -90,27 +189,209 @@ export default class PostDataSource implements IPostDataSource {
         requirements: post.requirements,
       };
     });
-
-    return postSummaries;
+    }
   };
 
   loadPostById = async (
     postId: string,
     current_user_id: string
   ): Promise<PostDetails | null> => {
-    // Fetch the post by ID and populate user fields
+    try {
+      // Use aggregation pipeline for better performance
+      const results = await PostModel.aggregate([
+        // Stage 1: Match the specific post
+        {
+          $match: { _id: postId }
+        },
+        // Stage 2: Lookup user data
+        {
+          $lookup: {
+            from: 'usermodels',
+            localField: 'posted_by',
+            foreignField: '_id',
+            as: 'user',
+            pipeline: [
+              {
+                $project: {
+                  first_name: 1,
+                  last_name: 1,
+                  photo: 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          $unwind: '$user'
+        },
+        // Stage 3: Check saved status
+        {
+          $lookup: {
+            from: 'savedpostmodels',
+            let: { postId: '$_id', userId: { $literal: current_user_id } },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$post_id', '$$postId'] },
+                      { $eq: ['$user_id', '$$userId'] }
+                    ]
+                  }
+                }
+              }
+            ],
+            as: 'saved'
+          }
+        },
+        // Stage 4: Check applied status
+        {
+          $lookup: {
+            from: 'applicationmodels',
+            let: { postId: '$_id', userId: { $literal: current_user_id } },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$post_id', '$$postId'] },
+                      { $eq: ['$applicant_id', '$$userId'] }
+                    ]
+                  }
+                }
+              },
+              {
+                $project: { status: 1 }
+              }
+            ],
+            as: 'applied'
+          }
+        },
+        // Stage 5: Check connection status
+        {
+          $lookup: {
+            from: 'connectionmodels',
+            let: { 
+              postUserId: '$posted_by', 
+              currentUserId: { $literal: current_user_id } 
+            },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $or: [
+                      {
+                        $and: [
+                          { $eq: ['$requester_user_id', '$$currentUserId'] },
+                          { $eq: ['$addressee_user_id', '$$postUserId'] }
+                        ]
+                      },
+                      {
+                        $and: [
+                          { $eq: ['$requester_user_id', '$$postUserId'] },
+                          { $eq: ['$addressee_user_id', '$$currentUserId'] }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                $project: { status: 1 }
+              }
+            ],
+            as: 'connection'
+          }
+        },
+        // Stage 6: Check chat if connection is accepted
+        {
+          $lookup: {
+            from: 'chatmodels',
+            let: { 
+              postUserId: '$posted_by', 
+              currentUserId: { $literal: current_user_id },
+              connectionStatus: { $arrayElemAt: ['$connection.status', 0] }
+            },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$$connectionStatus', 'accepted'] },
+                      { $all: ['$participant_ids', ['$$currentUserId', { $toString: '$$postUserId' }]] }
+                    ]
+                  }
+                }
+              },
+              {
+                $project: { _id: 1 }
+              }
+            ],
+            as: 'chat'
+          }
+        },
+        // Stage 7: Project final format
+        {
+          $project: {
+            _id: 1,
+            title: 1,
+            description: 1,
+            posted_by: 1,
+            first_name: '$user.first_name',
+            last_name: '$user.last_name',
+            photo: '$user.photo',
+            tech_stack: 1,
+            work_mode: 1,
+            experience_level: 1,
+            location_id: 1,
+            status: 1,
+            views_count: 1,
+            applications_count: 1,
+            requirements: 1,
+            project_phase: 1,
+            project_type: 1,
+            is_saved: { $gt: [{ $size: '$saved' }, 0] },
+            is_applied: {
+              $cond: {
+                if: { $gt: [{ $size: '$applied' }, 0] },
+                then: { $arrayElemAt: ['$applied.status', 0] },
+                else: null
+              }
+            },
+            created_at: 1,
+            updated_at: 1,
+            is_connection: {
+              $cond: {
+                if: { $gt: [{ $size: '$connection' }, 0] },
+                then: { $arrayElemAt: ['$connection.status', 0] },
+                else: null
+              }
+            },
+            chat_id: {
+              $cond: {
+                if: { $gt: [{ $size: '$chat' }, 0] },
+                then: { $arrayElemAt: ['$chat._id', 0] },
+                else: null
+              }
+            }
+          }
+        }
+      ]);
+
+      return results.length > 0 ? results[0] : null;
+    } catch (error) {
+      console.error('Error in loadPostById:', error);
+      // Fallback to original implementation
     const post = await PostModel.findById(postId).lean().exec();
     if (!post) {
       return null;
     }
 
-    // Fetch the user who posted the post
     const user = await UserModel.findById(post.posted_by).lean().exec();
     if (!user) {
       return null;
     }
 
-    // Check if the current user has saved or applied to the post
     const savedPost = await SavedPostModel.findOne({
       post_id: postId,
       user_id: current_user_id,
@@ -127,7 +408,6 @@ export default class PostDataSource implements IPostDataSource {
     const isSaved = savedPost !== null;
     const isApplied = appliedPost?.status;
 
-    // Add is_connection and chat_id for the post creator
     let is_connection = null;
     let chat_id = null;
     if (current_user_id && user._id.toString() !== current_user_id) {
@@ -146,7 +426,6 @@ export default class PostDataSource implements IPostDataSource {
       }
     }
 
-    // Return the detailed post with additional information
     return {
       _id: post._id,
       title: post.title,
@@ -172,6 +451,7 @@ export default class PostDataSource implements IPostDataSource {
       is_connection,
       chat_id,
     };
+    }
   };
 
   loadPostByFilter = async (
@@ -180,12 +460,168 @@ export default class PostDataSource implements IPostDataSource {
     limit: number,
     current_user_id: string
   ): Promise<PostSummary[]> => {
+    try {
     // Build MongoDB query from PostFilterInput
+      const matchQuery: any = {};
+      if (filter.status) {
+        matchQuery.status = filter.status;
+      }
+      // Relaxed matching for project_type
+      if (filter.project_type && filter.project_type.length > 0) {
+        matchQuery.project_type = {
+          $elemMatch: {
+            $regex: filter.project_type.join('|'),
+            $options: 'i',
+          },
+        };
+      }
+      // Strict matching for work_mode (enum)
+      if (filter.work_mode && filter.work_mode.length > 0) {
+        matchQuery.work_mode = { $in: filter.work_mode };
+      }
+      // Relaxed matching for tech_stack
+      if (filter.tech_stack && filter.tech_stack.length > 0) {
+        matchQuery.tech_stack = {
+          $elemMatch: {
+            $regex: filter.tech_stack.join('|'),
+            $options: 'i',
+          },
+        };
+      }
+      // Strict matching for experience_level (enum)
+      if (filter.experience_level && filter.experience_level.length > 0) {
+        matchQuery.experience_level = { $in: filter.experience_level };
+      }
+      // Relaxed matching for desired_roles
+      if (filter.desired_roles && filter.desired_roles.length > 0) {
+        matchQuery['requirements.desired_roles'] = {
+          $elemMatch: {
+            $regex: filter.desired_roles.join('|'),
+            $options: 'i',
+          },
+        };
+      }
+
+      // Use aggregation pipeline for better performance
+      const posts = await PostModel.aggregate([
+        // Stage 1: Match posts based on filter
+        {
+          $match: matchQuery
+        },
+        // Stage 2: Sort by created_at
+        {
+          $sort: { created_at: -1 }
+        },
+        // Stage 3: Pagination
+        {
+          $skip: (page - 1) * limit
+        },
+        {
+          $limit: limit
+        },
+        // Stage 4: Lookup user data
+        {
+          $lookup: {
+            from: 'usermodels',
+            localField: 'posted_by',
+            foreignField: '_id',
+            as: 'user',
+            pipeline: [
+              {
+                $project: {
+                  first_name: 1,
+                  last_name: 1,
+                  photo: 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          $unwind: '$user'
+        },
+        // Stage 5: Add saved and applied status
+        {
+          $lookup: {
+            from: 'savedpostmodels',
+            let: { postId: '$_id', userId: { $literal: current_user_id } },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$post_id', '$$postId'] },
+                      { $eq: ['$user_id', '$$userId'] }
+                    ]
+                  }
+                }
+              }
+            ],
+            as: 'saved'
+          }
+        },
+        {
+          $lookup: {
+            from: 'applicationmodels',
+            let: { postId: '$_id', userId: { $literal: current_user_id } },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$post_id', '$$postId'] },
+                      { $eq: ['$applicant_id', '$$userId'] }
+                    ]
+                  }
+                }
+              },
+              {
+                $project: { status: 1 }
+              }
+            ],
+            as: 'applied'
+          }
+        },
+        // Stage 6: Project final format
+        {
+          $project: {
+            _id: 1,
+            title: 1,
+            description: 1,
+            posted_by: 1,
+            first_name: '$user.first_name',
+            last_name: '$user.last_name',
+            photo: '$user.photo',
+            tech_stack: 1,
+            work_mode: 1,
+            experience_level: 1,
+            location_id: 1,
+            status: 1,
+            views_count: 1,
+            applications_count: 1,
+            is_saved: { $gt: [{ $size: '$saved' }, 0] },
+            is_applied: {
+              $cond: {
+                if: { $gt: [{ $size: '$applied' }, 0] },
+                then: { $arrayElemAt: ['$applied.status', 0] },
+                else: null
+              }
+            },
+            created_at: 1,
+            updated_at: 1,
+            requirements: 1
+          }
+        }
+      ]);
+
+      return posts;
+    } catch (error) {
+      console.error('Error in loadPostByFilter:', error);
+      // Fallback to original implementation
     const query: any = {};
     if (filter.status) {
       query.status = filter.status;
     }
-    // Relaxed matching for project_type
     if (filter.project_type && filter.project_type.length > 0) {
       query.project_type = {
         $elemMatch: {
@@ -194,11 +630,9 @@ export default class PostDataSource implements IPostDataSource {
         },
       };
     }
-    // Strict matching for work_mode (enum)
     if (filter.work_mode && filter.work_mode.length > 0) {
       query.work_mode = { $in: filter.work_mode };
     }
-    // Relaxed matching for tech_stack
     if (filter.tech_stack && filter.tech_stack.length > 0) {
       query.tech_stack = {
         $elemMatch: {
@@ -207,11 +641,9 @@ export default class PostDataSource implements IPostDataSource {
         },
       };
     }
-    // Strict matching for experience_level (enum)
     if (filter.experience_level && filter.experience_level.length > 0) {
       query.experience_level = { $in: filter.experience_level };
     }
-    // Relaxed matching for desired_roles
     if (filter.desired_roles && filter.desired_roles.length > 0) {
       query['requirements.desired_roles'] = {
         $elemMatch: {
@@ -221,7 +653,6 @@ export default class PostDataSource implements IPostDataSource {
       };
     }
 
-    // Fetch the posts based on the constructed query and populate user fields
     const posts = await PostModel.find(query)
       .sort({ created_at: -1 })
       .skip((page - 1) * limit)
@@ -238,7 +669,6 @@ export default class PostDataSource implements IPostDataSource {
       return acc;
     }, {});
 
-    // Get saved and applied post IDs for the current user
     const savedPosts = await SavedPostModel.find({ user_id: current_user_id })
       .lean()
       .exec();
@@ -249,24 +679,21 @@ export default class PostDataSource implements IPostDataSource {
       .exec();
 
     const savedPostIds = new Set(savedPosts.map((sp) => sp.post_id));
-    const appliedPostIds = new Set(appliedPosts.map((ap) => ap.post_id));
-
     const appliedPostStatusMap = new Map<string, string>();
     appliedPosts.forEach((ap) => {
       appliedPostStatusMap.set(ap.post_id.toString(), ap.status);
     });
 
-    const postSummaries = posts.map((post) => {
+      return posts.map((post) => {
       const user = userMap[post.posted_by];
-
       return {
         _id: post._id,
         title: post.title,
         description: post.description,
         posted_by: post.posted_by,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        photo: user.photo,
+          first_name: user?.first_name,
+          last_name: user?.last_name,
+          photo: user?.photo,
         tech_stack: post.tech_stack,
         work_mode: post.work_mode,
         experience_level: post.experience_level,
@@ -281,8 +708,7 @@ export default class PostDataSource implements IPostDataSource {
         requirements: post.requirements,
       };
     });
-
-    return postSummaries;
+    }
   };
 
   createPost = async (
@@ -338,17 +764,105 @@ export default class PostDataSource implements IPostDataSource {
   };
 
   loadPostsByUserId = async (userId: string): Promise<PostSummary[]> => {
-    // Find posts by the given userId
+    try {
+      // Use aggregation pipeline for better performance
+      const posts = await PostModel.aggregate([
+        // Stage 1: Match posts by user ID
+        {
+          $match: { posted_by: userId }
+        },
+        // Stage 2: Sort by created_at
+        {
+          $sort: { created_at: -1 }
+        },
+        // Stage 3: Lookup user data
+        {
+          $lookup: {
+            from: 'usermodels',
+            localField: 'posted_by',
+            foreignField: '_id',
+            as: 'user',
+            pipeline: [
+              {
+                $project: {
+                  first_name: 1,
+                  last_name: 1,
+                  photo: 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          $unwind: '$user'
+        },
+        // Stage 4: Check applied status (user can't save their own posts)
+        {
+          $lookup: {
+            from: 'applicationmodels',
+            let: { postId: '$_id', userId: { $literal: userId } },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$post_id', '$$postId'] },
+                      { $eq: ['$applicant_id', '$$userId'] }
+                    ]
+                  }
+                }
+              },
+              {
+                $project: { status: 1 }
+              }
+            ],
+            as: 'applied'
+          }
+        },
+        // Stage 5: Project final format
+        {
+          $project: {
+            _id: 1,
+            title: 1,
+            description: 1,
+            posted_by: 1,
+            first_name: '$user.first_name',
+            last_name: '$user.last_name',
+            photo: '$user.photo',
+            tech_stack: 1,
+            work_mode: 1,
+            experience_level: 1,
+            location_id: 1,
+            status: 1,
+            views_count: 1,
+            applications_count: 1,
+            is_saved: false, // User can't save their own posts
+            is_applied: {
+              $cond: {
+                if: { $gt: [{ $size: '$applied' }, 0] },
+                then: { $arrayElemAt: ['$applied.status', 0] },
+                else: null
+              }
+            },
+            created_at: 1,
+            updated_at: 1,
+            requirements: 1
+          }
+        }
+      ]);
+
+      return posts;
+    } catch (error) {
+      console.error('Error in loadPostsByUserId:', error);
+      // Fallback to original implementation
     const posts = await PostModel.find({ posted_by: userId })
       .sort({ created_at: -1 })
       .lean()
       .exec();
 
-    // Retrieve the user who posted the posts
     const user = await UserModel.findById(userId).lean().exec();
     if (!user) return [];
 
-    // Get the list of saved posts and applications for the user
     const savedPosts = await SavedPostModel.find({ user_id: userId })
       .lean()
       .exec();
@@ -358,7 +872,6 @@ export default class PostDataSource implements IPostDataSource {
       .lean()
       .exec();
 
-    // Map post_id to status for quick lookup
     const appliedPostStatusMap = new Map<string, string>();
     appliedPosts.forEach((ap) => {
       appliedPostStatusMap.set(ap.post_id.toString(), ap.status);
@@ -366,8 +879,7 @@ export default class PostDataSource implements IPostDataSource {
 
     const savedPostIds = new Set(savedPosts.map((sp) => sp.post_id));
 
-    // Map posts to include user data and check if they are saved or applied
-    const postSummaries = posts.map((post) => {
+      return posts.map((post) => {
       return {
         _id: post._id,
         title: post.title,
@@ -390,8 +902,7 @@ export default class PostDataSource implements IPostDataSource {
         requirements: post.requirements,
       };
     });
-
-    return postSummaries;
+    }
   };
 
   loadByRecommendation = async (
@@ -399,140 +910,174 @@ export default class PostDataSource implements IPostDataSource {
     limit: number,
     current_user_id: string
   ): Promise<PostSummary[]> => {
-    // 1. Fetch user profile data
-    const [skills, experiences, projects] = await Promise.all([
-      UserSkillModel.find({ user_id: current_user_id }).lean().exec(),
-      ExperienceModel.find({ user_id: current_user_id }).lean().exec(),
-      ProjectModel.find({ user_id: current_user_id }).lean().exec(),
-    ]);
-    const skillNames = skills.map((s) => s.skill_name);
-    const roles = experiences.map((e) => e.position);
-    const techs = projects.flatMap((p) => p.technologies || []);
-    // Optionally dedupe
-    const userTechStack = Array.from(new Set([...skillNames, ...techs]));
-
-    // Fallback: If user profile is incomplete, use loadPosts
-    if (
-      skillNames.length === 0 &&
-      roles.length === 0 &&
-      userTechStack.length === 0
-    ) {
-      return this.loadPosts(page, limit, current_user_id);
-    }
-
-    // 2. Build filter for posts
-    const postQuery = {
-      $or: [
-        { 'requirements.desired_skills': { $in: skillNames } },
-        { 'requirements.desired_roles': { $in: roles } },
-        { tech_stack: { $in: userTechStack } },
-      ],
-    };
-
-    // 3. Fetch posts
-    const posts = await PostModel.find(postQuery).lean().exec();
-
-    // 4. Score posts by matches
-    function fuzzyIncludes(arr: string[], value: string): boolean {
-      return arr.some(
-        (item) =>
-          item.toLowerCase().includes(value.toLowerCase()) ||
-          value.toLowerCase().includes(item.toLowerCase())
+    try {
+      // Use the enhanced recommendation engine
+      const recommendations = await RecommendationEngine.getPostRecommendations(
+        current_user_id,
+        {
+          limit,
+          page: page - 1, // Convert to 0-based indexing
+        }
       );
-    }
 
-    function scorePost(post) {
-      let matchScore = 0;
-      if (
-        post.requirements?.desired_skills?.some((skill) =>
-          fuzzyIncludes(skillNames, skill)
-        )
-      )
-        matchScore++;
-      if (
-        post.requirements?.desired_roles?.some((role) =>
-          fuzzyIncludes(roles, role)
-        )
-      )
-        matchScore++;
-      if (post.tech_stack?.some((tech) => fuzzyIncludes(userTechStack, tech)))
-        matchScore++;
+      // Convert recommendations to PostSummary format
+      const postSummaries: PostSummary[] = [];
 
-      // Recency score: 1 for newest, 0 for oldest (within a window)
-      const now = Date.now();
-      const postTime = new Date(post.created_at).getTime();
-      const maxAge = 1000 * 60 * 60 * 24 * 30; // 30 days in ms
-      const recencyScore = Math.max(0, 1 - (now - postTime) / maxAge);
+      for (const recommendation of recommendations) {
+        const post = recommendation.post;
+        
+        // Get user details
+        const user = await UserModel.findById(post.posted_by).lean();
+        
+        // Get saved and applied status
+        const [savedPost, appliedPost] = await Promise.all([
+          SavedPostModel.findOne({ 
+            user_id: current_user_id, 
+            post_id: post._id 
+          }).lean(),
+          ApplicationModel.findOne({ 
+            applicant_id: current_user_id, 
+            post_id: post._id 
+          }).lean(),
+        ]);
 
-      // Weights
-      const matchWeight = 0.7;
-      const recencyWeight = 0.3;
+        // Get connection and chat info
+        let is_connection = null;
+        let chat_id = null;
+        if (user && user._id.toString() !== current_user_id) {
+          const connection = await ConnectionModel.findOne({
+            $or: [
+              {
+                requester_user_id: current_user_id,
+                addressee_user_id: user._id,
+              },
+              {
+                requester_user_id: user._id,
+                addressee_user_id: current_user_id,
+              },
+            ],
+          });
+          is_connection = connection ? connection.status : null;
+          if (is_connection === 'accepted') {
+            const chat = await ChatModel.findOne({
+              participant_ids: { $all: [current_user_id, user._id.toString()] },
+            });
+            chat_id = chat ? chat._id : null;
+          }
+        }
 
-      // Combine scores
-      return matchScore * matchWeight + recencyScore * recencyWeight;
-    }
-    const scoredPosts = posts
-      .map((post) => ({ post, score: scorePost(post) }))
-      .sort((a, b) => b.score - a.score);
+        postSummaries.push({
+          _id: post._id,
+          title: post.title,
+          description: post.description,
+          posted_by: post.posted_by,
+          first_name: user?.first_name || '',
+          last_name: user?.last_name || '',
+          photo: user?.photo || '',
+          tech_stack: post.tech_stack || [],
+          work_mode: post.work_mode || '',
+          experience_level: post.experience_level || '',
+          location_id: post.location_id || '',
+          status: post.status,
+          views_count: post.views_count || 0,
+          applications_count: post.applications_count || 0,
+          is_saved: !!savedPost,
+          is_applied: appliedPost?.status || null,
+          created_at: post.created_at,
+          updated_at: post.updated_at,
+          requirements: post.requirements,
+        });
+      }
 
-    // Fallback: If no recommended posts, use recency fallback
-    if (scoredPosts.length === 0) {
+      return postSummaries;
+    } catch (error) {
+      console.error('Error in loadByRecommendation:', error);
+      // Fallback to original implementation
       return this.loadPosts(page, limit, current_user_id);
     }
+  };
 
-    // 5. Pagination
-    const paginated = scoredPosts.slice((page - 1) * limit, page * limit);
-    const paginatedPosts = paginated.map(({ post }) => post);
+  searchProjects = async (search, current_user_id) => {
+    try {
+      // Use the enhanced search engine
+      const searchResults = await AdvancedSearch.searchPosts({
+        query: search,
+        limit: 20,
+        page: 0,
+        status: 'open',
+      });
 
-    // 6. Populate user fields and saved/applied status (reuse logic from loadPosts)
-    const userIds = paginatedPosts.map((post) => post.posted_by);
-    const users = await UserModel.find({ _id: { $in: userIds } })
-      .lean()
-      .exec();
-    const userMap = users.reduce((acc, user) => {
-      acc[user._id] = user;
-      return acc;
-    }, {});
-    const savedPosts = await SavedPostModel.find({ user_id: current_user_id })
-      .lean()
-      .exec();
-    const appliedPosts = await ApplicationModel.find({
+      // Convert search results to PostSummary format
+      const postSummaries: PostSummary[] = [];
+
+      for (const post of searchResults.data) {
+        // Get user details
+        const user = await UserModel.findById(post.posted_by).lean();
+        
+        // Get saved and applied status
+        const [savedPost, appliedPost] = await Promise.all([
+          SavedPostModel.findOne({ 
+            user_id: current_user_id, 
+            post_id: post._id 
+          }).lean(),
+          ApplicationModel.findOne({ 
       applicant_id: current_user_id,
-    })
-      .lean()
-      .exec();
-    const savedPostIds = new Set(savedPosts.map((sp) => sp.post_id));
-    const appliedPostStatusMap = new Map(
-      appliedPosts.map((ap) => [ap.post_id.toString(), ap.status])
-    );
+            post_id: post._id 
+          }).lean(),
+        ]);
 
-    return paginatedPosts.map((post) => {
-      const user = userMap[post.posted_by];
-      return {
+        // Get connection and chat info
+        let is_connection = null;
+        let chat_id = null;
+        if (user && user._id.toString() !== current_user_id) {
+          const connection = await ConnectionModel.findOne({
+            $or: [
+              {
+                requester_user_id: current_user_id,
+                addressee_user_id: user._id,
+              },
+              {
+                requester_user_id: user._id,
+                addressee_user_id: current_user_id,
+              },
+            ],
+          });
+          is_connection = connection ? connection.status : null;
+          if (is_connection === 'accepted') {
+            const chat = await ChatModel.findOne({
+              participant_ids: { $all: [current_user_id, user._id.toString()] },
+            });
+            chat_id = chat ? chat._id : null;
+          }
+        }
+
+        postSummaries.push({
         _id: post._id,
         title: post.title,
         description: post.description,
         posted_by: post.posted_by,
-        first_name: user?.first_name,
-        last_name: user?.last_name,
-        photo: user?.photo,
-        tech_stack: post.tech_stack,
-        work_mode: post.work_mode,
-        experience_level: post.experience_level,
-        location_id: post.location_id,
+          first_name: user?.first_name || '',
+          last_name: user?.last_name || '',
+          photo: user?.photo || '',
+          tech_stack: post.tech_stack || [],
+          work_mode: post.work_mode || '',
+          experience_level: post.experience_level || '',
+          location_id: post.location_id || '',
         status: post.status,
-        views_count: post.views_count,
-        applications_count: post.applications_count,
-        is_saved: savedPostIds.has(post._id.toString()),
-        is_applied: appliedPostStatusMap.get(post._id.toString()) ?? null,
+          views_count: post.views_count || 0,
+          applications_count: post.applications_count || 0,
+          is_saved: !!savedPost,
+          is_applied: appliedPost?.status || null,
         created_at: post.created_at,
         updated_at: post.updated_at,
         requirements: post.requirements,
-      };
     });
-  };
+      }
 
-  searchProjects = async (search, current_user_id) => {
+      return postSummaries;
+    } catch (error) {
+      console.error('Error in searchProjects:', error);
+      // Fallback to original implementation
     let posts = [];
     if (search.length < 3) {
       // Use regex for prefix match
@@ -607,5 +1152,6 @@ export default class PostDataSource implements IPostDataSource {
         requirements: post.requirements,
       };
     });
+    }
   };
 }

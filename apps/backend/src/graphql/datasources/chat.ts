@@ -1,14 +1,15 @@
 import { IChatDataSource } from './types';
-import { MessageModel, ChatModel, ConnectionModel } from '@db'; // Assuming you have these models
-import { getIO, safeEmitToChat, safeEmitToUser } from '@socket'; // Import the socket helper
-import { Message, Chat } from '../../types/generated'; // Generated types from codegen
+import { ChatModel, MessageModel, ConnectionModel } from '@db';
+import { safeEmitToChat, safeEmitToUser } from '@socket';
 import {
   incrementChatCount,
-  resetChatCount,
   getChatCounts,
   getTotalCount,
+  resetChatCount,
   batchSetChatCounts,
+  isRedisAvailable,
 } from '../../lib/redis-helpers';
+import { Message, Chat } from '../../types/generated';
 
 export default class ChatDataSource implements IChatDataSource {
   sendMessage = async (
@@ -21,15 +22,16 @@ export default class ChatDataSource implements IChatDataSource {
       throw new Error('Unauthorized or chat not found');
     }
 
-    const newMessage = new MessageModel({
+    const newMessage = await MessageModel.create({
       chat_id: chatId,
       sender_id: senderId,
-      content: content,
-      is_deleted: false,
+      content,
       read_by: [{ user_id: senderId, read_at: new Date() }],
+      is_deleted: false,
+      deleted_for: [],
     });
 
-    await newMessage.save();
+    // Update chat with last message info
     await ChatModel.findOneAndUpdate(
       { _id: chatId },
       {
@@ -49,24 +51,77 @@ export default class ChatDataSource implements IChatDataSource {
 
     for (const recipientId of recipientIds) {
       try {
-        await incrementChatCount(recipientId, chatId);
+        // Try Redis first, fallback to MongoDB if Redis is unavailable
+        if (isRedisAvailable()) {
+          await incrementChatCount(recipientId, chatId);
+          
+          // Get updated counts and emit
+          const chatCount = (await getChatCounts(recipientId))[chatId] || 0;
+          const totalCount = await getTotalCount(recipientId);
 
-        // Get updated counts and emit
-        const chatCount = (await getChatCounts(recipientId))[chatId] || 0;
-        const totalCount = await getTotalCount(recipientId);
+          safeEmitToUser(recipientId, 'chatUnreadUpdate', {
+            chatId,
+            count: chatCount,
+          });
+          safeEmitToUser(recipientId, 'totalUnreadUpdate', {
+            count: totalCount,
+          });
+        } else {
+          // Redis unavailable - calculate from MongoDB and emit
+          const unreadCount = await MessageModel.countDocuments({
+            chat_id: chatId,
+            sender_id: { $ne: recipientId },
+            is_deleted: false,
+            'read_by.user_id': { $ne: recipientId },
+          });
 
-        safeEmitToUser(recipientId, 'chatUnreadUpdate', {
-          chatId,
-          count: chatCount,
-        });
-        safeEmitToUser(recipientId, 'totalUnreadUpdate', {
-          count: totalCount,
-        });
+          const totalUnread = await MessageModel.countDocuments({
+            chat_id: { $in: await this.getChatIdsForUser(recipientId) },
+            sender_id: { $ne: recipientId },
+            is_deleted: false,
+            'read_by.user_id': { $ne: recipientId },
+          });
+
+          safeEmitToUser(recipientId, 'chatUnreadUpdate', {
+            chatId,
+            count: unreadCount,
+          });
+          safeEmitToUser(recipientId, 'totalUnreadUpdate', {
+            count: totalUnread,
+          });
+        }
       } catch (error) {
         console.error(
           `Failed to update unread count for user ${recipientId}:`,
           error
         );
+        
+        // Fallback to MongoDB calculation
+        try {
+          const unreadCount = await MessageModel.countDocuments({
+            chat_id: chatId,
+            sender_id: { $ne: recipientId },
+            is_deleted: false,
+            'read_by.user_id': { $ne: recipientId },
+          });
+
+          const totalUnread = await MessageModel.countDocuments({
+            chat_id: { $in: await this.getChatIdsForUser(recipientId) },
+            sender_id: { $ne: recipientId },
+            is_deleted: false,
+            'read_by.user_id': { $ne: recipientId },
+          });
+
+          safeEmitToUser(recipientId, 'chatUnreadUpdate', {
+            chatId,
+            count: unreadCount,
+          });
+          safeEmitToUser(recipientId, 'totalUnreadUpdate', {
+            count: totalUnread,
+          });
+        } catch (fallbackError) {
+          console.error('Fallback calculation also failed:', fallbackError);
+        }
       }
     }
 
@@ -78,15 +133,17 @@ export default class ChatDataSource implements IChatDataSource {
     content: string,
     userId: string
   ): Promise<Message> => {
-    const message = await MessageModel.findById(messageId);
-    if (!message) throw new Error('Message not found');
-    // Validate user is sender
-    if (message.sender_id !== userId) throw new Error('Unauthorized');
-    message.content = content;
-    message.edited_at = new Date();
-    await message.save();
-    const io = getIO();
-    io.to(message.chat_id).emit('updateMessage', message);
+    const message = await MessageModel.findOneAndUpdate(
+      { _id: messageId, sender_id: userId },
+      { content, edited_at: new Date() },
+      { new: true }
+    );
+
+    if (!message) {
+      throw new Error('Message not found or unauthorized');
+    }
+
+    safeEmitToChat(message.chat_id, 'messageEdited', message);
     return message;
   };
 
@@ -96,21 +153,25 @@ export default class ChatDataSource implements IChatDataSource {
     forAll = false
   ): Promise<boolean> => {
     const message = await MessageModel.findById(messageId);
-    if (!message) throw new Error('Message not found');
-    // Validate user is participant
-    const chat = await ChatModel.findById(message.chat_id);
-    if (!chat || !chat.participant_ids.includes(userId))
-      throw new Error('Unauthorized');
-    if (forAll) {
-      message.is_deleted = true;
-    } else {
-      if (!message.deleted_for.includes(userId)) {
-        message.deleted_for.push(userId);
-      }
+    if (!message) {
+      throw new Error('Message not found');
     }
-    await message.save();
-    const io = getIO();
-    io.to(message.chat_id).emit('deleteMessage', message);
+
+    if (forAll) {
+      // Delete for everyone
+      await MessageModel.findByIdAndUpdate(messageId, {
+        is_deleted: true,
+        deleted_for: [],
+      });
+      safeEmitToChat(message.chat_id, 'messageDeleted', { messageId });
+    } else {
+      // Delete for user only
+      await MessageModel.findByIdAndUpdate(messageId, {
+        $push: { deleted_for: userId },
+      });
+      safeEmitToUser(userId, 'messageDeleted', { messageId });
+    }
+
     return true;
   };
 
@@ -119,41 +180,40 @@ export default class ChatDataSource implements IChatDataSource {
     page: number,
     limit: number
   ): Promise<Message[]> => {
-    return MessageModel.find({ chat_id: chatId })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .sort({ created_at: -1 });
+    const skip = (page - 1) * limit;
+    return await MessageModel.find({
+      chat_id: chatId,
+      is_deleted: false,
+    })
+      .sort({ created_at: -1 })
+      .skip(skip)
+      .limit(limit);
   };
 
   getChatListForUser = async (userId: string): Promise<Chat[]> => {
     const chats = await ChatModel.aggregate([
       {
         $match: {
-          is_active: true,
           participant_ids: userId,
-        },
-      },
-      {
-        $addFields: {
-          other_user_id: {
-            $arrayElemAt: [
-              {
-                $filter: {
-                  input: '$participant_ids',
-                  as: 'id',
-                  cond: { $ne: ['$$id', userId] },
-                },
-              },
-              0,
-            ],
-          },
+          is_active: true,
         },
       },
       {
         $lookup: {
           from: 'usermodels',
-          localField: 'other_user_id',
-          foreignField: '_id',
+          let: { participantIds: '$participant_ids' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $in: ['$_id', '$$participantIds'] },
+                    { $ne: ['$_id', { $toObjectId: userId }] },
+                  ],
+                },
+              },
+            },
+          ],
           as: 'other_user',
         },
       },
@@ -217,13 +277,19 @@ export default class ChatDataSource implements IChatDataSource {
   getUnreadCountForChats = async (
     userId: string
   ): Promise<{ chat_id: string; unread_count: number }[]> => {
-    // 1. Try Redis first
-    const redisCounts = await getChatCounts(userId);
-    if (Object.keys(redisCounts).length > 0) {
-      return Object.entries(redisCounts).map(([chat_id, unread_count]) => ({
-        chat_id,
-        unread_count,
-      }));
+    // Try Redis first if available
+    if (isRedisAvailable()) {
+      try {
+        const redisCounts = await getChatCounts(userId);
+        if (Object.keys(redisCounts).length > 0) {
+          return Object.entries(redisCounts).map(([chat_id, unread_count]) => ({
+            chat_id,
+            unread_count,
+          }));
+        }
+      } catch (error) {
+        console.log('Redis unavailable, falling back to MongoDB...');
+      }
     }
 
     // Fallback: calculate from MongoDB
@@ -250,8 +316,14 @@ export default class ChatDataSource implements IChatDataSource {
       countsObj[chatId] = found ? found.unread_count : 0;
     }
 
-    // Batch update Redis
-    await batchSetChatCounts(userId, countsObj);
+    // Try to update Redis if available
+    if (isRedisAvailable()) {
+      try {
+        await batchSetChatCounts(userId, countsObj);
+      } catch (error) {
+        console.log('Failed to update Redis, continuing with MongoDB data');
+      }
+    }
 
     return Object.entries(countsObj).map(([chat_id, unread_count]) => ({
       chat_id,
@@ -284,13 +356,39 @@ export default class ChatDataSource implements IChatDataSource {
       { $push: { read_by: { user_id: userId, read_at: now } } }
     );
 
-    // Use atomic Redis operations
-    await resetChatCount(userId, chatId, 0);
-    const totalUnread = await getTotalCount(userId);
+    // Try Redis first, fallback to MongoDB calculation
+    if (isRedisAvailable()) {
+      try {
+        await resetChatCount(userId, chatId, 0);
+        const totalUnread = await getTotalCount(userId);
 
-    // Safe socket emissions
-    safeEmitToUser(userId, 'chatUnreadUpdate', { chatId, count: 0 });
-    safeEmitToUser(userId, 'totalUnreadUpdate', { count: totalUnread });
+        safeEmitToUser(userId, 'chatUnreadUpdate', { chatId, count: 0 });
+        safeEmitToUser(userId, 'totalUnreadUpdate', { count: totalUnread });
+      } catch (error) {
+        console.log('Redis failed, using MongoDB calculation');
+        // Fallback to MongoDB calculation
+        const totalUnread = await MessageModel.countDocuments({
+          chat_id: { $in: await this.getChatIdsForUser(userId) },
+          sender_id: { $ne: userId },
+          is_deleted: false,
+          'read_by.user_id': { $ne: userId },
+        });
+
+        safeEmitToUser(userId, 'chatUnreadUpdate', { chatId, count: 0 });
+        safeEmitToUser(userId, 'totalUnreadUpdate', { count: totalUnread });
+      }
+    } else {
+      // Redis unavailable - use MongoDB calculation
+      const totalUnread = await MessageModel.countDocuments({
+        chat_id: { $in: await this.getChatIdsForUser(userId) },
+        sender_id: { $ne: userId },
+        is_deleted: false,
+        'read_by.user_id': { $ne: userId },
+      });
+
+      safeEmitToUser(userId, 'chatUnreadUpdate', { chatId, count: 0 });
+      safeEmitToUser(userId, 'totalUnreadUpdate', { count: totalUnread });
+    }
 
     return true;
   };
@@ -299,38 +397,56 @@ export default class ChatDataSource implements IChatDataSource {
     let totalUnread = 0;
     let chatCounts = {};
 
-    try {
-      // Try to get from Redis first
-      totalUnread = await getTotalCount(userId);
-      chatCounts = await getChatCounts(userId);
-    } catch (error) {
-      console.log('Redis unavailable, calculating from database...');
+    // Try Redis first if available
+    if (isRedisAvailable()) {
+      try {
+        totalUnread = await getTotalCount(userId);
+        chatCounts = await getChatCounts(userId);
+        
+        // If we got data from Redis, return it
+        if (totalUnread > 0 || Object.keys(chatCounts).length > 0) {
+          const friendRequestCount = await ConnectionModel.countDocuments({
+            addressee_user_id: userId,
+            status: 'pending',
+          });
 
-      // Fallback: Calculate from database
-      const userChats = await ChatModel.find({
-        participant_ids: userId,
-      }).select('_id');
-
-      const chatIds = userChats.map((chat) => chat._id);
-      const counts: Record<string, number> = {};
-
-      for (const chatId of chatIds) {
-        const unreadCount = await MessageModel.countDocuments({
-          chat_id: chatId,
-          sender_id: { $ne: userId },
-          is_deleted: false,
-          'read_by.user_id': { $ne: userId },
-        });
-
-        if (unreadCount > 0) {
-          counts[chatId.toString()] = unreadCount;
+          return {
+            totalUnread,
+            chatCounts,
+            friendRequestCount,
+          };
         }
+      } catch (error) {
+        console.log('Redis unavailable, calculating from database...');
       }
+    }
 
-      chatCounts = counts;
-      totalUnread = Object.values(counts).reduce((sum, c) => sum + c, 0);
+    // Fallback: Calculate from database
+    const userChats = await ChatModel.find({
+      participant_ids: userId,
+    }).select('_id');
 
-      // Update Redis with calculated values
+    const chatIds = userChats.map((chat) => chat._id);
+    const counts: Record<string, number> = {};
+
+    for (const chatId of chatIds) {
+      const unreadCount = await MessageModel.countDocuments({
+        chat_id: chatId,
+        sender_id: { $ne: userId },
+        is_deleted: false,
+        'read_by.user_id': { $ne: userId },
+      });
+
+      if (unreadCount > 0) {
+        counts[chatId.toString()] = unreadCount;
+      }
+    }
+
+    chatCounts = counts;
+    totalUnread = Object.values(counts).reduce((sum, c) => sum + c, 0);
+
+    // Try to update Redis if available
+    if (isRedisAvailable()) {
       try {
         await batchSetChatCounts(userId, counts);
       } catch (redisError) {

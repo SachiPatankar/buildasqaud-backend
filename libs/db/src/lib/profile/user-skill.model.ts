@@ -9,6 +9,8 @@ export interface IUserSkill extends Document {
   years_experience?: number;
   is_top: Boolean;
   order: number;
+  // New fields for recommendation system
+  skill_score?: number; // Calculated score based on proficiency and experience
   created_at: Date;
   updated_at: Date;
 }
@@ -47,6 +49,12 @@ const UserSkillSchema = new Schema<IUserSkill>(
       default: 0,
       required: true,
     },
+    // New field for recommendation system
+    skill_score: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
   },
   {
     timestamps: {
@@ -56,7 +64,58 @@ const UserSkillSchema = new Schema<IUserSkill>(
   }
 );
 
-UserSkillSchema.index({ skill_name: 'text' });
+// Enhanced text search index
+UserSkillSchema.index({ skill_name: 'text' }, {
+  weights: {
+    skill_name: 10,
+  },
+  name: 'skill_text_search'
+});
+
+// Performance indexes for common queries
+UserSkillSchema.index({ user_id: 1 });
+UserSkillSchema.index({ skill_name: 1 });
+UserSkillSchema.index({ proficiency_level: 1 });
+UserSkillSchema.index({ is_top: 1 });
+UserSkillSchema.index({ skill_score: -1 });
+UserSkillSchema.index({ order: 1 });
+
+// Compound indexes for complex queries
+UserSkillSchema.index({ 
+  user_id: 1, 
+  is_top: 1, 
+  order: 1 
+});
+
+UserSkillSchema.index({ 
+  skill_name: 1, 
+  proficiency_level: 1, 
+  skill_score: -1 
+});
+
+UserSkillSchema.index({ 
+  user_id: 1, 
+  skill_score: -1 
+});
+
+// Pre-save middleware to calculate skill score
+UserSkillSchema.pre('save', function(next) {
+  if (this.isModified('proficiency_level') || this.isModified('years_experience')) {
+    // Calculate skill score based on proficiency and experience
+    const proficiencyScores = {
+      'beginner': 1,
+      'intermediate': 2,
+      'advanced': 3,
+      'expert': 4
+    };
+    
+    const baseScore = proficiencyScores[this.proficiency_level] || 1;
+    const experienceBonus = Math.min((this.years_experience || 0) * 0.2, 2);
+    
+    this.skill_score = baseScore + experienceBonus;
+  }
+  next();
+});
 
 export const UserSkillModel = mongoose.model<IUserSkill>(
   'UserSkillModel',

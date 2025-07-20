@@ -41,87 +41,230 @@ export default class ApplicationDataSource implements IApplicationDataSource {
     postId: string,
     current_user_id?: string
   ): Promise<ApplicationsByPostIdResponse[]> => {
-    // Fetch all applications for the post
-    const applications = await ApplicationModel.find({ post_id: postId })
-      .sort({ created_at: -1 })
-      .lean();
-    if (applications.length === 0) return [];
-
-    // Batch fetch all users
-    const applicantIds = applications.map((app) => app.applicant_id);
-    const users = await UserModel.find({ _id: { $in: applicantIds } })
-      .select('first_name last_name photo location_id title bio')
-      .lean();
-    const userMap = users.reduce((acc, user) => {
-      acc[user._id] = user;
-      return acc;
-    }, {} as Record<string, any>);
-
-    // Batch fetch all top skills for these users
-    const skills = await UserSkillModel.find({
-      user_id: { $in: applicantIds },
-      is_top: true,
-    })
-      .limit(4 * applicantIds.length)
-      .lean();
-    const skillsMap: Record<string, any[]> = {};
-    skills.forEach((skill) => {
-      if (!skillsMap[skill.user_id]) skillsMap[skill.user_id] = [];
-      if (skillsMap[skill.user_id].length < 4)
-        skillsMap[skill.user_id].push(skill);
-    });
-
-    // Batch fetch connections if current_user_id is provided
-    const connectionsMap: Record<string, string | null> = {};
-    if (current_user_id) {
-      const connections = await ConnectionModel.find({
-        $or: applicantIds.map((applicantId) => ({
-          $or: [
-            {
-              requester_user_id: current_user_id,
-              addressee_user_id: applicantId,
+    try {
+      // Use aggregation pipeline for better performance
+      const applications = await ApplicationModel.aggregate([
+        // Stage 1: Match applications for the post
+        {
+          $match: { post_id: postId }
+        },
+        // Stage 2: Sort by created_at
+        {
+          $sort: { created_at: -1 }
+        },
+        // Stage 3: Lookup user data
+        {
+          $lookup: {
+            from: 'usermodels',
+            localField: 'applicant_id',
+            foreignField: '_id',
+            as: 'user',
+            pipeline: [
+              {
+                $project: {
+                  first_name: 1,
+                  last_name: 1,
+                  photo: 1,
+                  location_id: 1,
+                  title: 1,
+                  bio: 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          $unwind: '$user'
+        },
+        // Stage 4: Lookup top skills
+        {
+          $lookup: {
+            from: 'userskillmodels',
+            let: { applicantId: '$applicant_id' },
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $and: [
+                      { $eq: ['$user_id', '$$applicantId'] },
+                      { $eq: ['$is_top', true] }
+                    ]
+                  }
+                }
+              },
+              {
+                $limit: 4
+              },
+              {
+                $project: {
+                  _id: 1,
+                  skill_name: 1,
+                  proficiency_level: 1,
+                  years_of_experience: 1,
+                  is_top: 1
+                }
+              }
+            ],
+            as: 'top_skills'
+          }
+        },
+        // Stage 5: Check connection status if current_user_id provided
+        ...(current_user_id ? [{
+          $lookup: {
+            from: 'connectionmodels',
+            let: { 
+              applicantId: '$applicant_id', 
+              currentUserId: { $literal: current_user_id } 
             },
-            {
-              requester_user_id: applicantId,
-              addressee_user_id: current_user_id,
+            pipeline: [
+              {
+                $match: {
+                  $expr: {
+                    $or: [
+                      {
+                        $and: [
+                          { $eq: ['$requester_user_id', '$$currentUserId'] },
+                          { $eq: ['$addressee_user_id', '$$applicantId'] }
+                        ]
+                      },
+                      {
+                        $and: [
+                          { $eq: ['$requester_user_id', '$$applicantId'] },
+                          { $eq: ['$addressee_user_id', '$$currentUserId'] }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                $project: { status: 1 }
+              }
+            ],
+            as: 'connection'
+          }
+        }] : []),
+        // Stage 6: Project final format
+        {
+          $project: {
+            _id: 1,
+            post_id: 1,
+            applicant_id: 1,
+            first_name: '$user.first_name',
+            last_name: '$user.last_name',
+            photo: '$user.photo',
+            location_id: '$user.location_id',
+            title: '$user.title',
+            bio: '$user.bio',
+            top_skills: {
+              $map: {
+                input: '$top_skills',
+                as: 'skill',
+                in: {
+                  _id: '$$skill._id',
+                  skill_name: '$$skill.skill_name',
+                  proficiency_level: '$$skill.proficiency_level',
+                  years_of_experience: '$$skill.years_of_experience',
+                  is_top: '$$skill.is_top'
+                }
+              }
             },
-          ],
-        })),
-      }).lean();
-      connections.forEach((conn) => {
-        const otherId =
-          conn.requester_user_id === current_user_id
-            ? conn.addressee_user_id
-            : conn.requester_user_id;
-        connectionsMap[otherId] = conn.status;
+            is_connection: current_user_id ? {
+              $cond: {
+                if: { $gt: [{ $size: '$connection' }, 0] },
+                then: { $arrayElemAt: ['$connection.status', 0] },
+                else: null
+              }
+            } : null,
+            message: 1,
+            status: 1,
+            created_at: 1,
+            updated_at: 1
+          }
+        }
+      ]);
+
+      return applications;
+    } catch (error) {
+      console.error('Error in loadApplicationsByPostId:', error);
+      // Fallback to original implementation
+      const applications = await ApplicationModel.find({ post_id: postId })
+        .sort({ created_at: -1 })
+        .lean();
+      if (applications.length === 0) return [];
+
+      const applicantIds = applications.map((app) => app.applicant_id);
+      const users = await UserModel.find({ _id: { $in: applicantIds } })
+        .select('first_name last_name photo location_id title bio')
+        .lean();
+      const userMap = users.reduce((acc, user) => {
+        acc[user._id] = user;
+        return acc;
+      }, {} as Record<string, any>);
+
+      const skills = await UserSkillModel.find({
+        user_id: { $in: applicantIds },
+        is_top: true,
+      })
+        .limit(4 * applicantIds.length)
+        .lean();
+      const skillsMap: Record<string, any[]> = {};
+      skills.forEach((skill) => {
+        if (!skillsMap[skill.user_id]) skillsMap[skill.user_id] = [];
+        if (skillsMap[skill.user_id].length < 4)
+          skillsMap[skill.user_id].push(skill);
+      });
+
+      const connectionsMap: Record<string, string | null> = {};
+      if (current_user_id) {
+        const connections = await ConnectionModel.find({
+          $or: applicantIds.map((applicantId) => ({
+            $or: [
+              {
+                requester_user_id: current_user_id,
+                addressee_user_id: applicantId,
+              },
+              {
+                requester_user_id: applicantId,
+                addressee_user_id: current_user_id,
+              },
+            ],
+          })),
+        }).lean();
+        connections.forEach((conn) => {
+          const otherId =
+            conn.requester_user_id === current_user_id
+              ? conn.addressee_user_id
+              : conn.requester_user_id;
+          connectionsMap[otherId] = conn.status;
+        });
+      }
+
+      return applications.map((app) => {
+        const user = userMap[app.applicant_id] || {};
+        let is_connection = null;
+        if (current_user_id && app.applicant_id !== current_user_id) {
+          is_connection = connectionsMap[app.applicant_id] || null;
+        }
+        return {
+          _id: app._id,
+          post_id: app.post_id,
+          applicant_id: app.applicant_id,
+          first_name: user.first_name || '',
+          last_name: user.last_name || '',
+          photo: user.photo || '',
+          location_id: user.location_id || '',
+          title: user.title || '',
+          bio: user.bio || '',
+          top_skills: skillsMap[app.applicant_id] || [],
+          is_connection,
+          message: app.message,
+          status: app.status,
+          created_at: app.created_at,
+          updated_at: app.updated_at,
+        };
       });
     }
-
-    // Build the response
-    return applications.map((app) => {
-      const user = userMap[app.applicant_id] || {};
-      let is_connection = null;
-      if (current_user_id && app.applicant_id !== current_user_id) {
-        is_connection = connectionsMap[app.applicant_id] || null;
-      }
-      return {
-        _id: app._id,
-        post_id: app.post_id,
-        applicant_id: app.applicant_id,
-        first_name: user.first_name || '',
-        last_name: user.last_name || '',
-        photo: user.photo || '',
-        location_id: user.location_id || '',
-        title: user.title || '',
-        bio: user.bio || '',
-        top_skills: skillsMap[app.applicant_id] || [],
-        is_connection,
-        message: app.message,
-        status: app.status,
-        created_at: app.created_at,
-        updated_at: app.updated_at,
-      };
-    });
   };
 
   getApplicationsByUser = async (userId: string): Promise<any[]> => {

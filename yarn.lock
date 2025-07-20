@@ -1686,15 +1686,15 @@
     "@babel/helper-string-parser" "^7.25.9"
     "@babel/helper-validator-identifier" "^7.25.9"
 
-"@backend/backend-e2e@file:C:\\Users\\Sachi\\BASQ\\backend2\\apps\\backend-e2e":
+"@backend/backend-e2e@file:D:\\BuildASquad\\xyz\\buildasquad-backend\\apps\\backend-e2e":
   version "0.0.1"
   resolved "file:apps/backend-e2e"
 
-"@backend/backend@file:C:\\Users\\Sachi\\BASQ\\backend2\\apps\\backend":
+"@backend/backend@file:D:\\BuildASquad\\xyz\\buildasquad-backend\\apps\\backend":
   version "0.0.1"
   resolved "file:apps/backend"
 
-"@backend/db@file:C:\\Users\\Sachi\\BASQ\\backend2\\libs\\db":
+"@backend/db@file:D:\\BuildASquad\\xyz\\buildasquad-backend\\libs\\db":
   version "0.0.1"
   resolved "file:libs/db"
 
@@ -8345,6 +8345,11 @@ sync-fetch@0.6.0-2:
     node-fetch "^3.3.2"
     timeout-signal "^2.0.0"
     whatwg-mimetype "^4.0.0"
+
+systeminformation@^5.27.7:
+  version "5.27.7"
+  resolved "https://registry.npmjs.org/systeminformation/-/systeminformation-5.27.7.tgz"
+  integrity sha512-saaqOoVEEFaux4v0K8Q7caiauRwjXC4XbD2eH60dxHXbpKxQ8kH9Rf7Jh+nryKpOUSEFxtCdBlSUx0/lO6rwRg==
 
 tar-stream@~2.2.0:
   version "2.2.0"

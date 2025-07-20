@@ -167,25 +167,84 @@ export default class ConnectionDataSource implements IConnectionDataSource {
   };
 
   loadPendingFriendRequests = async (userId: string): Promise<Connection[]> => {
-    const connections = await ConnectionModel.find({
-      addressee_user_id: userId,
-      status: 'pending',
-    }).lean();
-    const otherUserIds = connections.map((conn) => conn.requester_user_id);
-    const users = await UserModel.find({ _id: { $in: otherUserIds } }).lean();
-    const userMap = users.reduce((acc, user) => {
-      acc[user._id] = user;
-      return acc;
-    }, {});
-    return connections.map((conn) => {
-      const user = userMap[conn.requester_user_id] || {};
-      return {
-        ...conn,
-        first_name: user.first_name || '',
-        last_name: user.last_name || '',
-        photo: user.photo || '',
-      };
-    });
+    try {
+      // Use aggregation pipeline for better performance
+      const connections = await ConnectionModel.aggregate([
+        // Stage 1: Match pending requests for the user
+        {
+          $match: {
+            addressee_user_id: userId,
+            status: 'pending'
+          }
+        },
+        // Stage 2: Add other user ID field
+        {
+          $addFields: {
+            other_user_id: '$requester_user_id'
+          }
+        },
+        // Stage 3: Lookup user data
+        {
+          $lookup: {
+            from: 'usermodels',
+            localField: 'other_user_id',
+            foreignField: '_id',
+            as: 'other_user',
+            pipeline: [
+              {
+                $project: {
+                  first_name: 1,
+                  last_name: 1,
+                  photo: 1
+                }
+              }
+            ]
+          }
+        },
+        {
+          $unwind: '$other_user'
+        },
+        // Stage 4: Project final format
+        {
+          $project: {
+            _id: 1,
+            requester_user_id: 1,
+            addressee_user_id: 1,
+            status: 1,
+            created_at: 1,
+            updated_at: 1,
+            other_user_id: 1,
+            first_name: '$other_user.first_name',
+            last_name: '$other_user.last_name',
+            photo: '$other_user.photo'
+          }
+        }
+      ]);
+
+      return connections;
+    } catch (error) {
+      console.error('Error in loadPendingFriendRequests:', error);
+      // Fallback to original implementation
+      const connections = await ConnectionModel.find({
+        addressee_user_id: userId,
+        status: 'pending',
+      }).lean();
+      const otherUserIds = connections.map((conn) => conn.requester_user_id);
+      const users = await UserModel.find({ _id: { $in: otherUserIds } }).lean();
+      const userMap = users.reduce((acc, user) => {
+        acc[user._id] = user;
+        return acc;
+      }, {});
+      return connections.map((conn) => {
+        const user = userMap[conn.requester_user_id] || {};
+        return {
+          ...conn,
+          first_name: user.first_name || '',
+          last_name: user.last_name || '',
+          photo: user.photo || '',
+        };
+      });
+    }
   };
 
   loadSentFriendRequests = async (userId: string): Promise<Connection[]> => {
