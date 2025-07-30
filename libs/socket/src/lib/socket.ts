@@ -16,6 +16,9 @@ export function initSocket(server: HTTPServer): IOServer {
       methods: ['GET', 'POST'],
       credentials: true,
     },
+    transports: ['polling'], // Force polling only
+    pingTimeout: 60000,
+    pingInterval: 25000,
   });
 
   io.use((socket, next) => {
